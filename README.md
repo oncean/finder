@@ -93,6 +93,36 @@ fengxiangbiao/
 │   ├── mini-program-dev-doc.md # 小程序开发文档
 │   └── mini-program-dev-doc.html
 │
+├── miniprogram/                # 微信小程序前端
+│   ├── pages/                  # 页面
+│   │   ├── chat/               # 吃喝玩乐（群聊页）
+│   │   ├── feed/               # 风向标（推荐页）
+│   │   ├── post-detail/        # 帖子详情页
+│   │   ├── shop-detail/        # 店铺详情页
+│   │   ├── shop-select/        # 选择店铺页
+│   │   └── photo-select/       # 选择照片页
+│   ├── components/             # 公共组件
+│   │   ├── shop-card/          # 店铺卡片
+│   │   ├── ai-summary/         # AI 总结标签
+│   │   ├── message-item/       # 消息条目
+│   │   ├── feed-card/          # 风向标推荐卡片
+│   │   ├── chat-input/         # 聊天输入框
+│   │   ├── add-sheet/          # 添加内容弹窗
+│   │   └── consume-record/     # 消费记录
+│   ├── utils/                  # 工具层
+│   │   ├── request.js          # HTTP 请求封装
+│   │   ├── websocket.js        # WebSocket 封装
+│   │   ├── storage.js          # 本地存储封装
+│   │   └── location.js         # 定位相关工具
+│   ├── services/               # 服务层
+│   │   ├── auth.js             # 认证服务
+│   │   ├── chat.js             # 聊天服务
+│   │   ├── shop.js             # 店铺服务
+│   │   ├── post.js             # 帖子服务
+│   │   └── upload.js           # 上传服务
+│   └── store/                  # 状态管理
+│       └── index.js
+│
 ├── assets/                     # 静态资源
 │   └── screenshots/            # 产品截图
 │       ├── 风向标主页.jpg
@@ -147,12 +177,25 @@ npm run start:dev
 
 后端服务将运行在 `http://localhost:3000`
 
-### 4. 配置微信小程序
+### 4. 配置并启动小程序
 
 1. 打开微信开发者工具
-2. 导入小程序项目（小程序代码目录）
-3. 在 `utils/request.js` 中配置 API 地址为 `http://localhost:3000/api/v1`
-4. 开启"不校验合法域名"选项（开发环境）
+2. 导入项目，选择 `miniprogram` 目录
+3. 填入你的小程序 AppID
+4. 在 `miniprogram/utils/request.js` 中配置 API 地址为 `http://localhost:3000/api/v1`
+5. 开启"不校验合法域名"选项（开发环境）
+6. 点击编译，即可在模拟器中预览
+
+**小程序页面说明：**
+
+| 页面 | 路径 | 功能 |
+|------|------|------|
+| 吃喝玩乐 | `pages/chat/chat` | 群聊页面，实时消息、发送文字/图片/店铺卡片 |
+| 风向标 | `pages/feed/feed` | 推荐列表，基于地理位置的店铺推荐 |
+| 帖子详情 | `pages/post-detail/post-detail` | 帖子详情、图片预览、相关推荐 |
+| 店铺详情 | `pages/shop-detail/shop-detail` | 店铺信息、AI 总结、用户评价 |
+| 选择店铺 | `pages/shop-select/shop-select` | 搜索并选择店铺发送到群聊 |
+| 选择照片 | `pages/photo-select/photo-select` | 选择照片发送到群聊 |
 
 ---
 
@@ -216,6 +259,65 @@ docker-compose logs -f
 | 微信小程序 | 基础库 2.30+ |
 | Docker | 24.x |
 | Nginx | 1.24 |
+
+---
+
+## 前端架构
+
+### 小程序目录结构
+
+```
+miniprogram/
+├── app.js                      # 应用入口，全局登录状态管理
+├── app.json                    # 全局配置，页面路由、TabBar、组件注册
+├── app.wxss                    # 全局样式，通用工具类
+├── pages/                      # 页面
+│   ├── chat/                   # 吃喝玩乐 - 群聊页
+│   │   ├── chat.js             # 页面逻辑：消息加载、WebSocket、发送消息
+│   │   ├── chat.wxml           # 页面结构：消息列表、输入框、添加弹窗
+│   │   └── chat.wxss           # 页面样式
+│   ├── feed/                   # 风向标 - 推荐页
+│   │   ├── feed.js             # 页面逻辑：推荐列表、下拉刷新、上拉加载
+│   │   ├── feed.wxml           # 页面结构：推荐卡片列表
+│   │   └── feed.wxss           # 页面样式
+│   ├── post-detail/            # 帖子详情页
+│   ├── shop-detail/            # 店铺详情页
+│   ├── shop-select/            # 选择店铺页
+│   └── photo-select/           # 选择照片页
+├── components/                 # 公共组件
+│   ├── shop-card/              # 店铺卡片（可复用）
+│   ├── ai-summary/             # AI 总结标签（好评/差评）
+│   ├── message-item/           # 消息条目（文字/图片/店铺卡片）
+│   ├── feed-card/              # 风向标推荐卡片
+│   ├── chat-input/             # 聊天输入框
+│   ├── add-sheet/              # 添加内容弹窗（店铺/照片）
+│   └── consume-record/         # 消费记录展示
+├── utils/                      # 工具层
+│   ├── request.js              # HTTP 请求封装（含 Token、错误处理）
+│   ├── websocket.js            # WebSocket 封装（连接、重连、心跳）
+│   ├── storage.js              # 本地存储封装
+│   └── location.js             # 定位、距离计算、导航
+├── services/                   # 服务层（API 调用）
+│   ├── auth.js                 # 认证：登录、获取用户信息
+│   ├── chat.js                 # 聊天：群聊信息、消息历史、发送消息
+│   ├── shop.js                 # 店铺：列表、详情、评价
+│   ├── post.js                 # 帖子：推荐、详情、相关推荐
+│   └── upload.js               # 上传：图片上传
+└── store/                      # 状态管理
+    └── index.js                # 轻量级 Store（订阅/发布模式）
+```
+
+### 组件说明
+
+| 组件 | 用途 | 接收参数 |
+|------|------|---------|
+| `shop-card` | 展示店铺基本信息和 AI 总结 | `shop` 对象，`showSummary`，`showDistance` |
+| `ai-summary` | 展示 AI 提炼的好评/差评标签 | `summary` 对象（`positive`、`negative`、`averageCost`） |
+| `message-item` | 展示单条消息（左/右布局） | `message` 对象，`isSelf` |
+| `feed-card` | 展示风向标推荐帖子 | `post` 对象 |
+| `chat-input` | 聊天输入框和发送按钮 | `placeholder` |
+| `add-sheet` | 底部弹窗，选择添加内容类型 | `visible` |
+| `consume-record` | 展示消费金额、商家、时间 | `record` 对象 |
 
 ---
 
