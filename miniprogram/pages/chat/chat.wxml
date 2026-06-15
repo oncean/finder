@@ -1,0 +1,50 @@
+<view class="chat-page">
+  <!-- 顶部信息栏 -->
+  <view class="chat-header">
+    <view class="location-info">
+      <text class="location-text">{{groupInfo.location ? groupInfo.location.district : '定位中...'}}</text>
+    </view>
+    <view class="online-info">
+      <text class="online-dot"></text>
+      <text class="online-count">{{onlineCount}}人在线</text>
+    </view>
+  </view>
+  
+  <!-- 消息列表 -->
+  <scroll-view 
+    class="message-list" 
+    scroll-y 
+    scroll-top="{{scrollTop}}"
+    id="message-list"
+    refresher-enabled
+    bindrefresherrefresh="loadMessages"
+  >
+    <view class="loading" wx:if="{{loading}}">加载中...</view>
+    
+    <block wx:for="{{messages}}" wx:key="id">
+      <message-item 
+        message="{{item}}" 
+        isSelf="{{item.sender.id === userId}}"
+        bindtapShop="onTapShopCard"
+      />
+    </block>
+    
+    <view class="empty" wx:if="{{messages.length === 0 && !loading}}">
+      <text>暂无消息，来说点什么吧~</text>
+    </view>
+  </scroll-view>
+  
+  <!-- 输入框 -->
+  <chat-input 
+    bindsend="onSendMessage"
+    bindshowAddSheet="onShowAddSheet"
+  />
+  
+  <!-- 添加内容弹窗 -->
+  <add-sheet 
+    visible="{{showAddSheet}}"
+    bindclose="onCloseAddSheet"
+    bindselectShop="onSelectShop"
+    bindselectPhoto="onSelectPhoto"
+  />
+</view>

@@ -1,0 +1,115 @@
+.shop-select-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f5f5f5;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #eee;
+}
+
+.search-input {
+  flex: 1;
+  height: 72rpx;
+  background: #f5f5f5;
+  border-radius: 36rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+}
+
+.search-btn {
+  margin-left: 20rpx;
+  padding: 14rpx 28rpx;
+  background: #a3e635;
+  border-radius: 32rpx;
+  font-size: 26rpx;
+  color: #1a1a2e;
+  font-weight: bold;
+}
+
+.shop-list {
+  flex: 1;
+  padding: 20rpx;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+  border: 2rpx solid transparent;
+}
+
+.shop-item.selected {
+  border-color: #a3e635;
+  background: rgba(163, 230, 53, 0.05);
+}
+
+.shop-thumb {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 12rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.shop-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-name {
+  font-size: 30rpx;
+  margin-bottom: 8rpx;
+}
+
+.shop-address {
+  font-size: 24rpx;
+  margin-bottom: 10rpx;
+}
+
+.shop-meta {
+  display: flex;
+  align-items: center;
+}
+
+.distance {
+  font-size: 24rpx;
+  font-weight: bold;
+  margin-right: 16rpx;
+}
+
+.review-count {
+  font-size: 22rpx;
+}
+
+.select-icon {
+  width: 48rpx;
+  height: 48rpx;
+  background: #a3e635;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a1a2e;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.bottom-bar {
+  padding: 20rpx;
+  background: #fff;
+  border-top: 1rpx solid #eee;
+}
+
+.send-btn {
+  width: 100%;
+}

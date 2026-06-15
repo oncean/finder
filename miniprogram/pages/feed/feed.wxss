@@ -1,0 +1,56 @@
+.feed-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f5f5f5;
+}
+
+.feed-header {
+  background: #1a1a2e;
+  padding: 24rpx 32rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.title-text {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #fff;
+}
+
+.subtitle {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 8rpx;
+}
+
+.location-tag {
+  display: flex;
+  align-items: center;
+  background: rgba(163, 230, 53, 0.2);
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  color: #a3e635;
+}
+
+.location-icon {
+  margin-right: 6rpx;
+}
+
+.feed-list {
+  flex: 1;
+}
+
+.no-more {
+  text-align: center;
+  padding: 40rpx;
+  color: #999;
+  font-size: 24rpx;
+}

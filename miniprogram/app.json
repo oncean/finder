@@ -1,0 +1,50 @@
+{
+  "pages": [
+    "pages/feed/feed",
+    "pages/chat/chat",
+    "pages/post-detail/post-detail",
+    "pages/shop-detail/shop-detail",
+    "pages/shop-select/shop-select",
+    "pages/photo-select/photo-select"
+  ],
+  "tabBar": {
+    "list": [
+      {
+        "pagePath": "pages/chat/chat",
+        "text": "吃喝玩乐",
+        "iconPath": "static/icons/chat.png",
+        "selectedIconPath": "static/icons/chat-active.png"
+      },
+      {
+        "pagePath": "pages/feed/feed",
+        "text": "风向标",
+        "iconPath": "static/icons/feed.png",
+        "selectedIconPath": "static/icons/feed-active.png"
+      }
+    ],
+    "selectedColor": "#a3e635",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black"
+  },
+  "window": {
+    "navigationBarBackgroundColor": "#1a1a2e",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "风向标",
+    "backgroundColor": "#f5f5f5"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于推荐附近美食"
+    }
+  },
+  "usingComponents": {
+    "shop-card": "./components/shop-card/shop-card",
+    "ai-summary": "./components/ai-summary/ai-summary",
+    "consume-record": "./components/consume-record/consume-record",
+    "message-item": "./components/message-item/message-item",
+    "chat-input": "./components/chat-input/chat-input",
+    "add-sheet": "./components/add-sheet/add-sheet",
+    "feed-card": "./components/feed-card/feed-card"
+  },
+  "sitemapLocation": "sitemap.json"
+}

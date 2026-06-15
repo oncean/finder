@@ -1,0 +1,85 @@
+<view class="shop-detail-page">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+  
+  <block wx:if="{{!loading && shop.id}}">
+    <!-- 店铺封面 -->
+    <view class="shop-cover-wrapper">
+      <image class="shop-cover" src="{{shop.coverImage || '/static/images/default-shop.png'}}" mode="aspectFill" />
+    </view>
+    
+    <!-- 店铺基本信息 -->
+    <view class="shop-info-section">
+      <view class="shop-header">
+        <text class="shop-name text-bold">{{shop.name}}</text>
+        <view class="shop-rating" wx:if="{{shop.rating}}">
+          <text class="rating-score">{{shop.rating}}</text>
+          <text class="rating-text">分</text>
+        </view>
+      </view>
+      
+      <view class="shop-meta">
+        <text class="category">{{shop.category}}</text>
+        <text class="dot">·</text>
+        <text class="review-count">{{shop.reviewCount}}条测评</text>
+      </view>
+      
+      <view class="shop-address" bindtap="onNavigate">
+        <text class="address-icon">📍</text>
+        <text class="address-text">{{shop.address}}</text>
+        <text class="navigate-btn">导航</text>
+      </view>
+      
+      <view class="business-hours" wx:if="{{shop.businessHours}}">
+        <text class="hours-icon">🕐</text>
+        <text>{{shop.businessHours}}</text>
+      </view>
+    </view>
+    
+    <!-- AI 总结 -->
+    <view class="ai-summary-section" wx:if="{{shop.aiSummary}}">
+      <view class="section-title">AI 智能总结</view>
+      <ai-summary summary="{{shop.aiSummary}}" />
+    </view>
+    
+    <!-- 测评列表 -->
+    <view class="reviews-section">
+      <view class="section-title">用户测评</view>
+      
+      <view class="review-list">
+        <view class="review-item" wx:for="{{reviews}}" wx:key="id">
+          <view class="review-header">
+            <image class="avatar-small" src="{{item.author.avatar || '/static/images/default-avatar.png'}}" />
+            <view class="reviewer-info">
+              <text class="reviewer-name">{{item.author.nickname}}</text>
+              <text class="review-time text-muted">{{item.createdAt}}</text>
+            </view>
+            <view class="review-rating" wx:if="{{item.rating}}">
+              <text>{{item.rating}}⭐</text>
+            </view>
+          </view>
+          <text class="review-content">{{item.content}}</text>
+          <view class="review-images" wx:if="{{item.images && item.images.length > 0}}">
+            <image 
+              wx:for="{{item.images}}" 
+              wx:for-item="img" 
+              wx:key="index"
+              src="{{img}}" 
+              mode="aspectFill"
+            />
+          </view>
+        </view>
+      </view>
+      
+      <view class="loading-more" wx:if="{{hasMoreReviews}}">
+        <text>加载更多...</text>
+      </view>
+      
+      <view class="empty" wx:if="{{reviews.length === 0}}">
+        <text>暂无测评</text>
+      </view>
+    </view>
+  </block>
+</view>

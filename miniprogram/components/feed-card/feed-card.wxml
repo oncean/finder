@@ -1,0 +1,35 @@
+<view class="feed-card" bindtap="onTap">
+  <!-- 封面图 -->
+  <view class="cover-wrapper">
+    <image class="cover-image" src="{{post.coverImage || post.images[0] || '/static/images/default-feed.png'}}" mode="aspectFill" />
+    <view class="rank-badge" wx:if="{{post.recommendRank}}">
+      <text>TOP {{post.recommendRank}}</text>
+    </view>
+  </view>
+  
+  <!-- 内容区 -->
+  <view class="feed-content">
+    <text class="feed-title text-bold text-ellipsis">{{post.title}}</text>
+    <text class="feed-desc text-secondary text-ellipsis-2">{{post.content}}</text>
+    
+    <!-- 消费记录 -->
+    <consume-record wx:if="{{post.consumeRecord}}" record="{{post.consumeRecord}}" />
+    
+    <!-- 底部信息 -->
+    <view class="feed-footer">
+      <view class="author-info">
+        <image class="avatar-small" src="{{post.author.avatar || '/static/images/default-avatar.png'}}" />
+        <text class="author-name text-muted">{{post.author.nickname}}</text>
+      </view>
+      <view class="feed-meta">
+        <text class="text-muted">{{post.reviewCount}}人测评</text>
+        <text class="text-muted" wx:if="{{post.location}}">· {{post.location}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 店铺信息 -->
+  <view class="shop-section" wx:if="{{post.shopName}}" catchtap="onTapShop">
+    <text class="shop-label">📍 {{post.shopName}}</text>
+  </view>
+</view>

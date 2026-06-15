@@ -1,0 +1,16 @@
+<view class="ai-summary">
+  <view class="summary-header" wx:if="{{summary.averageCost}}">
+    <text class="cost">人均 ¥{{summary.averageCost}}</text>
+  </view>
+  
+  <view class="tags-container">
+    <view class="tag tag-positive" wx:for="{{summary.positive}}" wx:key="index">
+      <text class="tag-icon">✓</text>
+      <text>{{item}}</text>
+    </view>
+    <view class="tag tag-negative" wx:for="{{summary.negative}}" wx:key="index">
+      <text class="tag-icon">✗</text>
+      <text>{{item}}</text>
+    </view>
+  </view>
+</view>

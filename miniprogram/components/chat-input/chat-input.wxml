@@ -1,0 +1,20 @@
+<view class="chat-input-bar safe-area-bottom">
+  <view class="add-btn" bindtap="onShowAddSheet">
+    <text class="add-icon">+</text>
+  </view>
+  
+  <input 
+    class="input"
+    type="text"
+    value="{{inputValue}}"
+    placeholder="{{placeholder}}"
+    placeholder-class="placeholder"
+    confirm-type="send"
+    bindinput="onInput"
+    bindconfirm="onSend"
+  />
+  
+  <view class="send-btn {{inputValue ? 'active' : ''}}" bindtap="onSend">
+    <text>发送</text>
+  </view>
+</view>

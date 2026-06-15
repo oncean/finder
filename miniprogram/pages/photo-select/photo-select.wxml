@@ -1,0 +1,35 @@
+<view class="photo-select-page">
+  <!-- 照片网格 -->
+  <view class="photo-grid">
+    <!-- 添加照片按钮 -->
+    <view class="add-photo" bindtap="onChoosePhoto">
+      <text class="add-icon">+</text>
+      <text class="add-text">添加照片</text>
+    </view>
+    
+    <!-- 照片列表 -->
+    <view 
+      class="photo-item {{selectedPhotos.includes(item) ? 'selected' : ''}}"
+      wx:for="{{photos}}"
+      wx:key="*this"
+      bindtap="onToggleSelect"
+      data-index="{{index}}"
+    >
+      <image src="{{item}}" mode="aspectFill" />
+      <view class="select-mark" wx:if="{{selectedPhotos.includes(item)}}">
+        <text>✓</text>
+      </view>
+      <view class="delete-btn" catchtap="onDeletePhoto" data-index="{{index}}">
+        <text>✕</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 底部发送栏 -->
+  <view class="bottom-bar safe-area-bottom">
+    <text class="selected-count">已选择 {{selectedPhotos.length}} 张</text>
+    <button class="send-btn btn-primary" bindtap="onSendPhotos">
+      发送
+    </button>
+  </view>
+</view>

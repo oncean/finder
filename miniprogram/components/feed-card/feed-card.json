@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "consume-record": "../consume-record/consume-record"
+  }
+}

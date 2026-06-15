@@ -1,0 +1,62 @@
+<view class="post-detail-page">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+  
+  <block wx:if="{{!loading && post.id}}">
+    <!-- 图片轮播 -->
+    <swiper class="image-swiper" indicator-dots autoplay circular wx:if="{{post.images && post.images.length > 0}}">
+      <swiper-item wx:for="{{post.images}}" wx:key="index">
+        <image src="{{item}}" mode="aspectFill" bindtap="onPreviewImage" data-url="{{item}}" />
+      </swiper-item>
+    </swiper>
+    
+    <!-- 内容区 -->
+    <view class="content-section">
+      <text class="post-title text-bold">{{post.title}}</text>
+      <text class="post-content">{{post.content}}</text>
+      
+      <!-- 消费记录 -->
+      <consume-record wx:if="{{post.consumeRecord}}" record="{{post.consumeRecord}}" />
+      
+      <!-- 作者信息 -->
+      <view class="author-section">
+        <image class="avatar" src="{{post.author.avatar || '/static/images/default-avatar.png'}}" />
+        <view class="author-info">
+          <text class="author-name">{{post.author.nickname}}</text>
+          <text class="post-time text-muted">{{post.createdAt}}</text>
+        </view>
+      </view>
+      
+      <!-- 位置信息 -->
+      <view class="location-section" wx:if="{{post.location}}">
+        <text class="location-icon">📍</text>
+        <text>{{post.location}}</text>
+      </view>
+    </view>
+    
+    <!-- 店铺信息 -->
+    <view class="shop-section" wx:if="{{post.shopId}}" bindtap="onTapShop">
+      <view class="section-title">关联店铺</view>
+      <shop-card shop="{{post.shop}}" showDistance="{{false}}" />
+    </view>
+    
+    <!-- 相关推荐 -->
+    <view class="related-section" wx:if="{{relatedPosts.length > 0}}">
+      <view class="section-title">相关推荐</view>
+      <view class="related-list">
+        <view 
+          class="related-item" 
+          wx:for="{{relatedPosts}}" 
+          wx:key="id"
+          bindtap="onTapRelated"
+          data-id="{{item.id}}"
+        >
+          <image class="related-cover" src="{{item.coverImage || item.images[0]}}" mode="aspectFill" />
+          <text class="related-title text-ellipsis">{{item.title}}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

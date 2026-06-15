@@ -1,0 +1,10 @@
+<view class="consume-record">
+  <view class="record-header">
+    <text class="record-label">消费记录</text>
+    <text class="record-amount">¥{{record.amount}}</text>
+  </view>
+  <view class="record-detail">
+    <text class="merchant-name">{{record.merchantName}}</text>
+    <text class="trade-time text-muted">{{record.tradeTime}}</text>
+  </view>
+</view>

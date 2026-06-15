@@ -1,0 +1,31 @@
+<view class="message-item {{isSelf ? 'self' : ''}}">
+  <image class="avatar avatar-small" src="{{message.sender.avatar || '/static/images/default-avatar.png'}}" />
+  
+  <view class="message-content">
+    <text class="sender-name text-muted">{{message.sender.nickname}}</text>
+    
+    <!-- 文字消息 -->
+    <view class="bubble text-bubble" wx:if="{{message.type === 'text'}}">
+      <text>{{message.content}}</text>
+    </view>
+    
+    <!-- 图片消息 -->
+    <view class="bubble image-bubble" wx:if="{{message.type === 'image'}}" bindtap="onPreviewImage">
+      <image src="{{message.content}}" mode="widthFix" lazy-load />
+    </view>
+    
+    <!-- 店铺卡片消息 -->
+    <view class="bubble shop-bubble" wx:if="{{message.type === 'shop_card'}}" bindtap="onTapShopCard">
+      <view class="shop-card-mini">
+        <image class="shop-thumb" src="{{message.shopCard.coverImage || '/static/images/default-shop.png'}}" mode="aspectFill" />
+        <view class="shop-mini-info">
+          <text class="shop-mini-name text-bold text-ellipsis">{{message.shopCard.name}}</text>
+          <text class="shop-mini-address text-muted text-ellipsis">{{message.shopCard.address}}</text>
+          <view class="shop-mini-tags" wx:if="{{message.shopCard.aiSummary}}">
+            <text class="mini-tag mini-tag-positive" wx:for="{{message.shopCard.aiSummary.positive}}" wx:key="index">{{item}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

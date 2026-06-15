@@ -1,0 +1,88 @@
+.feed-card {
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.cover-wrapper {
+  position: relative;
+  width: 100%;
+  height: 360rpx;
+}
+
+.cover-image {
+  width: 100%;
+  height: 100%;
+}
+
+.rank-badge {
+  position: absolute;
+  top: 16rpx;
+  left: 16rpx;
+  background: rgba(163, 230, 53, 0.9);
+  color: #1a1a2e;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+.feed-content {
+  padding: 24rpx;
+}
+
+.feed-title {
+  font-size: 32rpx;
+  margin-bottom: 12rpx;
+}
+
+.feed-desc {
+  font-size: 26rpx;
+  margin-bottom: 16rpx;
+  line-height: 1.5;
+}
+
+.feed-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+}
+
+.author-info .avatar-small {
+  margin-right: 12rpx;
+}
+
+.author-name {
+  font-size: 24rpx;
+}
+
+.feed-meta {
+  display: flex;
+  align-items: center;
+}
+
+.feed-meta text {
+  font-size: 22rpx;
+  margin-left: 12rpx;
+}
+
+.shop-section {
+  padding: 16rpx 24rpx;
+  background: #fafafa;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.shop-label {
+  font-size: 26rpx;
+  color: #666;
+}

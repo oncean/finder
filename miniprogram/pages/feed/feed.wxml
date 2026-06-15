@@ -1,0 +1,44 @@
+<view class="feed-page">
+  <!-- 顶部标题区 -->
+  <view class="feed-header">
+    <view class="header-title">
+      <text class="title-text">风向标</text>
+      <text class="subtitle">发现身边好味道</text>
+    </view>
+    <view class="location-tag" wx:if="{{location}}">
+      <text class="location-icon">📍</text>
+      <text>附近推荐</text>
+    </view>
+  </view>
+  
+  <!-- 推荐列表 -->
+  <scroll-view 
+    class="feed-list" 
+    scroll-y
+    refresher-enabled
+    bindrefresherrefresh="onPullDownRefresh"
+    bindscrolltolower="onReachBottom"
+  >
+    <view class="container">
+      <block wx:for="{{recommendations}}" wx:key="id">
+        <feed-card 
+          post="{{item}}"
+          bindtap="onTapPost"
+          bindtapShop="onTapShop"
+        />
+      </block>
+      
+      <view class="loading" wx:if="{{loading}}">
+        <text>加载中...</text>
+      </view>
+      
+      <view class="no-more" wx:if="{{!hasMore && recommendations.length > 0}}">
+        <text>已经到底了</text>
+      </view>
+      
+      <view class="empty" wx:if="{{recommendations.length === 0 && !loading}}">
+        <text>暂无推荐内容</text>
+      </view>
+    </view>
+  </scroll-view>
+</view>
