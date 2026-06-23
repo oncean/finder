@@ -1,0 +1,24 @@
+# Dependencies
+**/node_modules
+
+# Build output
+**/dist
+**/build
+
+# IDE
+.idea
+.vscode
+.history
+*.log
+
+# OS
+.DS_Store
+
+# Temp files
+*.tmp
+*.temp
+
+# Test files
+test-*.ps1
+test-*.js
+query
