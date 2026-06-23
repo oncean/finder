@@ -1,0 +1,48 @@
+<view class="feed-card" bindtap="onTap">
+  <view class="feed-head">
+    <view class="author-row">
+      <image class="author-avatar" src="{{post.author.avatar || 'http://192.168.2.103/static/default-avatar.png'}}" mode="aspectFill" />
+      <view class="title-wrap">
+        <text class="feed-title text-bold text-ellipsis">{{post.title}}</text>
+        <text class="feed-desc text-ellipsis">{{post.content}}</text>
+      </view>
+    </view>
+    <view class="right-meta">
+      <text class="rank-pill" wx:if="{{post.recommendRank}}">推荐榜第一</text>
+      <text class="date-text">01-24  南京</text>
+    </view>
+  </view>
+
+  <view class="image-grid">
+    <image class="food-image" src="{{post.images[0] || post.coverImage || 'http://192.168.2.103/static/default-feed.png'}}" mode="aspectFill" />
+    <image class="food-image" src="{{post.images[1] || post.coverImage || 'http://192.168.2.103/static/default-feed.png'}}" mode="aspectFill" />
+    <view class="receipt-card">
+      <image class="receipt-bg" src="{{post.images[2] || 'http://192.168.2.103/static/feed-receipt.jpg'}}" mode="aspectFill" />
+      <text class="receipt-amount">-{{post.consumeRecord.amount || 115000}}.00</text>
+    </view>
+  </view>
+
+  <view class="shop-section" wx:if="{{post.shopName}}">
+    <view class="shop-top">
+      <image class="shop-thumb" src="{{post.shop.coverImage || 'http://192.168.2.103/static/default-shop.png'}}" mode="aspectFill" />
+      <view class="shop-main">
+        <text class="shop-name text-bold">{{post.shopName}}</text>
+        <view class="shop-location">
+          <image class="pin" src="/static/icons/dingwei.svg" mode="aspectFit" />
+          <text>{{post.shop.address || post.location}}</text>
+          <text class="nav-text">导航</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="ai-summary-wrap" catchtap="onViewReview">
+      <ai-summary
+        summary="{{post.shop.summaryTags}}"
+        author-avatar="{{post.author.avatar || 'http://192.168.2.103/static/default-avatar.png'}}"
+        tester-count="2000+"
+        show-footer="{{true}}"
+        show-view="{{true}}"
+      />
+    </view>
+  </view>
+</view>

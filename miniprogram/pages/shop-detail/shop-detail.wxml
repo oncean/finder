@@ -1,0 +1,88 @@
+﻿<view class="shop-detail-page">
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+  
+  <block wx:if="{{!loading && shop.id}}">
+    <view class="top-nav">
+      <view class="back-btn" bindtap="onBack">‹</view>
+      <text class="nav-title">详情</text>
+      <view class="menu-pill">
+        <text>•••</text>
+        <text class="circle-dot">◎</text>
+      </view>
+    </view>
+
+    <image class="shop-cover" src="{{shop.coverImage || 'http://192.168.2.103/static/shop-detail-hero.jpg'}}" mode="aspectFill" />
+
+    <view class="shop-info-section">
+      <view class="shop-header">
+        <text class="shop-name text-bold">{{shop.name}}</text>
+        <text class="rank-pill">{{shop.rankText || '推荐榜第一'}}</text>
+      </view>
+      <text class="shop-desc">{{shop.subtitle}}</text>
+    </view>
+
+    <view class="detail-section">
+      <view class="tester-row">
+        <view class="tester-avatars">
+          <image class="tester-avatar" src="http://192.168.2.103/static/feed-author.jpg" mode="aspectFill" />
+          <image class="tester-avatar overlap" src="http://192.168.2.103/static/feed-author.jpg" mode="aspectFill" />
+          <image class="tester-avatar overlap" src="http://192.168.2.103/static/feed-author.jpg" mode="aspectFill" />
+        </view>
+        <view class="tester-count">
+          <text class="count-num">{{shop.testerCount || shop.reviewCount}}</text>
+          <text class="count-label"> 测评过</text>
+        </view>
+        <text class="row-arrow">›</text>
+      </view>
+
+      <view class="info-row">
+        <text class="row-icon clock">◷</text>
+        <text class="row-text">{{shop.businessHours || '周五01.24 19:30'}}</text>
+        <text class="row-arrow">›</text>
+      </view>
+
+      <view class="info-row" bindtap="onNavigate">
+        <text class="row-icon pin">◎</text>
+        <text class="row-text">{{shop.address}}</text>
+        <text class="row-arrow">›</text>
+      </view>
+
+      <view class="ai-summary-section" bindtap="onViewReview">
+        <ai-summary
+          summary="{{shop.summaryTags}}"
+          show-footer="{{true}}"
+          show-view="{{true}}"
+          tester-count="{{shop.testerCount || shop.reviewCount || '2000+'}}"
+          author-avatar="http://192.168.2.103/static/feed-author.jpg"
+        />
+      </view>
+
+      <image class="pay-record" src="{{shop.paymentRecord.image || 'http://192.168.2.103/static/shop-pay-record.jpg'}}" mode="aspectFill" />
+    </view>
+
+    <view class="recommend-section">
+      <view class="section-title">相关美食/景点推荐</view>
+      <scroll-view class="recommend-scroll" scroll-x>
+        <view class="recommend-list">
+          <view class="recommend-item" wx:for="{{shop.recommendations}}" wx:key="id">
+            <view class="reco-cover-wrap">
+              <image class="reco-cover" src="{{item.coverImage}}" mode="aspectFill" />
+              <text class="reco-count">{{item.reviewCount}}人测评</text>
+            </view>
+            <text class="reco-name">{{item.name}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view class="bottom-actions safe-area-bottom">
+      <view class="share-btn" bindtap="onShareTap">
+        <text class="share-icon">↗</text>
+        <text>分享</text>
+      </view>
+      <view class="nav-btn" bindtap="onNavigate">导航</view>
+    </view>
+  </block>
+</view>

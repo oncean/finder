@@ -1,0 +1,21 @@
+<view class="chat-input-bar safe-area-bottom">
+  <view class="add-btn" bindtap="onShowAddSheet">
+      <image class="send-icon" src="/static/icons/add.svg" mode="aspectFit" />
+  </view>
+  
+  <view class="input-wrap">
+    <input 
+      class="input"
+      type="text"
+      value="{{inputValue}}"
+      placeholder="{{placeholder}}"
+      placeholder-class="placeholder"
+      confirm-type="send"
+      bindinput="onInput"
+      bindconfirm="onSend"
+    />
+    <view class="send-btn" bindtap="onSend">
+      <image class="send-icon" src="/static/icons/fasong.svg" mode="aspectFit" />
+    </view>
+  </view>
+</view>

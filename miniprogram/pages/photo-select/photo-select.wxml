@@ -1,0 +1,37 @@
+<view class="photo-select-page">
+  <!-- 顶部导航 -->
+  <view class="top-nav">
+    <view class="back-btn" bindtap="onBack">‹</view>
+    <text class="nav-title">选择照片</text>
+    <view class="menu-placeholder"></view>
+  </view>
+  
+  <!-- 照片网格 -->
+  <view class="photo-grid">
+    <!-- 添加照片按钮 -->
+    <view class="add-photo" bindtap="onChoosePhoto">
+      <text class="add-icon">+</text>
+      <text class="add-text">添加照片</text>
+    </view>
+    
+    <!-- 照片列表 -->
+    <view 
+      class="photo-item"
+      wx:for="{{photos}}"
+      wx:key="*this"
+    >
+      <image src="{{item}}" mode="aspectFill" />
+      <view class="delete-btn" catchtap="onDeletePhoto" data-index="{{index}}">
+        <text>✕</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 底部发送栏 -->
+  <view class="bottom-bar safe-area-bottom">
+    <text class="selected-count">已选择 {{photos.length}} 张</text>
+    <button class="send-btn btn-primary" bindtap="onSendPhotos">
+      发送
+    </button>
+  </view>
+</view>

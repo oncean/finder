@@ -1,0 +1,60 @@
+<view class="shop-select-page">
+  <view class="top-nav">
+    <view class="back-btn" bindtap="onBack">‹</view>
+    <text class="nav-title">选择店铺</text>
+    <view class="menu-placeholder"></view>
+  </view>
+  
+  <view class="search-bar">
+    <input 
+      class="search-input"
+      type="text"
+      placeholder="搜索店铺名称"
+      value="{{keyword}}"
+      bindinput="onSearchInput"
+      bindconfirm="onSearchConfirm"
+    />
+    <view class="search-btn" bindtap="onSearchConfirm">
+      <text>搜索</text>
+    </view>
+  </view>
+  
+  <!-- 店铺列表 -->
+  <scroll-view class="shop-list" scroll-y>
+    <view class="loading" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+    
+    <block wx:for="{{shops}}" wx:key="id">
+      <view 
+        class="shop-item {{selectedShop && selectedShop.id === item.id ? 'selected' : ''}}"
+        bindtap="onSelectShop"
+        data-shop="{{item}}"
+      >
+        <image class="shop-thumb" src="{{item.coverImage || 'http://192.168.2.103/static/default-shop.png'}}" mode="aspectFill" />
+        <view class="shop-info">
+          <text class="shop-name text-bold text-ellipsis">{{item.name}}</text>
+          <text class="shop-address text-muted text-ellipsis">{{item.address}}</text>
+          <view class="shop-meta">
+            <text class="distance text-primary">{{item.distance}}m</text>
+            <text class="review-count text-muted">{{item.reviewCount}}人测评</text>
+          </view>
+        </view>
+        <view class="select-icon" wx:if="{{selectedShop && selectedShop.id === item.id}}">
+          <text>✓</text>
+        </view>
+      </view>
+    </block>
+    
+    <view class="empty" wx:if="{{shops.length === 0 && !loading}}">
+      <text>未找到相关店铺</text>
+    </view>
+  </scroll-view>
+  
+  <!-- 底部发送按钮 -->
+  <view class="bottom-bar safe-area-bottom">
+    <button class="send-btn btn-primary" bindtap="onSendShop">
+      发送店铺卡片
+    </button>
+  </view>
+</view>

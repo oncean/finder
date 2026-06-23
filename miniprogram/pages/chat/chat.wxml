@@ -1,0 +1,63 @@
+<view class="chat-page">
+  <tab-header 
+    active-tab="chat"
+    location="{{groupInfo.district || groupInfo.city || ''}}"
+    group-id="{{groupId}}"
+  />
+  
+  <scroll-view 
+    class="message-list" 
+    scroll-y 
+    scroll-top="{{scrollTop}}"
+    id="message-list"
+    refresher-enabled
+    refresher-triggered="{{refreshing}}"
+    bindrefresherrefresh="onPullDownRefresh"
+  >
+    <view class="loading" wx:if="{{loading}}">加载中...</view>
+    
+    <block wx:for="{{messages}}" wx:key="id">
+      <message-item 
+        message="{{item}}" 
+        isSelf="{{item.sender.id === userId}}"
+        bindtapShop="onTapShopCard"
+      />
+    </block>
+    
+    <view class="empty" wx:if="{{messages.length === 0 && !loading}}">
+      <text>暂无消息，来说点什么吧~</text>
+    </view>
+  </scroll-view>
+  
+  <chat-input 
+    bindsend="onSendMessage"
+    bindshowAddSheet="onShowAddSheet"
+  />
+  
+  <add-sheet 
+    visible="{{showAddSheet}}"
+    bindclose="onCloseAddSheet"
+    bindselectShop="onSelectShop"
+    bindselectPhoto="onSelectPhoto"
+  />
+  
+  <!-- 获取用户信息弹窗 -->
+  <view class="login-modal" wx:if="{{showUserInfoModal}}" bindtap="onCloseUserInfoModal">
+    <view class="login-content" catchtap="stopPropagation">
+      <view class="login-header">
+        <text class="login-title">设置昵称和头像</text>
+        <text class="login-subtitle">请选择一种方式设置您的昵称和头像</text>
+      </view>
+      
+      <button class="login-btn primary" bindtap="getUserProfile">使用微信信息</button>
+      <button class="login-btn secondary" bindtap="useRandomUser">使用随机</button>
+      
+      <view class="login-tip">
+        <text>登录即表示同意</text>
+        <text class="link">《用户协议》</text>
+        <text>和</text>
+        <text class="link">《隐私政策》</text>
+      </view>
+    </view>
+  </view>
+</view>

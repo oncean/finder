@@ -1,0 +1,24 @@
+<view class="shop-card" bindtap="onTap">
+  <view class="shop-main">
+    <image class="shop-cover" src="{{shop.coverImage || 'http://192.168.2.103/static/default-shop.png'}}" mode="aspectFill" />
+    <view class="shop-info">
+      <text class="shop-name text-bold text-ellipsis">{{shop.name}}</text>
+      <text class="shop-address text-muted text-ellipsis">{{shop.address}}</text>
+      <view class="shop-meta" wx:if="{{showDistance}}">
+        <text class="distance text-primary">{{shop.distance}}m</text>
+        <text class="review-count text-muted">{{shop.reviewCount}}人测评</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="shop-summary" wx:if="{{showSummary && (shop.aiSummary || shop.summaryTags)}}">
+    <ai-summary summary="{{shop.aiSummary || shop.summaryTags}}" />
+  </view>
+  
+  <view class="shop-actions" wx:if="{{showDistance}}">
+    <view class="action-btn" catchtap="onNavigate">
+      <image class="icon" src="/static/icons/dingwei.svg" mode="aspectFit" />
+      <text>导航</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "consume-record": "../consume-record/consume-record",
+    "ai-summary": "../ai-summary/ai-summary"
+  }
+}

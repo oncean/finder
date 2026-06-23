@@ -1,0 +1,36 @@
+{
+  "pages": [
+    "pages/chat/chat",
+    "pages/feed/feed",
+    "pages/post-detail/post-detail",
+    "pages/shop-detail/shop-detail",
+    "pages/shop-select/shop-select",
+    "pages/photo-select/photo-select"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#1a1a2e",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "风向标",
+    "navigationStyle": "custom",
+    "backgroundColor": "#f5f5f5"
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于推荐附近美食"
+    }
+  },
+  "usingComponents": {
+    "shop-card": "./components/shop-card/shop-card",
+    "ai-summary": "./components/ai-summary/ai-summary",
+    "consume-record": "./components/consume-record/consume-record",
+    "message-item": "./components/message-item/message-item",
+    "chat-input": "./components/chat-input/chat-input",
+    "add-sheet": "./components/add-sheet/add-sheet",
+    "feed-card": "./components/feed-card/feed-card",
+    "tab-header": "./components/tab-header/tab-header"
+  },
+  "sitemapLocation": "sitemap.json"
+}

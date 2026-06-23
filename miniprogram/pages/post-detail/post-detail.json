@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "评价详情",
+  "usingComponents": {
+    "ai-summary": "../../components/ai-summary/ai-summary"
+  }
+}

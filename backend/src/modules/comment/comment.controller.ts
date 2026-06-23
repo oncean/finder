@@ -24,6 +24,12 @@ export class CommentController {
     return this.commentService.findOne(id);
   }
 
+  @Post()
+  @HttpCode(HttpStatus.OK)
+  async create(@Body() body: any) {
+    return this.commentService.create(body);
+  }
+
   @Put(':id')
   @HttpCode(HttpStatus.OK)
   async update(@Param('id') id: string, @Body() body: any) {

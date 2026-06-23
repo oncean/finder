@@ -1,0 +1,191 @@
+.message-item {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-bottom: 12rpx;
+  padding: 0 20rpx;
+}
+
+.message-item.self {
+  flex-direction: row-reverse;
+}
+
+.message-item .avatar {
+  flex-shrink: 0;
+  margin-right: 12rpx;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+}
+
+.message-item.self .avatar {
+  margin-right: 0;
+  margin-left: 12rpx;
+}
+
+.message-content {
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+.message-item.self .message-content {
+  align-items: flex-end;
+}
+
+.sender-name {
+  font-size: 18rpx;
+  margin-bottom: 4rpx;
+  padding: 0 8rpx;
+}
+
+.bubble {
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.text-bubble {
+  background: #fff;
+  padding: 12rpx 16rpx;
+  font-size: 28rpx;
+  color: #333;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  line-height: 1.4;
+}
+
+.message-item.self .text-bubble {
+  background: #a3e635;
+  color: #1a1a2e;
+}
+
+.image-bubble {
+  background: transparent;
+  max-width: 400rpx;
+}
+
+.image-bubble image {
+  width: 100%;
+  border-radius: 16rpx;
+}
+
+.shop-bubble {
+  background: #fff;
+  padding: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  width: 540rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid #a3e635;
+}
+
+.shop-card-top {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.shop-logo {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 16rpx;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+  background: #f5f5f5;
+}
+
+.shop-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.shop-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.shop-name {
+  font-size: 32rpx;
+  color: #333;
+  flex: 1;
+  min-width: 0;
+}
+
+.rank-badge {
+  background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+  font-size: 20rpx;
+  color: #1a1a2e;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+
+.shop-address-row {
+  display: flex;
+  align-items: center;
+}
+
+.pin-icon {
+  width: 22rpx;
+  height: 22rpx;
+  margin-right: 4rpx;
+  flex-shrink: 0;
+}
+
+.shop-address {
+  font-size: 24rpx;
+  color: #999;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-text {
+  font-size: 24rpx;
+  color: #84cc16;
+  flex-shrink: 0;
+  margin-left: 8rpx;
+}
+
+.shop-summary {
+  padding: 0;
+}
+
+.shop-mini-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reviewer-info {
+  flex: 1;
+}
+
+.review-count {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.view-btn {
+  background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  color: #1a1a2e;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.message-time {
+  font-size: 20rpx;
+  color: #999;
+  margin-top: 4rpx;
+  padding: 0 8rpx;
+}

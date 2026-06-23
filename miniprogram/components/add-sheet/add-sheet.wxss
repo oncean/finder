@@ -1,0 +1,90 @@
+.add-sheet-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.add-sheet-mask.show {
+  opacity: 1;
+}
+
+.add-sheet-content {
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 32rpx;
+  transform: translateY(100%);
+  transition: transform 0.3s;
+}
+
+.add-sheet-mask.show .add-sheet-content {
+  transform: translateY(0);
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+
+.sheet-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.close-btn {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #999;
+}
+
+.sheet-options {
+  display: flex;
+  justify-content: space-around;
+  padding: 20rpx 0 40rpx;
+}
+
+.option-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 48rpx;
+}
+
+.option-icon {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56rpx;
+  margin-bottom: 16rpx;
+}
+
+.shop-icon {
+  background: rgba(163, 230, 53, 0.15);
+}
+
+.photo-icon {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.option-label {
+  font-size: 28rpx;
+  color: #333;
+}

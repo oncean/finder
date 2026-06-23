@@ -44,9 +44,7 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      total,
-      page,
-      limit,
+      success: true,
       data: users.map(user => ({
         id: user.id,
         nickname: user.nickname,
@@ -59,6 +57,7 @@ export class AdminController {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       })),
+      total,
     };
   }
 
@@ -185,9 +184,7 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      total,
-      page,
-      limit,
+      success: true,
       data: admins.map(admin => ({
         id: admin.id,
         username: admin.username,
@@ -198,6 +195,7 @@ export class AdminController {
         createdAt: admin.createdAt,
         updatedAt: admin.updatedAt,
       })),
+      total,
     };
   }
 
@@ -348,9 +346,7 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      total,
-      page,
-      limit,
+      success: true,
       data: posts.map(post => ({
         id: post.id,
         title: post.title,
@@ -377,6 +373,7 @@ export class AdminController {
         eventTime: post.eventTime,
         createdAt: post.createdAt,
       })),
+      total,
     };
   }
 
@@ -498,9 +495,7 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      total,
-      page,
-      limit,
+      success: true,
       data: shops.map(shop => ({
         id: shop.id,
         name: shop.name,
@@ -517,6 +512,7 @@ export class AdminController {
         isVerified: shop.isVerified,
         createdAt: shop.createdAt,
       })),
+      total,
     };
   }
 

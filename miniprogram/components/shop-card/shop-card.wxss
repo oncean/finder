@@ -1,0 +1,83 @@
+.shop-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.shop-main {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.shop-cover {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.shop-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-name {
+  font-size: 32rpx;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.shop-address {
+  font-size: 26rpx;
+  margin-bottom: 12rpx;
+}
+
+.shop-meta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.distance {
+  font-size: 26rpx;
+  font-weight: bold;
+  margin-right: 20rpx;
+}
+
+.review-count {
+  font-size: 24rpx;
+}
+
+.shop-summary {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.shop-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 20rpx;
+  background: rgba(163, 230, 53, 0.1);
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  color: #65a30d;
+}
+
+.action-btn .icon {
+  width: 24rpx;
+  height: 24rpx;
+  margin-right: 6rpx;
+}

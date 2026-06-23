@@ -1,0 +1,128 @@
+.chat-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #fff;
+}
+
+.message-list {
+  flex: 1;
+  padding: 10rpx 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.chat-input-bar {
+  flex-shrink: 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 20rpx;
+  color: #999;
+  font-size: 24rpx;
+}
+
+.empty {
+  text-align: center;
+  padding: 100rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 登录弹窗样式 */
+.login-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.login-content {
+  width: 100%;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 60rpx 48rpx 80rpx;
+  box-sizing: border-box;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 60rpx;
+}
+
+.login-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.login-subtitle {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.login-btn {
+  width: 100%;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+  margin-bottom: 28rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.login-btn.primary {
+  background: linear-gradient(135deg, #07c160 0%, #10b981 100%);
+  color: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.35);
+}
+
+.login-btn.primary:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(7, 193, 96, 0.3);
+}
+
+.login-btn.secondary {
+  background: #fff;
+  color: #07c160;
+  border: 2rpx solid #e8f5e9;
+}
+
+.login-btn.secondary:active {
+  background: #f0fff4;
+  transform: scale(0.98);
+}
+
+.login-tip {
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 32rpx;
+}
+
+.login-tip .link {
+  color: #576b95;
+}
+
+.close-btn {
+  text-align: center;
+  padding: 24rpx;
+}
+
+.close-btn text {
+  font-size: 28rpx;
+  color: #999;
+}

@@ -1,0 +1,50 @@
+<view class="tab-header">
+  <view class="tab-bar">
+    <view
+      class="tab-item {{activeTab === 'chat' ? 'active' : ''}}"
+      bindtap="onTabChange"
+      data-tab="chat"
+    >
+      <image class="tab-img" wx:if="{{activeTab === 'chat'}}" src="/static/images/chihewanle.png" mode="heightFix" />
+      <text class="tab-text" wx:else>吃喝玩乐</text>
+      <view class="tab-indicator" wx:if="{{activeTab === 'chat'}}"></view>
+    </view>
+    <view
+      class="tab-item {{activeTab === 'feed' ? 'active' : ''}}"
+      bindtap="onTabChange"
+      data-tab="feed"
+    >
+      <image class="tab-img" wx:if="{{activeTab === 'feed'}}" src="/static/images/fengxiangbiao.png" mode="heightFix" />
+      <text class="tab-text" wx:else>风向标</text>
+      <view class="tab-indicator" wx:if="{{activeTab === 'feed'}}"></view>
+    </view>
+  </view>
+  
+  <view class="header-info" wx:if="{{activeTab === 'chat'}}">
+    <view class="location-info">
+      <image class="location-icon" src="/static/icons/dingwei.svg" mode="aspectFit" />
+      <text class="location-text">{{location || '定位中...'}}</text>
+    </view>
+    <view class="online-info">
+      <view class="online-count-wrap">
+        <text class="online-count">{{onlineCount}}人</text>
+      </view>
+      <view class="online-avatars" wx:if="{{onlineUsers.length > 0}}">
+        <image
+          wx:for="{{onlineUsers}}"
+          wx:key="id"
+          class="avatar-preview"
+          src="{{item.avatar || 'http://192.168.2.103/static/default-avatar.png'}}"
+          mode="aspectFill"
+        />
+      </view>
+    </view>
+  </view>
+  
+  <view class="header-info feed-info" wx:if="{{false && activeTab === 'feed'}}">
+    <view class="location-tag">
+      <image class="location-icon" src="/static/icons/dingwei.svg" mode="aspectFit" />
+      <text>附近推荐</text>
+    </view>
+  </view>
+</view>
