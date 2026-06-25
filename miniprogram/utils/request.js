@@ -3,8 +3,6 @@ const BASE_URL = 'http://localhost:3000/api/v1';
 function request(options) {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('token');
-    console.log(`[Request] ${options.method || 'GET'} ${options.url}, token: ${token ? '存在' : '不存在'}`);
-    
     wx.request({
       url: BASE_URL + options.url,
       method: options.method || 'GET',
@@ -14,25 +12,34 @@ function request(options) {
         'Content-Type': 'application/json'
       },
       success: (res) => {
-        console.log(`[Response] ${options.url}, statusCode: ${res.statusCode}, data:`, res.data);
-        
+        // 401 登录过期
         if (res.statusCode === 401) {
           wx.removeStorageSync('token');
           wx.showToast({ title: '登录已过期，请重新登录', icon: 'none' });
           reject(new Error('登录已过期'));
           return;
         }
-        
-        if (res.data && res.data.code === 0) {
-          resolve(res.data.data);
-        } else {
-          const msg = res.data ? res.data.message : '请求失败';
+
+        // HTTP 状态码错误
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          const msg = res.data && res.data.message ? res.data.message : '请求失败';
           wx.showToast({ title: msg, icon: 'none' });
-          reject(res.data || new Error(msg));
+          reject(new Error(msg));
+          return;
         }
+
+        // 业务错误（后端返回 { code, message }）
+        if (res.data && res.data.code !== undefined) {
+          const msg = res.data.message || '请求失败';
+          wx.showToast({ title: msg, icon: 'none' });
+          reject(res.data);
+          return;
+        }
+
+        // 成功：返回 data 字段
+        resolve(res.data && res.data.data !== undefined ? res.data.data : res.data);
       },
       fail: (err) => {
-        console.error('[Request Failed]', options.url, err);
         wx.showToast({ title: '网络错误', icon: 'none' });
         reject(err);
       }
@@ -58,11 +65,8 @@ module.exports = {
         },
         success: (res) => {
           const data = JSON.parse(res.data);
-          if (data.code === 0) {
-            resolve(data.data);
-          } else {
-            reject(data);
-          }
+          // 上传接口返回原始数据
+          resolve(data);
         },
         fail: reject
       });

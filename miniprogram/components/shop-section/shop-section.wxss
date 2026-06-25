@@ -1,0 +1,104 @@
+.shop-section {
+  margin: 24rpx 30rpx 30rpx;
+  padding: 22rpx 24rpx 24rpx;
+  border: 2rpx solid #d8f99b;
+  border-radius: 24rpx;
+  background: linear-gradient(180deg, #fff 0%, #fbfff6 100%);
+}
+
+.shop-top {
+  display: flex;
+  align-items: center;
+}
+
+.shop-thumb {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 8rpx;
+  margin-right: 14rpx;
+}
+
+.shop-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.shop-name {
+  display: block;
+  color: #1f2933;
+  font-size: 29rpx;
+  line-height: 1.2;
+  margin-bottom: 4rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.shop-location {
+  display: flex;
+  align-items: center;
+  color: #9ca3af;
+  font-size: 20rpx;
+}
+
+.pin {
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 6rpx;
+}
+
+.nav-text {
+  color: #9bd625;
+  font-weight: 700;
+  margin-left: 4rpx;
+}
+
+.ai-summary-wrap {
+  margin-top: 24rpx;
+}
+
+.shop-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24rpx;
+}
+
+.comment-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.comment-avatars {
+  display: flex;
+  align-items: center;
+}
+
+.comment-avatar {
+  width: 39rpx;
+  height: 39rpx;
+  border-radius: 50%;
+  border: 2rpx solid #fff;
+}
+
+.comment-avatar.overlap {
+  margin-left: -13rpx;
+}
+
+.comment-text {
+  margin-left: 14rpx;
+  color: #9ca3af;
+  font-size: 23rpx;
+}
+
+.view-btn {
+  min-width: 106rpx;
+  height: 52rpx;
+  line-height: 52rpx;
+  border-radius: 999rpx;
+  text-align: center;
+  background: #020617;
+  color: #a3e635;
+  font-size: 20rpx;
+  font-weight: 800;
+  font-style: italic;
+}

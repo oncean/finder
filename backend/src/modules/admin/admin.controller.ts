@@ -1,12 +1,18 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus, HttpException, Req } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
 import { Admin } from '../../entities/admin.entity';
 import { Shop } from '../../entities/shop.entity';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import * as bcrypt from 'bcrypt';
-import { Post as PostEntity } from '../../entities/post.entity';
+import { Message } from '../../entities/message.entity';
+import { ChatGroup } from '../../entities/chat-group.entity';
+import { ChatOnlineUser } from '../../entities/chat-online-user.entity';
+import { assertCanDeleteEntity } from '../../common/utils/delete-dependency.util';
+import * as fs from 'fs';
+import * as path from 'path';
+import { Request } from 'express';
 
 @Controller('admin')
 @UseGuards(AuthGuard)
@@ -16,10 +22,15 @@ export class AdminController {
     private userRepo: Repository<User>,
     @InjectRepository(Admin)
     private adminRepo: Repository<Admin>,
-    @InjectRepository(PostEntity)
-    private postRepo: Repository<PostEntity>,
     @InjectRepository(Shop)
     private shopRepo: Repository<Shop>,
+    @InjectRepository(Message)
+    private messageRepo: Repository<Message>,
+    @InjectRepository(ChatGroup)
+    private chatGroupRepo: Repository<ChatGroup>,
+    @InjectRepository(ChatOnlineUser)
+    private chatOnlineUserRepo: Repository<ChatOnlineUser>,
+    private dataSource: DataSource,
   ) {}
 
   @Get('users')
@@ -66,7 +77,7 @@ export class AdminController {
     const user = await this.userRepo.findOne({ where: { id } });
     
     if (!user) {
-      return { success: false, message: '用户不存在' };
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
     }
 
     return {
@@ -119,7 +130,7 @@ export class AdminController {
     const user = await this.userRepo.findOne({ where: { id } });
     
     if (!user) {
-      return { success: false, message: '用户不存在' };
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
     }
 
     if (body.nickname !== undefined) user.nickname = body.nickname;
@@ -148,11 +159,15 @@ export class AdminController {
   @Delete('users/:id')
   async deleteUser(@Param('id') id: string) {
     const user = await this.userRepo.findOne({ where: { id } });
-    
+
     if (!user) {
-      return { success: false, message: '用户不存在' };
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
     }
 
+    // 级联删除聊天在线用户关联记录
+    await this.chatOnlineUserRepo.delete({ userId: id });
+
+    await assertCanDeleteEntity(this.dataSource, this.userRepo.metadata, id, '用户');
     await this.userRepo.remove(user);
 
     return {
@@ -204,7 +219,7 @@ export class AdminController {
     const admin = await this.adminRepo.findOne({ where: { id } });
     
     if (!admin) {
-      return { success: false, message: '管理员不存在' };
+      throw new HttpException('管理员不存在', HttpStatus.BAD_REQUEST);
     }
 
     return {
@@ -228,7 +243,7 @@ export class AdminController {
     const existing = await this.adminRepo.findOne({ where: { username: body.username } });
     
     if (existing) {
-      return { success: false, message: '用户名已存在' };
+      throw new HttpException('用户名已存在', HttpStatus.BAD_REQUEST);
     }
 
     const hashedPassword = await bcrypt.hash(body.password, 10);
@@ -264,13 +279,13 @@ export class AdminController {
     const admin = await this.adminRepo.findOne({ where: { id } });
     
     if (!admin) {
-      return { success: false, message: '管理员不存在' };
+      throw new HttpException('管理员不存在', HttpStatus.BAD_REQUEST);
     }
 
     if (body.username !== undefined) {
       const existing = await this.adminRepo.findOne({ where: { username: body.username } });
       if (existing && existing.id !== id) {
-        return { success: false, message: '用户名已存在' };
+        throw new HttpException('用户名已存在', HttpStatus.BAD_REQUEST);
       }
       admin.username = body.username;
     }
@@ -306,7 +321,7 @@ export class AdminController {
     const admin = await this.adminRepo.findOne({ where: { id } });
     
     if (!admin) {
-      return { success: false, message: '管理员不存在' };
+      throw new HttpException('管理员不存在', HttpStatus.BAD_REQUEST);
     }
 
     await this.adminRepo.remove(admin);
@@ -314,157 +329,6 @@ export class AdminController {
     return {
       success: true,
       message: '管理员删除成功',
-    };
-  }
-
-  @Get('posts')
-  async getPosts(
-    @Query('current') current: any = 1,
-    @Query('pageSize') pageSize: any = 10,
-    @Query('keyword') keyword: string = '',
-    @Query('authorId') authorId: string = '',
-  ) {
-    const page = parseInt(current, 10) || 1;
-    const limit = parseInt(pageSize, 10) || 10;
-    const query = this.postRepo.createQueryBuilder('post')
-      .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('post.shop', 'shop');
-    
-    if (keyword) {
-      query.where('post.title LIKE :keyword', { keyword: `%${keyword}%` })
-        .orWhere('post.content LIKE :keyword', { keyword: `%${keyword}%` });
-    }
-    
-    if (authorId) {
-      query.andWhere('post.authorId = :authorId', { authorId });
-    }
-
-    const [posts, total] = await query
-      .skip((page - 1) * limit)
-      .take(limit)
-      .orderBy('post.createdAt', 'DESC')
-      .getManyAndCount();
-
-    return {
-      success: true,
-      data: posts.map(post => ({
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        images: post.images,
-        coverImage: post.coverImage,
-        authorId: post.authorId,
-        author: post.author ? {
-          id: post.author.id,
-          nickname: post.author.nickname,
-          avatar: post.author.avatar,
-        } : null,
-        shopId: post.shopId,
-        shop: post.shop ? {
-          id: post.shop.id,
-          name: post.shop.name,
-          logo: post.shop.logo,
-        } : null,
-        consumeRecord: post.consumeRecord,
-        reviewCount: post.reviewCount,
-        isRecommended: post.isRecommended,
-        recommendRank: post.recommendRank,
-        location: post.location,
-        eventTime: post.eventTime,
-        createdAt: post.createdAt,
-      })),
-      total,
-    };
-  }
-
-  @Get('posts/:id')
-  async getPost(@Param('id') id: string) {
-    const post = await this.postRepo.findOne({
-      where: { id },
-      relations: ['author', 'shop'],
-    });
-    
-    if (!post) {
-      return { success: false, message: '帖子不存在' };
-    }
-
-    return {
-      success: true,
-      data: {
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        images: post.images,
-        coverImage: post.coverImage,
-        authorId: post.authorId,
-        author: post.author ? {
-          id: post.author.id,
-          nickname: post.author.nickname,
-          avatar: post.author.avatar,
-        } : null,
-        shopId: post.shopId,
-        shop: post.shop ? {
-          id: post.shop.id,
-          name: post.shop.name,
-          logo: post.shop.logo,
-        } : null,
-        consumeRecord: post.consumeRecord,
-        reviewCount: post.reviewCount,
-        isRecommended: post.isRecommended,
-        recommendRank: post.recommendRank,
-        location: post.location,
-        eventTime: post.eventTime,
-        createdAt: post.createdAt,
-      },
-    };
-  }
-
-  @Put('posts/:id')
-  async updatePost(@Param('id') id: string, @Body() body: any) {
-    const post = await this.postRepo.findOne({ where: { id } });
-    
-    if (!post) {
-      return { success: false, message: '帖子不存在' };
-    }
-
-    if (body.title !== undefined) post.title = body.title;
-    if (body.content !== undefined) post.content = body.content;
-    if (body.images !== undefined) post.images = body.images;
-    if (body.coverImage !== undefined) post.coverImage = body.coverImage;
-    if (body.shopId !== undefined) post.shopId = body.shopId;
-    if (body.isRecommended !== undefined) post.isRecommended = body.isRecommended;
-    if (body.recommendRank !== undefined) post.recommendRank = body.recommendRank;
-    if (body.location !== undefined) post.location = body.location;
-    if (body.eventTime !== undefined) post.eventTime = body.eventTime;
-
-    await this.postRepo.save(post);
-
-    return {
-      success: true,
-      message: '帖子更新成功',
-      data: {
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        isRecommended: post.isRecommended,
-        recommendRank: post.recommendRank,
-      },
-    };
-  }
-
-  @Delete('posts/:id')
-  async deletePost(@Param('id') id: string) {
-    const post = await this.postRepo.findOne({ where: { id } });
-    
-    if (!post) {
-      return { success: false, message: '帖子不存在' };
-    }
-
-    await this.postRepo.remove(post);
-
-    return {
-      success: true,
-      message: '帖子删除成功',
     };
   }
 
@@ -502,6 +366,7 @@ export class AdminController {
         category: shop.category,
         address: shop.address,
         location: shop.location,
+        city: shop.city,
         coverImage: shop.coverImage,
         logo: shop.logo,
         phone: shop.phone,
@@ -521,7 +386,7 @@ export class AdminController {
     const shop = await this.shopRepo.findOne({ where: { id } });
     
     if (!shop) {
-      return { success: false, message: '商家不存在' };
+      throw new HttpException('商家不存在', HttpStatus.BAD_REQUEST);
     }
 
     return {
@@ -532,6 +397,7 @@ export class AdminController {
         category: shop.category,
         address: shop.address,
         location: shop.location,
+        city: shop.city,
         coverImage: shop.coverImage,
         logo: shop.logo,
         phone: shop.phone,
@@ -553,6 +419,7 @@ export class AdminController {
       category: body.category,
       address: body.address,
       location: body.location,
+      city: body.city,
       coverImage: body.coverImage,
       logo: body.logo,
       phone: body.phone,
@@ -584,13 +451,14 @@ export class AdminController {
     const shop = await this.shopRepo.findOne({ where: { id } });
     
     if (!shop) {
-      return { success: false, message: '商家不存在' };
+      throw new HttpException('商家不存在', HttpStatus.BAD_REQUEST);
     }
 
     if (body.name !== undefined) shop.name = body.name;
     if (body.category !== undefined) shop.category = body.category;
     if (body.address !== undefined) shop.address = body.address;
     if (body.location !== undefined) shop.location = body.location;
+    if (body.city !== undefined) shop.city = body.city;
     if (body.coverImage !== undefined) shop.coverImage = body.coverImage;
     if (body.logo !== undefined) shop.logo = body.logo;
     if (body.phone !== undefined) shop.phone = body.phone;
@@ -619,14 +487,483 @@ export class AdminController {
     const shop = await this.shopRepo.findOne({ where: { id } });
     
     if (!shop) {
-      return { success: false, message: '商家不存在' };
+      throw new HttpException('商家不存在', HttpStatus.BAD_REQUEST);
     }
 
+    await assertCanDeleteEntity(this.dataSource, this.shopRepo.metadata, id, '店铺');
     await this.shopRepo.remove(shop);
 
     return {
       success: true,
       message: '商家删除成功',
     };
+  }
+
+  // ---- 消息管理 ----
+
+  @Get('messages')
+  async getMessages(
+    @Query('current') current: any = 1,
+    @Query('pageSize') pageSize: any = 10,
+    @Query('type') type: string = '',
+    @Query('keyword') keyword: string = '',
+  ) {
+    const page = parseInt(current, 10) || 1;
+    const limit = parseInt(pageSize, 10) || 10;
+    const query = this.messageRepo.createQueryBuilder('msg')
+      .leftJoinAndSelect('msg.sender', 'sender')
+      .leftJoinAndSelect('msg.group', 'group')
+      .leftJoinAndSelect('msg.shop', 'shop');
+
+    if (type) {
+      query.andWhere('msg.type = :type', { type });
+    }
+
+    if (keyword) {
+      query.andWhere('msg.content LIKE :keyword', { keyword: `%${keyword}%` });
+    }
+
+    const [messages, total] = await query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('msg.createdAt', 'DESC')
+      .getManyAndCount();
+
+    return {
+      success: true,
+      data: messages.map(msg => ({
+        id: msg.id,
+        type: msg.type,
+        content: msg.content,
+        shopId: msg.shopId,
+        shopCard: msg.type === 'shop_card' ? this.formatMessageShopCard(msg.shop) : null,
+        groupId: msg.groupId,
+        group: msg.group ? { id: msg.group.id, name: msg.group.name } : null,
+        senderId: msg.senderId,
+        sender: msg.sender ? {
+          id: msg.sender.id,
+          nickname: msg.sender.nickname,
+          avatar: msg.sender.avatar,
+        } : null,
+        createdAt: msg.createdAt,
+      })),
+      total,
+    };
+  }
+
+  @Post('messages/send')
+  @HttpCode(HttpStatus.OK)
+  async sendMessage(@Body() body: any) {
+    const { type, content, shopCard, shopId, groupId, senderId } = body;
+
+    if (!type) {
+      throw new HttpException('消息类型不能为空', HttpStatus.BAD_REQUEST);
+    }
+
+    if (!['text', 'image', 'shop_card'].includes(type)) {
+      throw new HttpException('消息类型无效，仅支持 text/image/shop_card', HttpStatus.BAD_REQUEST);
+    }
+
+    if (type === 'text' && !content) {
+      throw new HttpException('文本消息内容不能为空', HttpStatus.BAD_REQUEST);
+    }
+
+    if (type === 'image' && !content) {
+      throw new HttpException('图片URL不能为空', HttpStatus.BAD_REQUEST);
+    }
+
+    const finalShopId = type === 'shop_card' ? shopId || shopCard?.shopId || content : null;
+
+    if (type === 'shop_card' && !finalShopId) {
+      throw new HttpException('店铺ID不能为空', HttpStatus.BAD_REQUEST);
+    }
+
+    // 查找或创建系统通知群组
+    let group = await this.chatGroupRepo.findOne({ where: { name: '系统通知' } });
+    if (!group) {
+      group = this.chatGroupRepo.create({
+        name: '系统通知',
+        city: '全国',
+        district: '系统',
+      });
+      await this.chatGroupRepo.save(group);
+    }
+
+    const targetGroupId = groupId || group.id;
+
+    let sender: User;
+
+    if (senderId) {
+      sender = await this.userRepo.findOne({ where: { id: senderId } });
+      if (!sender) {
+        throw new HttpException('发送用户不存在', HttpStatus.BAD_REQUEST);
+      }
+    }
+
+    if (!sender) {
+      // 创建一个系统发送者
+      sender = this.userRepo.create({
+        nickname: '系统管理员',
+        isAdmin: true,
+      });
+      await this.userRepo.save(sender);
+    }
+
+    let shopEntity: Shop;
+    if (type === 'shop_card') {
+      shopEntity = await this.shopRepo.findOne({ where: { id: finalShopId } });
+      if (!shopEntity) {
+        throw new HttpException('店铺不存在', HttpStatus.BAD_REQUEST);
+      }
+    }
+
+    const message = this.messageRepo.create({
+      groupId: targetGroupId,
+      senderId: sender.id,
+      type,
+      content: type === 'text' ? content : (type === 'image' ? content : null),
+      shopId: type === 'shop_card' ? finalShopId : null,
+    });
+
+    await this.messageRepo.save(message);
+
+    return {
+      success: true,
+      message: '消息发送成功',
+      data: {
+        id: message.id,
+        type: message.type,
+        content: message.content,
+        shopId: message.shopId,
+        shopCard: type === 'shop_card' ? this.formatMessageShopCard(shopEntity) : null,
+        sender: {
+          id: sender.id,
+          nickname: sender.nickname,
+          avatar: sender.avatar,
+        },
+        createdAt: message.createdAt,
+      },
+    };
+  }
+
+  private formatMessageShopCard(shop: Shop) {
+    if (!shop) {
+      return null;
+    }
+
+    return {
+      shopId: shop.id,
+      name: shop.name,
+      address: shop.address,
+      coverImage: shop.coverImage,
+      distance: 0,
+      summaryTags: shop.summaryTags,
+      reviewCount: shop.reviewCount,
+      rating: shop.rating,
+    };
+  }
+
+  @Delete('messages/:id')
+  async deleteMessage(@Param('id') id: string) {
+    const message = await this.messageRepo.findOne({ where: { id } });
+    
+    if (!message) {
+      throw new HttpException('消息不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    await this.messageRepo.remove(message);
+
+    return {
+      success: true,
+      message: '消息删除成功',
+    };
+  }
+
+  // ---- 群组管理 ----
+
+  @Get('chat-groups')
+  async getChatGroups(
+    @Query('current') current: any = 1,
+    @Query('pageSize') pageSize: any = 10,
+    @Query('keyword') keyword: string = '',
+  ) {
+    const page = parseInt(current, 10) || 1;
+    const limit = parseInt(pageSize, 10) || 10;
+    const query = this.chatGroupRepo.createQueryBuilder('group');
+    
+    if (keyword) {
+      query.where('group.name LIKE :keyword', { keyword: `%${keyword}%` })
+        .orWhere('group.city LIKE :keyword', { keyword: `%${keyword}%` })
+        .orWhere('group.district LIKE :keyword', { keyword: `%${keyword}%` });
+    }
+
+    const [groups, total] = await query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('group.createdAt', 'DESC')
+      .getManyAndCount();
+
+    return {
+      success: true,
+      data: await Promise.all(groups.map(async (group) => ({
+        id: group.id,
+        name: group.name,
+        city: group.city,
+        district: group.district,
+        onlineCount: await this.countChatGroupOnlineUsers(group.id),
+        createdAt: group.createdAt,
+      }))),
+      total,
+    };
+  }
+
+  private async countChatGroupOnlineUsers(groupId: string) {
+    return this.chatOnlineUserRepo.count({
+      where: { groupId, isOnline: true },
+    });
+  }
+
+  @Get('chat-groups/:id/online-users')
+  async getChatGroupOnlineUsers(@Param('id') id: string) {
+    const group = await this.chatGroupRepo.findOne({ where: { id } });
+
+    if (!group) {
+      throw new HttpException('群组不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    const onlineUsers = await this.chatOnlineUserRepo.find({
+      where: { groupId: id, isOnline: true },
+      relations: ['user'],
+      order: { updatedAt: 'DESC' },
+    });
+
+    return {
+      success: true,
+      data: onlineUsers.map((item) => ({
+        id: item.id,
+        groupId: item.groupId,
+        userId: item.userId,
+        isOnline: item.isOnline,
+        lastActiveAt: item.lastActiveAt,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        user: item.user ? {
+          id: item.user.id,
+          nickname: item.user.nickname,
+          avatar: item.user.avatar,
+          phone: item.user.phone,
+        } : null,
+      })),
+      total: onlineUsers.length,
+    };
+  }
+
+  @Post('chat-groups/:id/online-users')
+  @HttpCode(HttpStatus.OK)
+  async addChatGroupOnlineUser(@Param('id') id: string, @Body() body: any) {
+    if (!body.userId) {
+      throw new HttpException('请选择在线用户', HttpStatus.BAD_REQUEST);
+    }
+
+    const group = await this.chatGroupRepo.findOne({ where: { id } });
+    if (!group) {
+      throw new HttpException('群组不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: body.userId } });
+    if (!user) {
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    let onlineUser = await this.chatOnlineUserRepo.findOne({
+      where: { groupId: id, userId: body.userId },
+    });
+
+    if (onlineUser) {
+      onlineUser.isOnline = true;
+      onlineUser.lastActiveAt = new Date();
+    } else {
+      onlineUser = this.chatOnlineUserRepo.create({
+        groupId: id,
+        userId: body.userId,
+        isOnline: true,
+        lastActiveAt: new Date(),
+      });
+    }
+
+    await this.chatOnlineUserRepo.save(onlineUser);
+
+    return {
+      success: true,
+      message: '在线用户添加成功',
+      data: {
+        id: onlineUser.id,
+        groupId: onlineUser.groupId,
+        userId: onlineUser.userId,
+        isOnline: onlineUser.isOnline,
+        group: {
+          id,
+          onlineCount: await this.countChatGroupOnlineUsers(id),
+        },
+      },
+    };
+  }
+
+  @Delete('chat-groups/:id/online-users/:userId')
+  async deleteChatGroupOnlineUser(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+  ) {
+    const group = await this.chatGroupRepo.findOne({ where: { id } });
+    if (!group) {
+      throw new HttpException('群组不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    await this.chatOnlineUserRepo.delete({ groupId: id, userId });
+
+    return {
+      success: true,
+      message: '在线用户删除成功',
+      data: {
+        groupId: id,
+        onlineCount: await this.countChatGroupOnlineUsers(id),
+      },
+    };
+  }
+
+  @Get('chat-groups/:id')
+  async getChatGroup(@Param('id') id: string) {
+    const group = await this.chatGroupRepo.findOne({ where: { id } });
+    
+    if (!group) {
+      throw new HttpException('群组不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    return {
+      success: true,
+      data: {
+        id: group.id,
+        name: group.name,
+        city: group.city,
+        district: group.district,
+        onlineCount: await this.countChatGroupOnlineUsers(group.id),
+        createdAt: group.createdAt,
+      },
+    };
+  }
+
+  @Post('chat-groups')
+  @HttpCode(HttpStatus.OK)
+  async createChatGroup(@Body() body: any) {
+    if (!body.name) {
+      throw new HttpException('群组名称不能为空', HttpStatus.BAD_REQUEST);
+    }
+
+    const group = this.chatGroupRepo.create({
+      name: body.name,
+      city: body.city || '',
+      district: body.district || '',
+    });
+
+    await this.chatGroupRepo.save(group);
+
+    return {
+      success: true,
+      message: '群组创建成功',
+      data: {
+        id: group.id,
+        name: group.name,
+        city: group.city,
+        district: group.district,
+        onlineCount: 0,
+        createdAt: group.createdAt,
+      },
+    };
+  }
+
+  @Put('chat-groups/:id')
+  async updateChatGroup(@Param('id') id: string, @Body() body: any) {
+    const group = await this.chatGroupRepo.findOne({ where: { id } });
+    
+    if (!group) {
+      throw new HttpException('群组不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    if (body.name !== undefined) group.name = body.name;
+    if (body.city !== undefined) group.city = body.city;
+    if (body.district !== undefined) group.district = body.district;
+
+    await this.chatGroupRepo.save(group);
+
+    return {
+      success: true,
+      message: '群组更新成功',
+      data: {
+        id: group.id,
+        name: group.name,
+        city: group.city,
+        district: group.district,
+        onlineCount: await this.countChatGroupOnlineUsers(group.id),
+        createdAt: group.createdAt,
+      },
+    };
+  }
+
+  @Delete('chat-groups/:id')
+  async deleteChatGroup(@Param('id') id: string) {
+    const group = await this.chatGroupRepo.findOne({ where: { id } });
+    
+    if (!group) {
+      throw new HttpException('群组不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    await assertCanDeleteEntity(this.dataSource, this.chatGroupRepo.metadata, id, '群组');
+    await this.chatGroupRepo.remove(group);
+
+    return {
+      success: true,
+      message: '群组删除成功',
+    };
+  }
+
+  @Get('random-avatar')
+  async getRandomAvatar(@Req() req: Request) {
+    const avatarDir = 'D:\\developer\\code\\finder\\assets\\avatar';
+    
+    try {
+      const files = fs.readdirSync(avatarDir).filter(f => 
+        /\.(png|jpg|jpeg|gif|webp)$/i.test(f)
+      );
+      
+      if (files.length === 0) {
+        return { success: false, message: '头像目录为空' };
+      }
+      
+      const randomFile = files[Math.floor(Math.random() * files.length)];
+      const filePath = path.join(avatarDir, randomFile);
+      
+      // 复制到 uploads 目录并返回 URL
+      const uploadsDir = process.env.UPLOAD_DIR || './uploads';
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const destFileName = `avatar-${uniqueSuffix}${path.extname(randomFile)}`;
+      const destPath = path.join(uploadsDir, destFileName);
+      
+      fs.copyFileSync(filePath, destPath);
+      
+      const host = req.protocol + '://' + req.get('host');
+      const url = `${host}/uploads/${destFileName}`;
+      
+      return {
+        success: true,
+        url,
+        filename: destFileName,
+      };
+    } catch (error) {
+      return { success: false, message: '获取随机头像失败: ' + error.message };
+    }
   }
 }

@@ -17,6 +17,10 @@ export class SendMessageDto {
   @IsOptional()
   content?: string;
 
+  @IsString()
+  @IsOptional()
+  shopId?: string;
+
   @IsOptional()
   shopCard?: {
     shopId: string;

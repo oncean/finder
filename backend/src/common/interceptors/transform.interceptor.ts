@@ -19,15 +19,13 @@ export class TransformInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map(data => {
-        // 如果 controller 已经返回了标准格式，直接透传
+        // 如果 controller 返回了包含 success 的对象，剥离 success 字段
         if (data && typeof data === 'object' && 'success' in data) {
-          return data;
+          const { success, ...rest } = data;
+          return rest;
         }
-        // 否则包装成前端期望的格式
-        return {
-          success: true,
-          data,
-        };
+        // 否则包装到 data 字段
+        return { data };
       }),
     );
   }

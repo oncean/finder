@@ -1,6 +1,7 @@
 // 配置文件 - 统一管理API地址
-const API_BASE = 'http://127.0.0.1:3000';
-const WS_BASE = 'ws://127.0.0.1:3002';
+// 使用 localhost，小程序开发工具需要开启「不校验合法域名」
+const API_BASE = 'http://localhost:3000';
+const WS_BASE = 'ws://localhost:3000';
 
 module.exports = {
   API_BASE,

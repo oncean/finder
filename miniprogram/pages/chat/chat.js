@@ -269,7 +269,7 @@ Page({
   onTapShopCard(e) {
     const { shopId } = e.detail;
     wx.navigateTo({
-      url: `/pages/shop-detail/shop-detail?id=${shopId}`
+      url: `/pages/comment-detail/comment-detail?id=${shopId}`
     });
   },
 

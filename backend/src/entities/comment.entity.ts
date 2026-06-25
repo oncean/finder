@@ -42,6 +42,12 @@ export class Comment {
   @Column({ type: 'int', default: 0, name: 'like_count' })
   likeCount: number;
 
+  @Column({ type: 'boolean', default: false, name: 'is_fengxiangbiao' })
+  isFengxiangbiao: boolean;
+
+  @Column({ type: 'int', nullable: true, name: 'fengxiangbiao_rank' })
+  fengxiangbiaoRank: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

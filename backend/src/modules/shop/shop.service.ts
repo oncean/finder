@@ -96,6 +96,20 @@ export class ShopService {
       throw new HttpException('店铺不存在', HttpStatus.NOT_FOUND);
     }
 
+    // 查询评论总数
+    const commentCount = await this.commentRepo.count({ where: { shopId: id } });
+
+    // 查询前4条评论的作者头像
+    const recentComments = await this.commentRepo.find({
+      where: { shopId: id },
+      order: { createdAt: 'DESC' },
+      take: 4,
+      relations: ['author'],
+    });
+    const commentAvatars = recentComments
+      .map(c => c.author?.avatar)
+      .filter(Boolean);
+
     return {
       id: shop.id,
       name: shop.name || '南京这家店味道真不错',
@@ -106,10 +120,11 @@ export class ShopService {
       businessHours: '周五01.24 19:30',
       rating: shop.rating,
       reviewCount: Math.max(shop.reviewCount || 0, 6321),
+      commentCount,
+      commentAvatars,
       summaryTags: shop.summaryTags || {
         positive: ['重油重辣'],
         negative: ['太酸了'],
-        averageCost: 22,
       },
       isVerified: shop.isVerified,
       location: shop.location || { lat: 32.0603, lng: 118.7969 },

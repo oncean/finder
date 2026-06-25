@@ -18,9 +18,14 @@
 .back-btn {
   width: 56rpx;
   height: 56rpx;
-  line-height: 48rpx;
-  font-size: 58rpx;
-  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  width: 40rpx;
+  height: 40rpx;
 }
 
 .nav-title {

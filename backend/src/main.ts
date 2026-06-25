@@ -8,9 +8,11 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import * as express from 'express';
 import * as path from 'path';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.useWebSocketAdapter(new WsAdapter(app));
 
   app.enableCors({
     origin: '*',
@@ -18,8 +20,12 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type,Authorization',
   });
 
+  // 系统静态资源（默认图片、字体等）
   app.use('/static', express.static(path.join(__dirname, '..', 'static')));
-  app.use('/uploads', express.static(path.join(__dirname, '..', 'tmp', 'uploads')));
+  
+  // 用户上传文件
+  const uploadDir = process.env.UPLOAD_DIR || './uploads';
+  app.use('/uploads', express.static(path.join(__dirname, '..', uploadDir.replace(/^\.\//, ''))));
 
   app.useGlobalPipes(
     new ValidationPipe({

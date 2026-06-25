@@ -10,14 +10,8 @@ import { SendMessageDto } from './dto/send-message.dto';
 
 @Injectable()
 export class ChatService {
-  private readonly mockOnlineUserCount = 20;
-
   private readonly staticBaseUrl =
     process.env.STATIC_BASE_URL || 'http://192.168.2.103/static';
-
-  private get defaultAvatarImage() {
-    return `${this.staticBaseUrl}/default-avatar.png`;
-  }
 
   constructor(
     @InjectRepository(Message)
@@ -45,15 +39,9 @@ export class ChatService {
   }
 
   async getGroupInfo(groupId: string) {
-    let group = await this.getOrCreateGroup(groupId);
+    const group = await this.getOrCreateGroup(groupId);
     
-    await this.seedMockOnlineUsers(group.id);
     const onlineUsers = await this.getOnlineUsers(group.id);
-    if (group.onlineCount !== onlineUsers.length || group.memberCount < onlineUsers.length) {
-      group.onlineCount = onlineUsers.length;
-      group.memberCount = Math.max(group.memberCount, onlineUsers.length);
-      group = await this.groupRepo.save(group);
-    }
 
     return {
       id: group.id,
@@ -62,13 +50,11 @@ export class ChatService {
       district: group.district,
       onlineCount: onlineUsers.length,
       onlineUsers: onlineUsers.slice(0, 3),
-      memberCount: Math.max(group.memberCount, onlineUsers.length),
     };
   }
 
   async getOnlineUsersByGroupId(groupId: string) {
     const group = await this.getOrCreateGroup(groupId);
-    await this.seedMockOnlineUsers(group.id);
     const onlineUsers = await this.getOnlineUsers(group.id);
 
     return {
@@ -76,59 +62,6 @@ export class ChatService {
       totalCount: onlineUsers.length,
       list: onlineUsers.slice(0, 3),
     };
-  }
-
-  async seedMockOnlineUsers(groupId: string) {
-    await this.migrateLegacyAvatars();
-
-    for (let i = 1; i <= this.mockOnlineUserCount; i++) {
-      const index = String(i).padStart(2, '0');
-      // 优先使用 mock_user_XX（真实用户），否则使用 mock_online_user_XX
-      let user = await this.userRepo.findOne({ 
-        where: { openid: `mock_user_${index}` } 
-      });
-      
-      if (!user) {
-        user = await this.userRepo.findOne({ 
-          where: { openid: `mock_online_user_${index}` } 
-        });
-      }
-
-      if (!user) {
-        user = this.userRepo.create({
-          openid: `mock_user_${index}`,
-          nickname: `用户${index}`,
-          avatar: this.defaultAvatarImage,
-          location: {
-            lat: 32.0603,
-            lng: 118.7969,
-            city: '南京市',
-          },
-        });
-        user = await this.userRepo.save(user);
-      } else if (user.avatar === '/static/images/default-avatar.png') {
-        user.avatar = this.defaultAvatarImage;
-        user = await this.userRepo.save(user);
-      }
-
-      let onlineUser = await this.onlineUserRepo.findOne({
-        where: { groupId, userId: user.id },
-      });
-
-      if (!onlineUser) {
-        onlineUser = this.onlineUserRepo.create({
-          groupId,
-          userId: user.id,
-          isOnline: true,
-          lastActiveAt: new Date(),
-        });
-      } else {
-        onlineUser.isOnline = true;
-        onlineUser.lastActiveAt = new Date();
-      }
-
-      await this.onlineUserRepo.save(onlineUser);
-    }
   }
 
   async getOnlineUsers(groupId: string) {
@@ -151,7 +84,6 @@ export class ChatService {
       : await this.groupRepo.findOne({ where: { name: '吃喝玩乐群' } });
 
     const targetGroup = group || await this.createGroup('吃喝玩乐群', '南京市', '玄武区');
-    await this.seedMockOnlineUsers(targetGroup.id);
     return this.getOnlineUsers(targetGroup.id);
   }
 
@@ -174,37 +106,11 @@ export class ChatService {
       relations: ['sender'],
     });
 
-    const shopCardMessages = messages.filter(
-      (msg) => msg.type === 'shop_card' && (!msg.shopCard || !msg.shopCard.name)
-    );
-
-    if (shopCardMessages.length > 0) {
-      const shopIds = shopCardMessages.map((msg) => msg.content).filter((id) => id && id.trim());
-      if (shopIds.length > 0) {
-        const shops = await this.shopRepo.findByIds(shopIds);
-        const shopMap = new Map(shops.map((shop) => [shop.id, shop]));
-
-        shopCardMessages.forEach((msg) => {
-          const shop = shopMap.get(msg.content);
-          if (shop) {
-            msg.shopCard = {
-              shopId: shop.id,
-              name: shop.name || '南京这家店味道真不错',
-              address: shop.address || '湛山路与望江西路',
-              coverImage: shop.coverImage || `${this.staticBaseUrl}/default-shop.png`,
-              distance: 0,
-              summaryTags: shop.summaryTags || {
-                positive: ['重油重辣'],
-                negative: ['太酸了'],
-                averageCost: 22,
-              },
-              reviewCount: Math.max(shop.reviewCount || 0, 6321),
-              rating: shop.rating || 5.0,
-            };
-          }
-        });
-      }
-    }
+    const shopIds = messages
+      .filter((msg) => msg.type === 'shop_card' && msg.shopId)
+      .map((msg) => msg.shopId);
+    const shops = shopIds.length > 0 ? await this.shopRepo.findByIds(shopIds) : [];
+    const shopMap = new Map(shops.map((shop) => [shop.id, shop]));
 
     return messages.reverse().map(msg => ({
       id: msg.id,
@@ -216,43 +122,27 @@ export class ChatService {
       },
       type: msg.type,
       content: msg.content,
-      shopCard: msg.shopCard,
+      shopId: msg.shopId,
+      shopCard: msg.type === 'shop_card' ? this.formatShopCard(shopMap.get(msg.shopId)) : null,
       createdAt: msg.createdAt,
     }));
   }
 
   async sendMessage(dto: SendMessageDto, senderId: string) {
-    let shopCard = dto.shopCard;
+    const shopId = dto.type === 'shop_card'
+      ? dto.shopId || dto.shopCard?.shopId || dto.content
+      : null;
 
-    if (dto.type === 'shop_card' && !shopCard && dto.content) {
-      const shop = await this.shopRepo.findOne({
-        where: { id: dto.content },
-      });
-
-      if (shop) {
-        shopCard = {
-          shopId: shop.id,
-          name: shop.name || '南京这家店味道真不错',
-          address: shop.address || '湛山路与望江西路',
-          coverImage: shop.coverImage || `${this.staticBaseUrl}/default-shop.png`,
-          distance: 0,
-          summaryTags: shop.summaryTags || {
-            positive: ['重油重辣'],
-            negative: ['太酸了'],
-            averageCost: 22,
-          },
-          reviewCount: Math.max(shop.reviewCount || 0, 6321),
-          rating: shop.rating || 5.0,
-        };
-      }
-    }
+    const shop = shopId
+      ? await this.shopRepo.findOne({ where: { id: shopId } })
+      : null;
 
     const message = this.messageRepo.create({
       groupId: dto.groupId,
       senderId,
       type: dto.type,
       content: dto.type === 'shop_card' ? '' : dto.content,
-      shopCard,
+      shopId,
     });
 
     await this.messageRepo.save(message);
@@ -271,8 +161,29 @@ export class ChatService {
       },
       type: message.type,
       content: message.content,
-      shopCard: message.shopCard,
+      shopId: message.shopId,
+      shopCard: message.type === 'shop_card' ? this.formatShopCard(shop) : null,
       createdAt: message.createdAt,
+    };
+  }
+
+  private formatShopCard(shop: any) {
+    if (!shop) {
+      return null;
+    }
+
+    return {
+      shopId: shop.id,
+      name: shop.name || '南京这家店味道真不错',
+      address: shop.address || '湛山路与望江西路',
+      coverImage: shop.coverImage || `${this.staticBaseUrl}/default-shop.png`,
+      distance: 0,
+      summaryTags: shop.summaryTags || {
+        positive: ['重油重辣'],
+        negative: ['太酸了'],
+      },
+      reviewCount: Math.max(shop.reviewCount || 0, 6321),
+      rating: shop.rating || 5.0,
     };
   }
 
@@ -283,12 +194,5 @@ export class ChatService {
       district,
     });
     return this.groupRepo.save(group);
-  }
-
-  private async migrateLegacyAvatars() {
-    await this.userRepo.update(
-      { avatar: '/static/images/default-avatar.png' },
-      { avatar: this.defaultAvatarImage },
-    );
   }
 }

@@ -1,5 +1,3 @@
-/* 全局样式 */
-@import "/static/icons/font/iconfont.wxss";
 
 :root {
   --theme-color: #b2ea1c;

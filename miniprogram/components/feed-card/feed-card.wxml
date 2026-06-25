@@ -1,48 +1,38 @@
 <view class="feed-card" bindtap="onTap">
   <view class="feed-head">
-    <view class="author-row">
-      <image class="author-avatar" src="{{post.author.avatar || 'http://192.168.2.103/static/default-avatar.png'}}" mode="aspectFill" />
-      <view class="title-wrap">
+    <view class="head-main">
+      <view class="title-row">
+      
+        <image class="author-avatar" src="{{post.author.avatar}}" mode="aspectFill" wx:if="{{post.author.avatar}}" />
         <text class="feed-title text-bold text-ellipsis">{{post.title}}</text>
-        <text class="feed-desc text-ellipsis">{{post.content}}</text>
+        <text class="rank-pill" wx:if="{{rankText}}">{{rankText}}</text>
+      </view>
+      <view class="title-row">
+        <text class="feed-desc text-ellipsis" wx:if="{{post.content}}">{{post.content}}</text>
+      <text class="date-text" wx:if="{{dateText || locationText}}">{{dateText}}  {{locationText}}</text>
       </view>
     </view>
-    <view class="right-meta">
-      <text class="rank-pill" wx:if="{{post.recommendRank}}">推荐榜第一</text>
-      <text class="date-text">01-24  南京</text>
+  </view>
+
+  <view class="image-grid" wx:if="{{post.images.length || post.coverImage}}">
+    <image class="food-image" src="{{post.images[0] || post.coverImage}}" mode="aspectFill" wx:if="{{post.images[0] || post.coverImage}}" />
+    <image class="food-image" src="{{post.images[1] || post.coverImage}}" mode="aspectFill" wx:if="{{post.images[1] || post.coverImage}}" />
+    <view class="receipt-card" wx:if="{{post.images[2]}}">
+      <image class="receipt-bg" src="{{post.images[2]}}" mode="aspectFill" />
+      <text class="receipt-amount" wx:if="{{amountText}}">-{{amountText}}</text>
     </view>
   </view>
 
-  <view class="image-grid">
-    <image class="food-image" src="{{post.images[0] || post.coverImage || 'http://192.168.2.103/static/default-feed.png'}}" mode="aspectFill" />
-    <image class="food-image" src="{{post.images[1] || post.coverImage || 'http://192.168.2.103/static/default-feed.png'}}" mode="aspectFill" />
-    <view class="receipt-card">
-      <image class="receipt-bg" src="{{post.images[2] || 'http://192.168.2.103/static/feed-receipt.jpg'}}" mode="aspectFill" />
-      <text class="receipt-amount">-{{post.consumeRecord.amount || 115000}}.00</text>
-    </view>
-  </view>
-
-  <view class="shop-section" wx:if="{{post.shopName}}">
-    <view class="shop-top">
-      <image class="shop-thumb" src="{{post.shop.coverImage || 'http://192.168.2.103/static/default-shop.png'}}" mode="aspectFill" />
-      <view class="shop-main">
-        <text class="shop-name text-bold">{{post.shopName}}</text>
-        <view class="shop-location">
-          <image class="pin" src="/static/icons/dingwei.svg" mode="aspectFit" />
-          <text>{{post.shop.address || post.location}}</text>
-          <text class="nav-text">导航</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="ai-summary-wrap" catchtap="onViewReview">
-      <ai-summary
-        summary="{{post.shop.summaryTags}}"
-        author-avatar="{{post.author.avatar || 'http://192.168.2.103/static/default-avatar.png'}}"
-        tester-count="2000+"
-        show-footer="{{true}}"
-        show-view="{{true}}"
-      />
-    </view>
-  </view>
+  <shop-section
+    wx:if="{{post.shopName}}"
+    shop="{{post.shop}}"
+    shop-name="{{post.shopName}}"
+    location="{{post.city}}"
+    summary-tags="{{post.shop.summaryTags}}"
+    author-avatar="{{post.author.avatar}}"
+    tester-count-text="{{testerCountText}}"
+    show-ai-summary="{{true}}"
+    shop-id="{{post.shopId}}"
+    bind:tapShop="onTapShop"
+  />
 </view>

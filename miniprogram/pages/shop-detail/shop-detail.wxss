@@ -1,288 +1,204 @@
-.shop-detail-page {
-  background: #fff;
+.review-page {
+  background: #f5f5f5;
   min-height: 100vh;
-  padding-bottom: 150rpx;
 }
 
+/* 顶部返回栏 */
 .top-nav {
-  height: 176rpx;
-  padding: 76rpx 30rpx 0;
-  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: calc(88rpx + env(safe-area-inset-top)) 32rpx 16rpx;
+  padding-top: calc(88rpx + constant(safe-area-inset-top));
   background: #fff;
 }
 
 .back-btn {
-  width: 56rpx;
-  height: 56rpx;
-  line-height: 48rpx;
-  font-size: 58rpx;
-  color: #111827;
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  width: 44rpx;
+  height: 44rpx;
 }
 
 .nav-title {
-  font-size: 32rpx;
-  font-weight: 800;
-  color: #111827;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #111;
+  flex: 1;
+  text-align: center;
+}
+
+.nav-placeholder {
+  width: 64rpx;
+  height: 64rpx;
 }
 
 .menu-pill {
-  width: 130rpx;
-  height: 58rpx;
-  border-radius: 999rpx;
-  background: rgba(246, 246, 246, 0.95);
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  gap: 8rpx;
   font-size: 28rpx;
-  font-weight: 800;
-  color: #111827;
+  color: #333;
 }
 
 .circle-dot {
-  font-size: 35rpx;
+  font-size: 32rpx;
 }
 
-.shop-cover {
+/* 大图 */
+.review-hero {
   width: 100%;
   height: 506rpx;
   display: block;
 }
 
-.shop-info-section {
+/* 评价列表 */
+.review-list {
+  padding: 0 0 24rpx;
+}
+
+.review-card {
   background: #fff;
-  padding: 28rpx 30rpx 24rpx;
-  border-bottom: 12rpx solid #f5f5f5;
+  margin: 0 24rpx 24rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 10rpx 34rpx rgba(31, 41, 55, 0.08);
 }
 
-.shop-header {
+/* feed-head */
+.feed-head {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 14rpx;
-  gap: 16rpx;
+  padding: 30rpx 30rpx 18rpx;
+  gap: 14rpx;
 }
 
-.shop-name {
-  font-size: 31rpx;
-  line-height: 1.25;
-  color: #111827;
+.author-avatar {
+  width: 54rpx;
+  height: 54rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.head-main {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.feed-title {
+  font-size: 31rpx;
+  color: #1f2933;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-desc {
+  font-size: 23rpx;
+  color: #a3a3a3;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 65%;
 }
 
 .rank-pill {
   background: linear-gradient(90deg, #dcfce7 0%, #94f2d4 100%);
   color: #196b3f;
   font-size: 21rpx;
-  font-weight: 800;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   padding: 7rpx 16rpx;
   border-radius: 6rpx;
-  white-space: nowrap;
-}
-
-.shop-desc {
-  display: block;
-  color: #8c8c8c;
-  font-size: 27rpx;
-  line-height: 1.45;
-}
-
-.detail-section {
-  padding: 28rpx 30rpx 26rpx;
-  background: #fff;
-}
-
-.tester-row {
-  display: flex;
-  align-items: center;
-  padding-bottom: 22rpx;
-}
-
-.tester-avatars {
-  display: flex;
-  margin-right: auto;
-}
-
-.tester-avatar {
-  width: 52rpx;
-  height: 52rpx;
-  border-radius: 50%;
-  border: 2rpx solid #fff;
-}
-
-.tester-avatar.overlap {
-  margin-left: -16rpx;
-}
-
-.tester-count {
-  margin-left: auto;
-  display: flex;
-  align-items: baseline;
-}
-
-.count-num {
-  color: #a3e635;
-  font-size: 48rpx;
-  font-weight: 900;
+  flex-shrink: 0;
   font-style: italic;
 }
 
-.count-label {
-  color: #333;
-  font-size: 26rpx;
+.date-text {
+  color: #9ca3af;
+  font-size: 22rpx;
+  width: 30%;
 }
 
-.row-arrow {
-  color: #c7c7c7;
-  font-size: 42rpx;
-  margin-left: 10rpx;
+/* image-grid */
+.image-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.02fr;
+  gap: 8rpx;
+  padding: 0 30rpx 30rpx;
 }
 
-.info-row {
-  height: 66rpx;
-  display: flex;
-  align-items: center;
-  border-top: 1rpx solid #f3f3f3;
-  color: #333;
-}
-
-.row-icon {
-  width: 44rpx;
-  font-size: 28rpx;
-}
-
-.clock {
-  color: #9bd625;
-}
-
-.pin {
-  color: #111827;
-}
-
-.row-text {
-  flex: 1;
-  font-size: 26rpx;
-  color: #333;
-}
-
-.ai-summary-section {
-  margin: 18rpx 0 24rpx;
-}
-
-.pay-record {
-  width: 100%;
-  height: 208rpx;
-  border-radius: 8rpx;
-  display: block;
-}
-
-.recommend-section {
-  padding: 28rpx 0 28rpx 30rpx;
-  background: #fff;
-}
-
-.section-title {
-  font-size: 29rpx;
-  font-weight: 800;
-  margin-bottom: 20rpx;
-  color: #111827;
-}
-
-.recommend-scroll {
-  white-space: nowrap;
-}
-
-.recommend-list {
-  display: inline-flex;
-  gap: 14rpx;
-  padding-right: 30rpx;
-}
-
-.recommend-item {
-  width: 132rpx;
-}
-
-.reco-cover-wrap {
-  position: relative;
-  width: 132rpx;
-  height: 132rpx;
+.food-image,
+.receipt-card {
+  height: 214rpx;
   border-radius: 8rpx;
   overflow: hidden;
-  background: #f5f5f5;
 }
 
-.reco-cover {
+.food-image {
+  width: 100%;
+}
+
+.receipt-card {
+  position: relative;
+  background: #f8fff4;
+  border: 4rpx solid #ecffd8;
+}
+
+.receipt-bg {
   width: 100%;
   height: 100%;
 }
 
-.reco-count {
+.receipt-amount {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 6rpx 0;
-  text-align: center;
-  color: #fff;
-  font-size: 19rpx;
-  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.55));
-}
-
-.reco-name {
-  display: block;
-  margin-top: 10rpx;
-  font-size: 23rpx;
+  top: 8rpx;
+  right: 12rpx;
   color: #111827;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 18rpx;
+  font-weight: 800;
 }
 
-.bottom-actions {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 132rpx;
-  background: #fff;
+/* 空状态 */
+.empty-reviews {
   display: flex;
-  align-items: center;
-  padding: 18rpx 30rpx 22rpx;
-  box-sizing: border-box;
-  box-shadow: 0 -8rpx 24rpx rgba(15, 23, 42, 0.04);
+  justify-content: center;
+  padding: 60rpx 0;
 }
 
-.share-btn {
-  width: 110rpx;
-  color: #111827;
-  font-size: 23rpx;
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 加载更多 */
+.load-more,
+.no-more {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
+  padding: 24rpx 0 40rpx;
 }
 
-.share-icon {
-  width: 38rpx;
-  height: 38rpx;
-  line-height: 34rpx;
-  text-align: center;
-  color: #9bd625;
-  border: 3rpx solid #9bd625;
-  border-radius: 50%;
-  font-size: 25rpx;
-  margin-bottom: 2rpx;
-}
-
-.nav-btn {
-  flex: 1;
-  height: 74rpx;
-  line-height: 74rpx;
-  border-radius: 999rpx;
-  background: #181818;
-  color: #a3e635;
-  text-align: center;
-  font-size: 31rpx;
-  font-weight: 900;
+.load-more text,
+.no-more text {
+  font-size: 24rpx;
+  color: #999;
 }

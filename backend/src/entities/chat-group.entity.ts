@@ -14,12 +14,6 @@ export class ChatGroup {
   @Column({ type: 'varchar', length: 32, nullable: true })
   district: string;
 
-  @Column({ type: 'int', default: 0, name: 'online_count' })
-  onlineCount: number;
-
-  @Column({ type: 'int', default: 0, name: 'member_count' })
-  memberCount: number;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

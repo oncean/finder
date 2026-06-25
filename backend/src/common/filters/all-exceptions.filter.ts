@@ -11,22 +11,33 @@ export class AllExceptionsFilter implements ExceptionFilter {
       ? exception.getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message = exception instanceof HttpException
+    const exceptionResponse = exception instanceof HttpException
       ? exception.getResponse()
       : '服务器内部错误';
+    const message = typeof exceptionResponse === 'string'
+      ? exceptionResponse
+      : (exceptionResponse as any).message || '服务器错误';
 
     console.error('请求错误:', {
       path: request.url,
       method: request.method,
       status,
-      message,
+      message: exceptionResponse,
       stack: exception instanceof Error ? exception.stack : undefined,
     });
 
-    response.status(status).json({
+    const body: Record<string, any> = {
       code: status,
-      message: typeof message === 'string' ? message : (message as any).message || '服务器错误',
-      data: null,
-    });
+      message,
+    };
+
+    if (typeof exceptionResponse !== 'string') {
+      const responseData = (exceptionResponse as any).data;
+      if (responseData !== undefined) {
+        body.data = responseData;
+      }
+    }
+
+    response.status(status).json(body);
   }
 }

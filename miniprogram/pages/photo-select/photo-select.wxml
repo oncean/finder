@@ -1,7 +1,7 @@
 <view class="photo-select-page">
   <!-- 顶部导航 -->
   <view class="top-nav">
-    <view class="back-btn" bindtap="onBack">‹</view>
+    <view class="back-btn" bindtap="onBack"><image class="back-icon" src="/static/icons/return.svg" mode="aspectFit" /></view>
     <text class="nav-title">选择照片</text>
     <view class="menu-placeholder"></view>
   </view>

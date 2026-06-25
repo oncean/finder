@@ -1,5 +1,5 @@
 <view class="message-item {{isSelf ? 'self' : ''}}">
-  <image class="avatar avatar-small" src="{{message.sender.avatar || 'http://192.168.2.103/static/default-avatar.png'}}" mode="aspectFill" />
+  <image wx:if="{{!isSelf}}" class="avatar avatar-small" src="{{message.sender.avatar || 'http://192.168.2.103/static/default-avatar.png'}}" mode="aspectFill" />
   
   <view class="message-content">
     <text class="sender-name text-muted">{{message.sender.nickname}}</text>
@@ -34,13 +34,13 @@
       </view>
       
       <view class="shop-summary" wx:if="{{message.shopCard.summaryTags}}">
-        <ai-summary
-          summary="{{message.shopCard.summaryTags}}"
-          author-avatar="{{message.shopCard.logo || message.sender.avatar || 'http://192.168.2.103/static/default-avatar.png'}}"
-          tester-count="{{message.shopCard.reviewCount || 100}}+"
-          show-footer="{{true}}"
-          show-view="{{true}}"
-        />
+        <ai-summary summary="{{message.shopCard.summaryTags}}" />
+        <view class="shop-footer">
+          <view class="tester-row" wx:if="{{message.shopCard.reviewCount}}">
+            <text class="tester-text">{{message.shopCard.reviewCount}}+ 真实测评过</text>
+          </view>
+          <view class="view-btn">查看</view>
+        </view>
       </view>
     </view>
     

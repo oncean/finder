@@ -158,29 +158,35 @@
   padding: 0;
 }
 
-.shop-mini-footer {
+.shop-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24rpx;
+}
+
+.shop-footer .tester-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  min-width: 0;
 }
 
-.reviewer-info {
-  flex: 1;
-}
-
-.review-count {
+.shop-footer .tester-text {
+  color: #9ca3af;
   font-size: 22rpx;
-  color: #999;
 }
 
-.view-btn {
-  background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
-  padding: 8rpx 20rpx;
-  border-radius: 24rpx;
-  font-size: 24rpx;
-  color: #1a1a2e;
-  font-weight: bold;
-  flex-shrink: 0;
+.shop-footer .view-btn {
+  min-width: 106rpx;
+  height: 52rpx;
+  line-height: 52rpx;
+  border-radius: 999rpx;
+  text-align: center;
+  background: #020617;
+  color: #a3e635;
+  font-size: 20rpx;
+  font-weight: 800;
+  font-style: italic;
 }
 
 .message-time {

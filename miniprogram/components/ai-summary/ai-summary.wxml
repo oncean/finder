@@ -3,28 +3,14 @@
 
   <view class="summary-tags">
     <view class="summary-tag positive" wx:for="{{summary.positive}}" wx:key="index">
-      <text class="tag-icon">✓</text>
+      <image class="back-icon" src="/static/icons/right.svg" mode="aspectFit" />
       <text>{{item}}</text>
-    </view>
-
-    <view class="summary-tag positive" wx:if="{{summary.averageCost}}">
-      <text class="tag-icon">✓</text>
-      <text>人均{{summary.averageCost}}/人</text>
     </view>
 
     <view class="summary-tag negative" wx:for="{{summary.negative}}" wx:key="index">
-      <text class="tag-icon">×</text>
+      <image class="back-icon" src="/static/icons/wrong.svg" mode="aspectFit" />
       <text>{{item}}</text>
     </view>
   </view>
 
-  <view class="summary-footer" wx:if="{{showFooter}}">
-    <view class="tester-row">
-      <image class="tester-avatar" src="{{authorAvatar}}" mode="aspectFill" />
-      <image class="tester-avatar overlap" src="{{authorAvatar}}" mode="aspectFill" />
-      <image class="tester-avatar overlap" src="{{authorAvatar}}" mode="aspectFill" />
-      <text class="tester-text">{{testerCount}} 真实测评过</text>
-    </view>
-    <view class="view-btn" wx:if="{{showView}}">查看</view>
-  </view>
 </view>

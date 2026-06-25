@@ -25,8 +25,8 @@ Page({
       return;
     }
 
-    this.setData({ refreshing: true });
-    this.loadNextRecommendations().finally(() => {
+    this.setData({ refreshing: true, page: 1 });
+    this.loadRecommendations().finally(() => {
       this.setData({ refreshing: false });
       wx.stopPullDownRefresh();
     });
@@ -68,7 +68,7 @@ Page({
       const data = await postService.getRecommendations(params);
       
       this.setData({
-        recommendations: this.data.page === 1 ? data.list.slice(0, 10) : [...this.data.recommendations, ...data.list],
+        recommendations: this.data.page === 1 ? data.list : [...this.data.recommendations, ...data.list],
         hasMore: data.list.length === 10,
         loading: false
       });
@@ -127,11 +127,11 @@ Page({
     const { shopId, postId } = e.detail;
     if (shopId) {
       wx.navigateTo({
-        url: `/pages/shop-detail/shop-detail?id=${shopId}`
+        url: `/pages/comment-detail/comment-detail?id=${shopId}`
       });
     } else if (postId) {
       wx.navigateTo({
-        url: `/pages/post-detail/post-detail?id=${postId}`
+        url: `/pages/shop-detail/shop-detail?id=${postId}`
       });
     }
   },
@@ -141,11 +141,21 @@ Page({
     const { postId, shopId } = e.detail;
     if (shopId) {
       wx.navigateTo({
-        url: `/pages/post-detail/post-detail?shopId=${shopId}`
+        url: `/pages/shop-detail/shop-detail?shopId=${shopId}`
       });
     } else if (postId) {
       wx.navigateTo({
-        url: `/pages/post-detail/post-detail?id=${postId}`
+        url: `/pages/shop-detail/shop-detail?id=${postId}`
+      });
+    }
+  },
+
+  // 点击店铺区域 -> 店铺详情页
+  onTapShop(e) {
+    const { shopId } = e.detail;
+    if (shopId) {
+      wx.navigateTo({
+        url: `/pages/shop-detail/shop-detail?shopId=${shopId}`
       });
     }
   }

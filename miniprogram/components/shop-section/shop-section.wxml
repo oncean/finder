@@ -1,0 +1,39 @@
+<view class="shop-section" bindtap="onTapShop">
+  <view class="shop-top">
+    <image class="shop-thumb" src="{{shop.coverImage}}" mode="aspectFill" wx:if="{{shop.coverImage}}" />
+    <view class="shop-main">
+      <text class="shop-name text-bold">{{shopName}}</text>
+      <view class="shop-location" wx:if="{{shop.address || location}}">
+        <image class="pin" src="/static/icons/dingwei-white.svg" mode="aspectFit" />
+        <text>{{shop.address || location}}</text>
+        <text class="nav-text">导航</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="ai-summary-wrap" wx:if="{{showAiSummary && summaryTags}}">
+    <ai-summary
+      summary="{{summaryTags}}"
+      author-avatar="{{commentAvatars[0]}}"
+      tester-count="{{commentCount > 0 ? commentCount + '+' : ''}}"
+      show-footer="{{true}}"
+      show-view="{{true}}"
+    />
+  </view>
+
+  <view class="shop-footer" wx:if="{{showAiSummary && summaryTags}}">
+    <view class="comment-row">
+      <view class="comment-avatars">
+        <image
+          wx:for="{{commentAvatars}}"
+          wx:key="index"
+          class="comment-avatar {{index > 0 ? 'overlap' : ''}}"
+          src="{{item}}"
+          mode="aspectFill"
+        />
+      </view>
+      <text class="comment-text" wx:if="{{commentCount > 0}}">{{commentCount}}+ 真实测评过</text>
+    </view>
+    <view class="view-btn">查看</view>
+  </view>
+</view>

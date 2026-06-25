@@ -20,6 +20,9 @@ export class Shop {
     lng: number;
   };
 
+  @Column({ type: 'varchar', length: 32, nullable: true })
+  city: string;
+
   @Column({ type: 'varchar', length: 255, nullable: true, name: 'cover_image' })
   coverImage: string;
 
@@ -42,7 +45,6 @@ export class Shop {
   summaryTags: {
     positive: string[];
     negative: string[];
-    averageCost: number;
   };
 
   @Column({ type: 'boolean', default: false, name: 'is_verified' })

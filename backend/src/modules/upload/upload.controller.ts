@@ -7,7 +7,7 @@ import { AuthGuard } from '../../common/guards/auth.guard';
 
 @Controller('upload')
 export class UploadController {
-  private readonly staticBaseUrl = process.env.STATIC_BASE_URL || 'http://192.168.2.103/static';
+  private readonly uploadBaseUrl = process.env.UPLOAD_BASE_URL || 'http://localhost:3000';
 
   @Post('image')
   @HttpCode(HttpStatus.OK)
@@ -32,10 +32,9 @@ export class UploadController {
       },
     }),
   )
-  uploadFile(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
-    const host = req.protocol + '://' + req.get('host');
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
     return {
-      url: `${host}/uploads/${file.filename}`,
+      url: `${this.uploadBaseUrl}/uploads/${file.filename}`,
       filename: file.filename,
       size: file.size,
     };

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 import { ChatGroup } from './chat-group.entity';
+import { Shop } from './shop.entity';
 
 @Entity('messages')
 export class Message {
@@ -27,17 +28,12 @@ export class Message {
   @Column({ type: 'text', nullable: true })
   content: string;
 
-  @Column({ type: 'jsonb', nullable: true, name: 'shop_card' })
-  shopCard: {
-    shopId: string;
-    name: string;
-    address: string;
-    coverImage: string;
-    distance: number;
-    summaryTags: any;
-    reviewCount: number;
-    rating?: number;
-  };
+  @Column({ name: 'shop_id', nullable: true })
+  shopId: string;
+
+  @ManyToOne(() => Shop, { nullable: true })
+  @JoinColumn({ name: 'shop_id' })
+  shop: Shop;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

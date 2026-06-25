@@ -4,12 +4,14 @@ import { AdminController } from './admin.controller';
 import { HomeController } from './home.controller';
 import { User } from '../../entities/user.entity';
 import { Admin } from '../../entities/admin.entity';
-import { Post } from '../../entities/post.entity';
 import { Shop } from '../../entities/shop.entity';
+import { Message } from '../../entities/message.entity';
+import { ChatGroup } from '../../entities/chat-group.entity';
+import { ChatOnlineUser } from '../../entities/chat-online-user.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Admin, Post, Shop]), AuthModule],
+  imports: [TypeOrmModule.forFeature([User, Admin, Shop, Message, ChatGroup, ChatOnlineUser]), AuthModule],
   controllers: [HomeController, AdminController],
 })
 export class AdminModule {}

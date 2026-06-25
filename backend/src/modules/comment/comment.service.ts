@@ -1,18 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Comment } from '../../entities/comment.entity';
+import { assertCanDeleteEntity } from '../../common/utils/delete-dependency.util';
 
 @Injectable()
 export class CommentService {
   constructor(
     @InjectRepository(Comment)
     private commentRepo: Repository<Comment>,
+    private dataSource: DataSource,
   ) {}
 
-  async findAll(page = 1, limit = 10, keyword?: string, shopId?: string) {
+  async findAll(
+    page = 1,
+    limit = 10,
+    keyword?: string,
+    shopId?: string,
+    authorId?: string,
+    isFengxiangbiao?: string,
+  ) {
     const query = this.commentRepo.createQueryBuilder('comment')
-      .leftJoinAndSelect('comment.shop', 'shop');
+      .leftJoinAndSelect('comment.shop', 'shop')
+      .leftJoinAndSelect('comment.author', 'author');
 
     if (keyword) {
       query.andWhere('comment.title LIKE :keyword OR comment.content LIKE :keyword', {
@@ -24,10 +34,21 @@ export class CommentService {
       query.andWhere('comment.shopId = :shopId', { shopId });
     }
 
+    if (authorId) {
+      query.andWhere('comment.authorId = :authorId', { authorId });
+    }
+
+    if (isFengxiangbiao !== undefined) {
+      query.andWhere('comment.isFengxiangbiao = :isFengxiangbiao', {
+        isFengxiangbiao: isFengxiangbiao === 'true',
+      });
+    }
+
     const [data, total] = await query
       .skip((page - 1) * limit)
       .take(limit)
-      .orderBy('comment.createdAt', 'DESC')
+      .orderBy('comment.fengxiangbiaoRank', 'ASC', 'NULLS LAST')
+      .addOrderBy('comment.createdAt', 'DESC')
       .getManyAndCount();
 
     return { success: true, data, total };
@@ -62,7 +83,14 @@ export class CommentService {
   }
 
   async delete(id: string) {
-    await this.commentRepo.delete(id);
-    return { success: true };
+    const comment = await this.commentRepo.findOne({ where: { id } });
+
+    if (!comment) {
+      throw new NotFoundException('评价不存在');
+    }
+
+    await assertCanDeleteEntity(this.dataSource, this.commentRepo.metadata, id, '评价');
+    await this.commentRepo.remove(comment);
+    return { success: true, message: '评价删除成功' };
   }
 }

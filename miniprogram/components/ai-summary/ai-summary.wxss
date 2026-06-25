@@ -7,7 +7,7 @@
 .summary-title {
   display: inline-block;
   color: #111827;
-  font-size: 34rpx;
+  font-size: 28rpx;
   line-height: 1;
   font-weight: 900;
   font-style: italic;
@@ -35,7 +35,7 @@
 .summary-tag {
   display: flex;
   align-items: center;
-  font-size: 24rpx;
+  font-size: 18rpx;
   color: #374151;
   line-height: 1.2;
   white-space: nowrap;
@@ -45,13 +45,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 31rpx;
-  height: 31rpx;
+  width: 20rpx;
+  height: 20rpx;
   border-radius: 50%;
   color: #fff;
-  font-size: 22rpx;
+  font-size: 18rpx;
   font-weight: 800;
   margin-right: 8rpx;
+}
+
+.back-icon{
+  height: 20rpx;
+  width: 20rpx;
+  margin-right: 10rpx;
 }
 
 .positive .tag-icon {
@@ -62,44 +68,4 @@
   background: #ef4444;
 }
 
-.summary-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 24rpx;
-}
 
-.tester-row {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
-.tester-avatar {
-  width: 39rpx;
-  height: 39rpx;
-  border-radius: 50%;
-  border: 2rpx solid #fff;
-}
-
-.tester-avatar.overlap {
-  margin-left: -13rpx;
-}
-
-.tester-text {
-  margin-left: 14rpx;
-  color: #9ca3af;
-  font-size: 23rpx;
-}
-
-.view-btn {
-  min-width: 106rpx;
-  height: 52rpx;
-  line-height: 52rpx;
-  border-radius: 999rpx;
-  text-align: center;
-  background: #020617;
-  color: #fff;
-  font-size: 24rpx;
-  font-weight: 800;
-}

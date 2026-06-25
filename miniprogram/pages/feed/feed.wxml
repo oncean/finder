@@ -16,6 +16,7 @@
           post="{{item}}"
           bindtap="onTapPost"
           bindtapReview="onTapReview"
+          bindtapShop="onTapShop"
         />
       </block>
       

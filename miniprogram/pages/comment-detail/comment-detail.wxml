@@ -1,0 +1,71 @@
+<view class="comment-detail-page">
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <block wx:if="{{!loading && shop.id}}">
+    <view class="top-nav">
+      <view class="back-btn" bindtap="onBack"><image class="back-icon" src="/static/icons/return.svg" mode="aspectFit" /></view>
+      <text class="nav-title">详情</text>
+    </view>
+
+    <image class="shop-cover" src="{{shop.coverImage}}" mode="aspectFill" wx:if="{{shop.coverImage}}" />
+
+    <view class="shop-info-section">
+      <view class="shop-header">
+        <text class="shop-name text-bold">{{shop.name}}</text>
+        <text class="rank-pill" wx:if="{{shop.rankText}}">{{shop.rankText}}</text>
+      </view>
+      <text class="shop-desc" wx:if="{{shop.subtitle}}">{{shop.subtitle}}</text>
+    </view>
+
+    <view class="detail-section">
+      <view class="tester-row" wx:if="{{shop.testerCount || shop.reviewCount}}">
+        <view class="tester-count">
+          <text class="count-num">{{shop.testerCount || shop.reviewCount}}</text>
+          <text class="count-label"> 测评过</text>
+        </view>
+        <text class="row-arrow">›</text>
+      </view>
+
+      <view class="info-row" wx:if="{{shop.businessHours}}">
+        <text class="row-icon clock">◷</text>
+        <text class="row-text">{{shop.businessHours}}</text>
+        <text class="row-arrow">›</text>
+      </view>
+
+      <view class="info-row" bindtap="onNavigate" wx:if="{{shop.address}}">
+        <image class="dingwei-pin" src="/static/icons/dingwei-white.svg" mode="aspectFit" />
+        <text class="row-text">{{shop.address}}</text>
+        <text class="row-arrow">›</text>
+      </view>
+
+      <ai-summary summary="{{shop.summaryTags}}" />
+
+      <image class="pay-record" src="{{shop.paymentRecord.image}}" mode="aspectFill" wx:if="{{shop.paymentRecord.image}}" />
+    </view>
+
+    <view class="recommend-section" wx:if="{{shop.recommendations && shop.recommendations.length}}">
+      <view class="section-title">相关美食/景点推荐</view>
+      <scroll-view class="recommend-scroll" scroll-x>
+        <view class="recommend-list">
+          <view class="recommend-item" wx:for="{{shop.recommendations}}" wx:key="id">
+            <view class="reco-cover-wrap">
+              <image class="reco-cover" src="{{item.coverImage}}" mode="aspectFill" />
+              <text class="reco-count" wx:if="{{item.reviewCount}}">{{item.reviewCount}}人测评</text>
+            </view>
+            <text class="reco-name">{{item.name}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view class="bottom-actions safe-area-bottom">
+      <view class="share-btn" bindtap="onShareTap">
+        <text class="share-icon">↗</text>
+        <text>分享</text>
+      </view>
+      <view class="nav-btn" bindtap="onNavigate">导航</view>
+    </view>
+  </block>
+</view>

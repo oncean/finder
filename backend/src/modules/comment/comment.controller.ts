@@ -13,10 +13,12 @@ export class CommentController {
     @Query('pageSize') pageSize: any = 10,
     @Query('keyword') keyword?: string,
     @Query('shopId') shopId?: string,
+    @Query('authorId') authorId?: string,
+    @Query('isFengxiangbiao') isFengxiangbiao?: string,
   ) {
     const page = parseInt(current, 10) || 1;
     const limit = parseInt(pageSize, 10) || 10;
-    return this.commentService.findAll(page, limit, keyword, shopId);
+    return this.commentService.findAll(page, limit, keyword, shopId, authorId, isFengxiangbiao);
   }
 
   @Get(':id')

@@ -2,8 +2,8 @@
   "pages": [
     "pages/chat/chat",
     "pages/feed/feed",
-    "pages/post-detail/post-detail",
     "pages/shop-detail/shop-detail",
+    "pages/comment-detail/comment-detail",
     "pages/shop-select/shop-select",
     "pages/photo-select/photo-select"
   ],
@@ -23,7 +23,6 @@
     }
   },
   "usingComponents": {
-    "shop-card": "./components/shop-card/shop-card",
     "ai-summary": "./components/ai-summary/ai-summary",
     "consume-record": "./components/consume-record/consume-record",
     "message-item": "./components/message-item/message-item",
