@@ -55,8 +55,7 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      success: true,
-      data: users.map(user => ({
+      list: users.map(user => ({
         id: user.id,
         nickname: user.nickname,
         avatar: user.avatar,
@@ -81,8 +80,6 @@ export class AdminController {
     }
 
     return {
-      success: true,
-      data: {
         id: user.id,
         nickname: user.nickname,
         avatar: user.avatar,
@@ -93,7 +90,6 @@ export class AdminController {
         isAdmin: user.isAdmin,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-      },
     };
   }
 
@@ -111,9 +107,6 @@ export class AdminController {
     await this.userRepo.save(user);
 
     return {
-      success: true,
-      message: '用户创建成功',
-      data: {
         id: user.id,
         nickname: user.nickname,
         avatar: user.avatar,
@@ -121,7 +114,6 @@ export class AdminController {
         location: user.location,
         isAdmin: user.isAdmin,
         createdAt: user.createdAt,
-      },
     };
   }
 
@@ -142,9 +134,6 @@ export class AdminController {
     await this.userRepo.save(user);
 
     return {
-      success: true,
-      message: '用户更新成功',
-      data: {
         id: user.id,
         nickname: user.nickname,
         avatar: user.avatar,
@@ -152,7 +141,6 @@ export class AdminController {
         location: user.location,
         isAdmin: user.isAdmin,
         updatedAt: user.updatedAt,
-      },
     };
   }
 
@@ -170,10 +158,7 @@ export class AdminController {
     await assertCanDeleteEntity(this.dataSource, this.userRepo.metadata, id, '用户');
     await this.userRepo.remove(user);
 
-    return {
-      success: true,
-      message: '用户删除成功',
-    };
+    return { message: '用户删除成功' };
   }
 
   @Get('admins')
@@ -199,8 +184,7 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      success: true,
-      data: admins.map(admin => ({
+      list: admins.map(admin => ({
         id: admin.id,
         username: admin.username,
         nickname: admin.nickname,
@@ -223,8 +207,6 @@ export class AdminController {
     }
 
     return {
-      success: true,
-      data: {
         id: admin.id,
         username: admin.username,
         nickname: admin.nickname,
@@ -233,7 +215,6 @@ export class AdminController {
         permissions: admin.permissions,
         createdAt: admin.createdAt,
         updatedAt: admin.updatedAt,
-      },
     };
   }
 
@@ -260,9 +241,6 @@ export class AdminController {
     await this.adminRepo.save(admin);
 
     return {
-      success: true,
-      message: '管理员创建成功',
-      data: {
         id: admin.id,
         username: admin.username,
         nickname: admin.nickname,
@@ -270,7 +248,6 @@ export class AdminController {
         phone: admin.phone,
         permissions: admin.permissions,
         createdAt: admin.createdAt,
-      },
     };
   }
 
@@ -302,9 +279,6 @@ export class AdminController {
     await this.adminRepo.save(admin);
 
     return {
-      success: true,
-      message: '管理员更新成功',
-      data: {
         id: admin.id,
         username: admin.username,
         nickname: admin.nickname,
@@ -312,7 +286,6 @@ export class AdminController {
         phone: admin.phone,
         permissions: admin.permissions,
         updatedAt: admin.updatedAt,
-      },
     };
   }
 
@@ -326,10 +299,7 @@ export class AdminController {
 
     await this.adminRepo.remove(admin);
 
-    return {
-      success: true,
-      message: '管理员删除成功',
-    };
+    return { message: '管理员删除成功' };
   }
 
   @Get('shops')
@@ -359,8 +329,7 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      success: true,
-      data: shops.map(shop => ({
+      list: shops.map(shop => ({
         id: shop.id,
         name: shop.name,
         category: shop.category,
@@ -390,8 +359,6 @@ export class AdminController {
     }
 
     return {
-      success: true,
-      data: {
         id: shop.id,
         name: shop.name,
         category: shop.category,
@@ -407,7 +374,6 @@ export class AdminController {
         summaryTags: shop.summaryTags,
         isVerified: shop.isVerified,
         createdAt: shop.createdAt,
-      },
     };
   }
 
@@ -433,16 +399,12 @@ export class AdminController {
     await this.shopRepo.save(shop);
 
     return {
-      success: true,
-      message: '商家创建成功',
-      data: {
         id: shop.id,
         name: shop.name,
         category: shop.category,
         address: shop.address,
         isVerified: shop.isVerified,
         createdAt: shop.createdAt,
-      },
     };
   }
 
@@ -471,14 +433,10 @@ export class AdminController {
     await this.shopRepo.save(shop);
 
     return {
-      success: true,
-      message: '商家更新成功',
-      data: {
         id: shop.id,
         name: shop.name,
         category: shop.category,
         isVerified: shop.isVerified,
-      },
     };
   }
 
@@ -493,10 +451,7 @@ export class AdminController {
     await assertCanDeleteEntity(this.dataSource, this.shopRepo.metadata, id, '店铺');
     await this.shopRepo.remove(shop);
 
-    return {
-      success: true,
-      message: '商家删除成功',
-    };
+    return { message: '商家删除成功' };
   }
 
   // ---- 消息管理 ----
@@ -530,8 +485,7 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      success: true,
-      data: messages.map(msg => ({
+      list: messages.map(msg => ({
         id: msg.id,
         type: msg.type,
         content: msg.content,
@@ -628,9 +582,6 @@ export class AdminController {
     await this.messageRepo.save(message);
 
     return {
-      success: true,
-      message: '消息发送成功',
-      data: {
         id: message.id,
         type: message.type,
         content: message.content,
@@ -642,7 +593,6 @@ export class AdminController {
           avatar: sender.avatar,
         },
         createdAt: message.createdAt,
-      },
     };
   }
 
@@ -673,10 +623,7 @@ export class AdminController {
 
     await this.messageRepo.remove(message);
 
-    return {
-      success: true,
-      message: '消息删除成功',
-    };
+    return { message: '消息删除成功' };
   }
 
   // ---- 群组管理 ----
@@ -704,8 +651,7 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      success: true,
-      data: await Promise.all(groups.map(async (group) => ({
+      list: await Promise.all(groups.map(async (group) => ({
         id: group.id,
         name: group.name,
         city: group.city,
@@ -738,8 +684,7 @@ export class AdminController {
     });
 
     return {
-      success: true,
-      data: onlineUsers.map((item) => ({
+      list: onlineUsers.map((item) => ({
         id: item.id,
         groupId: item.groupId,
         userId: item.userId,
@@ -794,9 +739,6 @@ export class AdminController {
     await this.chatOnlineUserRepo.save(onlineUser);
 
     return {
-      success: true,
-      message: '在线用户添加成功',
-      data: {
         id: onlineUser.id,
         groupId: onlineUser.groupId,
         userId: onlineUser.userId,
@@ -805,7 +747,6 @@ export class AdminController {
           id,
           onlineCount: await this.countChatGroupOnlineUsers(id),
         },
-      },
     };
   }
 
@@ -822,12 +763,8 @@ export class AdminController {
     await this.chatOnlineUserRepo.delete({ groupId: id, userId });
 
     return {
-      success: true,
-      message: '在线用户删除成功',
-      data: {
         groupId: id,
         onlineCount: await this.countChatGroupOnlineUsers(id),
-      },
     };
   }
 
@@ -840,15 +777,12 @@ export class AdminController {
     }
 
     return {
-      success: true,
-      data: {
         id: group.id,
         name: group.name,
         city: group.city,
         district: group.district,
         onlineCount: await this.countChatGroupOnlineUsers(group.id),
         createdAt: group.createdAt,
-      },
     };
   }
 
@@ -868,16 +802,12 @@ export class AdminController {
     await this.chatGroupRepo.save(group);
 
     return {
-      success: true,
-      message: '群组创建成功',
-      data: {
         id: group.id,
         name: group.name,
         city: group.city,
         district: group.district,
         onlineCount: 0,
         createdAt: group.createdAt,
-      },
     };
   }
 
@@ -896,16 +826,12 @@ export class AdminController {
     await this.chatGroupRepo.save(group);
 
     return {
-      success: true,
-      message: '群组更新成功',
-      data: {
         id: group.id,
         name: group.name,
         city: group.city,
         district: group.district,
         onlineCount: await this.countChatGroupOnlineUsers(group.id),
         createdAt: group.createdAt,
-      },
     };
   }
 
@@ -920,10 +846,7 @@ export class AdminController {
     await assertCanDeleteEntity(this.dataSource, this.chatGroupRepo.metadata, id, '群组');
     await this.chatGroupRepo.remove(group);
 
-    return {
-      success: true,
-      message: '群组删除成功',
-    };
+    return { message: '群组删除成功' };
   }
 
   @Get('random-avatar')
@@ -936,7 +859,7 @@ export class AdminController {
       );
       
       if (files.length === 0) {
-        return { success: false, message: '头像目录为空' };
+        throw new HttpException('头像目录为空', HttpStatus.BAD_REQUEST);
       }
       
       const randomFile = files[Math.floor(Math.random() * files.length)];
@@ -957,13 +880,12 @@ export class AdminController {
       const host = req.protocol + '://' + req.get('host');
       const url = `${host}/uploads/${destFileName}`;
       
-      return {
-        success: true,
-        url,
-        filename: destFileName,
-      };
+      return { url, filename: destFileName };
     } catch (error) {
-      return { success: false, message: '获取随机头像失败: ' + error.message };
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('获取随机头像失败: ' + error.message, HttpStatus.BAD_REQUEST);
     }
   }
 }

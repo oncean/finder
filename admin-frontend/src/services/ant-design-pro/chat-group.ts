@@ -38,8 +38,7 @@ export async function fetchChatGroupList(
   options?: RequestOptions,
 ) {
   return request<{
-    success: boolean;
-    data: ChatGroupItem[];
+    list: ChatGroupItem[];
     total: number;
   }>('/api/v1/admin/chat-groups', {
     method: 'GET',
@@ -53,10 +52,7 @@ export async function fetchChatGroupDetail(
   id: string,
   options?: RequestOptions,
 ) {
-  return request<{
-    success: boolean;
-    data: ChatGroupItem;
-  }>('/api/v1/admin/chat-groups/' + id, {
+  return request<ChatGroupItem>('/api/v1/admin/chat-groups/' + id, {
     method: 'GET',
     ...(options || {}),
   });
@@ -71,11 +67,7 @@ export async function createChatGroup(
   },
   options?: RequestOptions,
 ) {
-  return request<{
-    success: boolean;
-    data: ChatGroupItem;
-    message?: string;
-  }>('/api/v1/admin/chat-groups', {
+  return request<ChatGroupItem>('/api/v1/admin/chat-groups', {
     method: 'POST',
     data,
     ...(options || {}),
@@ -92,11 +84,7 @@ export async function updateChatGroup(
   },
   options?: RequestOptions,
 ) {
-  return request<{
-    success: boolean;
-    data: ChatGroupItem;
-    message?: string;
-  }>('/api/v1/admin/chat-groups/' + id, {
+  return request<ChatGroupItem>('/api/v1/admin/chat-groups/' + id, {
     method: 'PUT',
     data,
     ...(options || {}),
@@ -109,8 +97,7 @@ export async function deleteChatGroup(
   options?: RequestOptions,
 ) {
   return request<{
-    success: boolean;
-    message?: string;
+    message: string;
   }>('/api/v1/admin/chat-groups/' + id, {
     method: 'DELETE',
     ...(options || {}),
@@ -123,8 +110,7 @@ export async function fetchChatGroupOnlineUsers(
   options?: RequestOptions,
 ) {
   return request<{
-    success: boolean;
-    data: ChatGroupOnlineUserItem[];
+    list: ChatGroupOnlineUserItem[];
     total: number;
   }>('/api/v1/admin/chat-groups/' + groupId + '/online-users', {
     method: 'GET',
@@ -138,10 +124,7 @@ export async function addChatGroupOnlineUser(
   data: { userId: string },
   options?: RequestOptions,
 ) {
-  return request<{
-    success: boolean;
-    message?: string;
-  }>('/api/v1/admin/chat-groups/' + groupId + '/online-users', {
+  return request<ChatGroupOnlineUserItem>('/api/v1/admin/chat-groups/' + groupId + '/online-users', {
     method: 'POST',
     data,
     ...(options || {}),
@@ -155,8 +138,8 @@ export async function deleteChatGroupOnlineUser(
   options?: RequestOptions,
 ) {
   return request<{
-    success: boolean;
-    message?: string;
+    groupId: string;
+    onlineCount: number;
   }>('/api/v1/admin/chat-groups/' + groupId + '/online-users/' + userId, {
     method: 'DELETE',
     ...(options || {}),

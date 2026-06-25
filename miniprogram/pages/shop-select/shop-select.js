@@ -1,5 +1,6 @@
 const shopService = require('../../services/shop');
 const ws = require('../../utils/websocket');
+const { getCurrentLocation } = require('../../utils/location');
 
 Page({
   data: {

@@ -109,39 +109,28 @@ export class ShopService {
     const commentAvatars = recentComments
       .map(c => c.author?.avatar)
       .filter(Boolean);
+    const recommendations = await this.findRelatedShops(shop);
 
     return {
       id: shop.id,
-      name: shop.name || '南京这家店味道真不错',
-      category: shop.category || '南京菜',
-      address: shop.address || '湛山路与望江西路',
-      coverImage: `${this.staticBaseUrl}/shop-detail-hero.jpg`,
+      name: shop.name,
+      category: shop.category,
+      address: shop.address,
+      coverImage: shop.coverImage || shop.logo || '',
       phone: shop.phone,
-      businessHours: '周五01.24 19:30',
+      businessHours: shop.businessHours,
       rating: shop.rating,
-      reviewCount: Math.max(shop.reviewCount || 0, 6321),
+      reviewCount: shop.reviewCount || commentCount,
       commentCount,
       commentAvatars,
-      summaryTags: shop.summaryTags || {
-        positive: ['重油重辣'],
-        negative: ['太酸了'],
-      },
+      summaryTags: shop.summaryTags,
       isVerified: shop.isVerified,
-      location: shop.location || { lat: 32.0603, lng: 118.7969 },
-      subtitle: '好吃的菜好吃的菜好吃的菜好吃的菜好吃的菜好吃的菜好吃的菜好吃的菜好吃的菜好吃的菜',
-      rankText: '推荐榜第一',
-      testerCount: 6321,
-      paymentRecord: {
-        image: `${this.staticBaseUrl}/shop-pay-record.jpg`,
-        amount: 979.46,
-        discount: 0.21,
-      },
-      recommendations: [1, 2, 3, 4].map((index) => ({
-        id: `mock_related_${index}`,
-        name: '南京盐水鸭',
-        coverImage: `${this.staticBaseUrl}/shop-reco-${index}.jpg`,
-        reviewCount: index === 1 ? 20 : index === 2 ? 2188 : index === 3 ? 1888 : 290,
-      })),
+      location: shop.location,
+      subtitle: [shop.category, shop.address].filter(Boolean).join(' · '),
+      rankText: null,
+      testerCount: commentCount || shop.reviewCount || 0,
+      paymentRecord: null,
+      recommendations,
     };
   }
 
@@ -186,5 +175,51 @@ export class ShopService {
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return Math.round(R * c * 1000);
+  }
+
+  private async findRelatedShops(shop: Shop) {
+    const query = this.shopRepo.createQueryBuilder('related')
+      .select([
+        'related.id',
+        'related.name',
+        'related.category',
+        'related.address',
+        'related.coverImage',
+        'related.logo',
+        'related.rating',
+        'related.reviewCount',
+      ])
+      .where('related.id != :id', { id: shop.id });
+
+    if (shop.category) {
+      query.addOrderBy(
+        'CASE WHEN related.category = :category THEN 0 ELSE 1 END',
+        'ASC',
+      ).setParameter('category', shop.category);
+    }
+
+    if (shop.city) {
+      query.addOrderBy(
+        'CASE WHEN related.city = :city THEN 0 ELSE 1 END',
+        'ASC',
+      ).setParameter('city', shop.city);
+    }
+
+    const relatedShops = await query
+      .addOrderBy('related.reviewCount', 'DESC')
+      .addOrderBy('related.rating', 'DESC')
+      .addOrderBy('related.createdAt', 'DESC')
+      .take(4)
+      .getMany();
+
+    return relatedShops.map((item) => ({
+      id: item.id,
+      name: item.name,
+      category: item.category,
+      address: item.address,
+      coverImage: item.coverImage || item.logo || '',
+      reviewCount: item.reviewCount || 0,
+      rating: item.rating,
+    }));
   }
 }

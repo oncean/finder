@@ -45,7 +45,7 @@
 }
 
 .text-bubble {
-  background: #fff;
+  background: #f2f3f5;
   padding: 12rpx 16rpx;
   font-size: 28rpx;
   color: #333;
@@ -69,12 +69,17 @@
 }
 
 .shop-bubble {
-  background: #fff;
+  background: #f7f7f7;
   padding: 16rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
   width: 540rpx;
   border-radius: 16rpx;
-  border: 2rpx solid #a3e635;
+  border: 2rpx solid #e5e7eb;
+}
+
+.message-item.self .shop-bubble {
+  background: #fff;
+  border-color: #a3e635;
 }
 
 .shop-card-top {

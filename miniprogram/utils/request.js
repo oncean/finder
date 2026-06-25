@@ -36,8 +36,8 @@ function request(options) {
           return;
         }
 
-        // 成功：返回 data 字段
-        resolve(res.data && res.data.data !== undefined ? res.data.data : res.data);
+        // 成功：直接返回后端响应体
+        resolve(res.data);
       },
       fail: (err) => {
         wx.showToast({ title: '网络错误', icon: 'none' });

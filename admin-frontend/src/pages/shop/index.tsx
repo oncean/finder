@@ -323,7 +323,11 @@ const ShopPage: React.FC = () => {
           fetchShopList({
             current: params.current,
             pageSize: params.pageSize,
-          })
+          }).then((res) => ({
+            data: res.list || [],
+            success: true,
+            total: res.total || 0,
+          }))
         }
         columns={columns}
         rowSelection={{

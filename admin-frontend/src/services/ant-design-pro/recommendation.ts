@@ -47,7 +47,7 @@ export async function fetchRecommendationList(
   options?: RequestOptions,
 ) {
   const res = await request<{
-    data: any[];
+    list: any[];
     total: number;
   }>('/api/v1/admin/comments', {
     method: 'GET',
@@ -59,7 +59,7 @@ export async function fetchRecommendationList(
   });
   return {
     ...res,
-    data: (res.data || []).map(normalizeCommentRecommendation),
+    list: (res.list || []).map(normalizeCommentRecommendation),
   };
 }
 
@@ -69,7 +69,7 @@ export async function fetchAllPosts(
   options?: RequestOptions,
 ) {
   const res = await request<{
-    data: any[];
+    list: any[];
     total: number;
   }>('/api/v1/admin/comments', {
     method: 'GET',
@@ -78,7 +78,7 @@ export async function fetchAllPosts(
   });
   return {
     ...res,
-    data: (res.data || []).map(normalizeCommentRecommendation),
+    list: (res.list || []).map(normalizeCommentRecommendation),
   };
 }
 
@@ -88,10 +88,7 @@ export async function updateRecommendation(
   data: { isRecommended: boolean; recommendRank?: number },
   options?: RequestOptions,
 ) {
-  return request<{
-    data: RecommendationItem;
-    message?: string;
-  }>('/api/v1/admin/comments/' + id, {
+  return request<RecommendationItem>('/api/v1/admin/comments/' + id, {
     method: 'PUT',
     data: {
       isFengxiangbiao: data.isRecommended,

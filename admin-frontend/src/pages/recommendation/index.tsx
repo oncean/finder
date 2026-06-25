@@ -83,7 +83,7 @@ const RecommendationPage: React.FC = () => {
 
     try {
       const res = await fetchAllPosts({ pageSize: 100 });
-      setAllPosts(res.data || []);
+      setAllPosts(res.list || []);
     } catch {
       setAllPosts([]);
     }
@@ -273,7 +273,11 @@ const RecommendationPage: React.FC = () => {
             current: params.current,
             pageSize: params.pageSize,
             keyword: params.title as string,
-          })
+          }).then((res) => ({
+            data: res.list || [],
+            success: true,
+            total: res.total || 0,
+          }))
         }
         columns={columns}
         rowSelection={{

@@ -44,6 +44,6 @@
       </view>
     </view>
     
-    <text class="message-time">{{formatTime(message.createdAt)}}</text>
+    <text class="message-time">{{displayTime}}</text>
   </view>
 </view>

@@ -34,6 +34,7 @@ const MessageManagement: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [tableRefreshKey, setTableRefreshKey] = useState(0);
   const [groupOptions, setGroupOptions] = useState<
     { label: string; value: string }[]
   >([]);
@@ -51,9 +52,9 @@ const MessageManagement: React.FC = () => {
   const loadGroupOptions = async () => {
     try {
       const res = await fetchChatGroupList({ pageSize: 100, current: 1 });
-      if (res.data) {
+      if (res.list) {
         setGroupOptions(
-          res.data.map((g: any) => ({
+          res.list.map((g: any) => ({
             label: g.name,
             value: g.id,
           })),
@@ -68,9 +69,9 @@ const MessageManagement: React.FC = () => {
   const loadShopOptions = async () => {
     try {
       const res = await fetchShopList({ pageSize: 100, current: 1 });
-      if (res.data) {
+      if (res.list) {
         setShopOptions(
-          res.data.map((shop: any) => ({
+          res.list.map((shop: any) => ({
             label: shop.name,
             value: shop.id,
           })),
@@ -85,9 +86,9 @@ const MessageManagement: React.FC = () => {
   const loadUserOptions = async () => {
     try {
       const res = await fetchWechatUserList({ pageSize: 100, current: 1 });
-      if (res.data) {
+      if (res.list) {
         setUserOptions(
-          res.data.map((user: any) => ({
+          res.list.map((user: any) => ({
             label: user.nickname || user.openid || user.id,
             value: user.id,
           })),
@@ -118,16 +119,12 @@ const MessageManagement: React.FC = () => {
         payload.content = values.content;
       }
 
-      const res = await sendMessage(payload);
-
-      if (res.success) {
-        message.success('消息发送成功');
-        setIsModalVisible(false);
-        form.resetFields();
-        actionRef.current?.reload();
-      } else {
-        message.error(res.message || '发送失败');
-      }
+      await sendMessage(payload);
+      message.success('消息发送成功');
+      setIsModalVisible(false);
+      form.resetFields();
+      actionRef.current?.reloadAndRest?.();
+      setTableRefreshKey((key) => key + 1);
     } catch (error: any) {
       message.error(error.message || '发送失败');
     } finally {
@@ -137,13 +134,10 @@ const MessageManagement: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await deleteMessage(id);
-      if (res.success) {
-        message.success('删除成功');
-        actionRef.current?.reload();
-      } else {
-        message.error(res.message || '删除失败');
-      }
+      await deleteMessage(id);
+      message.success('删除成功');
+      actionRef.current?.reloadAndRest?.();
+      setTableRefreshKey((key) => key + 1);
     } catch (error: any) {
       message.error(error.message || '删除失败');
     }
@@ -223,6 +217,7 @@ const MessageManagement: React.FC = () => {
       <Card>
         <ProTable
           headerTitle="消息列表"
+          key={tableRefreshKey}
           actionRef={actionRef}
           rowKey="id"
           search={{
@@ -240,8 +235,8 @@ const MessageManagement: React.FC = () => {
               current: params.current || 1,
             });
             return {
-              data: res.data || [],
-              success: res.success,
+              data: res.list || [],
+              success: true,
               total: res.total || 0,
             };
           }}

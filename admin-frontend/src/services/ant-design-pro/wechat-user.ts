@@ -26,7 +26,7 @@ export async function fetchWechatUserList(
   options?: RequestOptions,
 ) {
   return request<{
-    data: WechatUserItem[];
+    list: WechatUserItem[];
     total: number;
   }>('/api/v1/admin/users', {
     method: 'GET',
@@ -40,9 +40,7 @@ export async function fetchWechatUserDetail(
   id: string,
   options?: RequestOptions,
 ) {
-  return request<{
-    data: WechatUserItem;
-  }>('/api/v1/admin/users/' + id, {
+  return request<WechatUserItem>('/api/v1/admin/users/' + id, {
     method: 'GET',
     ...(options || {}),
   });
@@ -53,10 +51,7 @@ export async function createWechatUser(
   data: Partial<Pick<WechatUserItem, 'nickname' | 'avatar' | 'phone' | 'location' | 'isAdmin'>>,
   options?: RequestOptions,
 ) {
-  return request<{
-    data: WechatUserItem;
-    message?: string;
-  }>('/api/v1/admin/users', {
+  return request<WechatUserItem>('/api/v1/admin/users', {
     method: 'POST',
     data,
     ...(options || {}),
@@ -69,10 +64,7 @@ export async function updateWechatUser(
   data: Partial<Pick<WechatUserItem, 'nickname' | 'avatar' | 'phone' | 'location' | 'isAdmin'>>,
   options?: RequestOptions,
 ) {
-  return request<{
-    data: WechatUserItem;
-    message?: string;
-  }>('/api/v1/admin/users/' + id, {
+  return request<WechatUserItem>('/api/v1/admin/users/' + id, {
     method: 'PUT',
     data,
     ...(options || {}),

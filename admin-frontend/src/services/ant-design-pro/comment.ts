@@ -36,7 +36,7 @@ export async function fetchCommentList(
   options?: RequestOptions,
 ) {
   return request<{
-    data: CommentItem[];
+    list: CommentItem[];
     total: number;
   }>('/api/v1/admin/comments', {
     method: 'GET',
@@ -50,9 +50,7 @@ export async function fetchCommentDetail(
   id: string,
   options?: RequestOptions,
 ) {
-  return request<{
-    data: CommentItem;
-  }>('/api/v1/admin/comments/' + id, {
+  return request<CommentItem>('/api/v1/admin/comments/' + id, {
     method: 'GET',
     ...(options || {}),
   });
@@ -63,10 +61,7 @@ export async function createComment(
   data: Partial<Omit<CommentItem, 'id' | 'shop'>>,
   options?: RequestOptions,
 ) {
-  return request<{
-    data: CommentItem;
-    message?: string;
-  }>('/api/v1/admin/comments', {
+  return request<CommentItem>('/api/v1/admin/comments', {
     method: 'POST',
     data,
     ...(options || {}),
@@ -79,10 +74,7 @@ export async function updateComment(
   data: Partial<CommentItem>,
   options?: RequestOptions,
 ) {
-  return request<{
-    data: CommentItem;
-    message?: string;
-  }>('/api/v1/admin/comments/' + id, {
+  return request<CommentItem>('/api/v1/admin/comments/' + id, {
     method: 'PUT',
     data,
     ...(options || {}),

@@ -55,25 +55,17 @@ const ChatGroupManagement: React.FC = () => {
     setLoading(true);
     try {
       if (isEdit && currentId) {
-        const res = await updateChatGroup(currentId, values);
-        if (res.success) {
-          message.success('群组更新成功');
-          setIsModalVisible(false);
-          form.resetFields();
-          actionRef.current?.reload();
-        } else {
-          message.error(res.message || '更新失败');
-        }
+        await updateChatGroup(currentId, values);
+        message.success('群组更新成功');
+        setIsModalVisible(false);
+        form.resetFields();
+        actionRef.current?.reload();
       } else {
-        const res = await createChatGroup(values);
-        if (res.success) {
-          message.success('群组创建成功');
-          setIsModalVisible(false);
-          form.resetFields();
-          actionRef.current?.reload();
-        } else {
-          message.error(res.message || '创建失败');
-        }
+        await createChatGroup(values);
+        message.success('群组创建成功');
+        setIsModalVisible(false);
+        form.resetFields();
+        actionRef.current?.reload();
       }
     } catch (error: any) {
       message.error(error.message || '操作失败');
@@ -95,7 +87,7 @@ const ChatGroupManagement: React.FC = () => {
 
   const loadOnlineUsers = async (groupId: string) => {
     const res = await fetchChatGroupOnlineUsers(groupId);
-    setOnlineUsers(res.data || []);
+    setOnlineUsers(res.list || []);
   };
 
   const openOnlineModal = async (record: ChatGroupItem) => {
@@ -108,8 +100,8 @@ const ChatGroupManagement: React.FC = () => {
         fetchChatGroupOnlineUsers(record.id),
         fetchWechatUserList({ current: 1, pageSize: 100 }),
       ]);
-      setOnlineUsers(onlineRes.data || []);
-      setWechatUsers(userRes.data || []);
+      setOnlineUsers(onlineRes.list || []);
+      setWechatUsers(userRes.list || []);
     } catch (error: any) {
       message.error(getErrorMessage(error, '加载在线用户失败'));
     } finally {
@@ -130,17 +122,13 @@ const ChatGroupManagement: React.FC = () => {
 
     setOnlineLoading(true);
     try {
-      const res = await addChatGroupOnlineUser(currentGroup.id, {
+      await addChatGroupOnlineUser(currentGroup.id, {
         userId: selectedUserId,
       });
-      if (res.success) {
-        message.success('在线用户添加成功');
-        setSelectedUserId(undefined);
-        await loadOnlineUsers(currentGroup.id);
-        actionRef.current?.reload();
-      } else {
-        message.error(res.message || '添加失败');
-      }
+      message.success('在线用户添加成功');
+      setSelectedUserId(undefined);
+      await loadOnlineUsers(currentGroup.id);
+      actionRef.current?.reload();
     } catch (error: any) {
       message.error(getErrorMessage(error, '添加失败'));
     } finally {
@@ -155,14 +143,10 @@ const ChatGroupManagement: React.FC = () => {
 
     setOnlineLoading(true);
     try {
-      const res = await deleteChatGroupOnlineUser(currentGroup.id, userId);
-      if (res.success) {
-        message.success('在线用户删除成功');
-        await loadOnlineUsers(currentGroup.id);
-        actionRef.current?.reload();
-      } else {
-        message.error(res.message || '删除失败');
-      }
+      await deleteChatGroupOnlineUser(currentGroup.id, userId);
+      message.success('在线用户删除成功');
+      await loadOnlineUsers(currentGroup.id);
+      actionRef.current?.reload();
     } catch (error: any) {
       message.error(getErrorMessage(error, '删除失败'));
     } finally {
@@ -172,13 +156,9 @@ const ChatGroupManagement: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await deleteChatGroup(id);
-      if (res.success) {
-        message.success('删除成功');
-        actionRef.current?.reload();
-      } else {
-        message.error(res.message || '删除失败');
-      }
+      await deleteChatGroup(id);
+      message.success('删除成功');
+      actionRef.current?.reload();
     } catch (error: any) {
       message.error(error.message || '删除失败');
     }
@@ -317,8 +297,8 @@ const ChatGroupManagement: React.FC = () => {
               current: params.current || 1,
             });
             return {
-              data: res.data || [],
-              success: res.success,
+              data: res.list || [],
+              success: true,
               total: res.total || 0,
             };
           }}

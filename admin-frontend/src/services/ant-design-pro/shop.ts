@@ -34,7 +34,7 @@ export async function fetchShopList(
   options?: RequestOptions,
 ) {
   return request<{
-    data: ShopItem[];
+    list: ShopItem[];
     total: number;
   }>('/api/v1/admin/shops', {
     method: 'GET',
@@ -48,9 +48,7 @@ export async function fetchShopDetail(
   id: string,
   options?: RequestOptions,
 ) {
-  return request<{
-    data: ShopItem;
-  }>('/api/v1/admin/shops/' + id, {
+  return request<ShopItem>('/api/v1/admin/shops/' + id, {
     method: 'GET',
     ...(options || {}),
   });
@@ -61,10 +59,7 @@ export async function createShop(
   data: Partial<ShopItem>,
   options?: RequestOptions,
 ) {
-  return request<{
-    data: ShopItem;
-    message?: string;
-  }>('/api/v1/admin/shops', {
+  return request<ShopItem>('/api/v1/admin/shops', {
     method: 'POST',
     data,
     ...(options || {}),
@@ -77,10 +72,7 @@ export async function updateShop(
   data: Partial<ShopItem>,
   options?: RequestOptions,
 ) {
-  return request<{
-    data: ShopItem;
-    message?: string;
-  }>('/api/v1/admin/shops/' + id, {
+  return request<ShopItem>('/api/v1/admin/shops/' + id, {
     method: 'PUT',
     data,
     ...(options || {}),

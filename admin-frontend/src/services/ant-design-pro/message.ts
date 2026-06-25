@@ -40,8 +40,7 @@ export async function fetchMessageList(
   options?: RequestOptions,
 ) {
   return request<{
-    success: boolean;
-    data: MessageItem[];
+    list: MessageItem[];
     total: number;
   }>('/api/v1/admin/messages', {
     method: 'GET',
@@ -67,11 +66,7 @@ export async function sendMessage(
   },
   options?: RequestOptions,
 ) {
-  return request<{
-    success: boolean;
-    data: MessageItem;
-    message?: string;
-  }>('/api/v1/admin/messages/send', {
+  return request<MessageItem>('/api/v1/admin/messages/send', {
     method: 'POST',
     data,
     ...(options || {}),
@@ -84,8 +79,7 @@ export async function deleteMessage(
   options?: RequestOptions,
 ) {
   return request<{
-    success: boolean;
-    message?: string;
+    message: string;
   }>('/api/v1/admin/messages/' + id, {
     method: 'DELETE',
     ...(options || {}),

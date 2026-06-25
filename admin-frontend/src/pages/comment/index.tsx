@@ -50,7 +50,7 @@ const CommentPage: React.FC = () => {
 
   React.useEffect(() => {
     fetchShopList({}).then((res) => {
-      setShops(res.data || []);
+      setShops(res.list || []);
     });
   }, []);
 
@@ -298,7 +298,11 @@ const CommentPage: React.FC = () => {
           fetchCommentList({
             current: params.current,
             pageSize: params.pageSize,
-          })
+          }).then((res) => ({
+            data: res.list || [],
+            success: true,
+            total: res.total || 0,
+          }))
         }
         columns={columns}
         rowSelection={{

@@ -4,9 +4,7 @@ import { request } from '@umijs/max';
 
 /** 获取当前的管理员用户 GET /api/v1/auth/admin/me */
 export async function currentUser(options?: { [key: string]: any }) {
-  return request<{
-    data: API.CurrentUser;
-  }>('/api/v1/auth/admin/me', {
+  return request<API.CurrentUser>('/api/v1/auth/admin/me', {
     method: 'GET',
     ...(options || {}),
   });

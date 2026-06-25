@@ -270,7 +270,11 @@ const WechatUserPage: React.FC = () => {
             current: params.current,
             pageSize: params.pageSize,
             keyword: params.keyword as string,
-          })
+          }).then((res) => ({
+            data: res.list || [],
+            success: true,
+            total: res.total || 0,
+          }))
         }
         columns={columns}
         rowSelection={{

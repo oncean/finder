@@ -44,14 +44,14 @@ export class CommentService {
       });
     }
 
-    const [data, total] = await query
+    const [list, total] = await query
       .skip((page - 1) * limit)
       .take(limit)
       .orderBy('comment.fengxiangbiaoRank', 'ASC', 'NULLS LAST')
       .addOrderBy('comment.createdAt', 'DESC')
       .getManyAndCount();
 
-    return { success: true, data, total };
+    return { list, total };
   }
 
   async findOne(id: string) {
@@ -91,6 +91,6 @@ export class CommentService {
 
     await assertCanDeleteEntity(this.dataSource, this.commentRepo.metadata, id, '评价');
     await this.commentRepo.remove(comment);
-    return { success: true, message: '评价删除成功' };
+    return { message: '评价删除成功' };
   }
 }
