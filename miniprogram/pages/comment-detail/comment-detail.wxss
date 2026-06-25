@@ -54,19 +54,33 @@
   font-size: 35rpx;
 }
 
+.gallery-section {
+  width: 100%;
+}
+
+.gallery-swiper {
+  width: 100%;
+  height: 506rpx;
+}
+
+.gallery-image {
+  width: 100%;
+  height: 100%;
+}
+
 .shop-cover {
   width: 100%;
   height: 506rpx;
   display: block;
 }
 
-.shop-info-section {
+.comment-info-section {
   background: #fff;
   padding: 28rpx 30rpx 24rpx;
   border-bottom: 12rpx solid #f5f5f5;
 }
 
-.shop-header {
+.comment-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -74,7 +88,7 @@
   gap: 16rpx;
 }
 
-.shop-name {
+.comment-title {
   font-size: 31rpx;
   line-height: 1.25;
   color: #111827;
@@ -91,6 +105,14 @@
   white-space: nowrap;
 }
 
+.comment-content {
+  display: block;
+  color: #333;
+  font-size: 27rpx;
+  line-height: 1.45;
+  margin-bottom: 8rpx;
+}
+
 .shop-desc {
   display: block;
   color: #8c8c8c;
@@ -103,29 +125,29 @@
   background: #fff;
 }
 
-.tester-row {
+.stats-row {
   display: flex;
   align-items: center;
   padding-bottom: 22rpx;
 }
 
-.tester-avatars {
+.reviewer-avatars {
   display: flex;
-  margin-right: auto;
+  align-items: center;
 }
 
-.tester-avatar {
+.reviewer-avatar {
   width: 52rpx;
   height: 52rpx;
   border-radius: 50%;
   border: 2rpx solid #fff;
 }
 
-.tester-avatar.overlap {
+.reviewer-avatar.overlap {
   margin-left: -16rpx;
 }
 
-.tester-count {
+.review-count {
   margin-left: auto;
   display: flex;
   align-items: baseline;
@@ -133,20 +155,21 @@
 
 .count-num {
   color: #a3e635;
-  font-size: 48rpx;
+  font-size: 58rpx;
   font-weight: 900;
   margin-right: 5rpx;
 }
 
 .count-label {
   color: #333;
-  font-size: 26rpx;
+  font-size: 20rpx;
+  font-weight: 900;
 }
 
 .row-arrow {
   color: #c7c7c7;
   font-size: 42rpx;
-  margin-left: 10rpx;
+  margin-left: 12rpx;
 }
 
 .info-row {
@@ -191,7 +214,7 @@
   margin-top: 24rpx;
 }
 
-.shop-footer .tester-row {
+.shop-footer .stats-row {
   display: flex;
   align-items: center;
   min-width: 0;
@@ -217,73 +240,228 @@
   font-style: italic;
 }
 
-.pay-record {
-  width: 100%;
-  height: 208rpx;
-  border-radius: 8rpx;
-  display: block;
-}
-
-.recommend-section {
-  padding: 28rpx 0 28rpx 30rpx;
+.consume-section {
+  padding: 0rpx 20rpx 10rpx;
   background: #fff;
 }
 
-.section-title {
-  font-size: 29rpx;
-  font-weight: 800;
-  margin-bottom: 20rpx;
-  color: #111827;
-}
-
-.recommend-scroll {
-  white-space: nowrap;
-}
-
-.recommend-list {
-  display: inline-flex;
-  gap: 14rpx;
-  padding-right: 30rpx;
-}
-
-.recommend-item {
-  width: 132rpx;
-}
-
-.reco-cover-wrap {
+.consume-card {
+  border-radius: 16rpx;
   position: relative;
-  width: 132rpx;
-  height: 132rpx;
-  border-radius: 8rpx;
   overflow: hidden;
-  background: #f5f5f5;
+  height: 200rpx;
 }
 
-.reco-cover {
+.consume-card--text {
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.consume-receipt {
   width: 100%;
   height: 100%;
 }
 
-.reco-count {
+.consume-overlay {
   position: absolute;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 6rpx 0;
-  text-align: center;
-  color: #fff;
-  font-size: 19rpx;
-  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.55));
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
 }
 
-.reco-name {
+.consume-cert {
+  color: #fff;
+  font-size: 22rpx;
+  letter-spacing: 1rpx;
+  margin-bottom: 20rpx;
+  margin-right: 20rpx;
+}
+
+.consume-amount-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 40rpx;
+  font-weight: 900;
+}
+
+.recommend-section {
+  padding: 28rpx 0 40rpx;
+  background: #fff;
+}
+
+.recommend-section .section-title {
+  padding: 0 30rpx;
+}
+
+.recommend-scroll {
+  width: 100%;
+}
+
+.recommend-list {
+  display: flex;
+  padding: 0 30rpx;
+  gap: 16rpx;
+}
+
+.recommend-card {
+  flex-shrink: 0;
+  width: 180rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4rpx 16rpx rgba(31, 41, 55, 0.06);
+}
+
+.recommend-cover-wrap {
+  position: relative;
+  width: 180rpx;
+  height: 135rpx;
+  overflow: hidden;
+  border-radius: 12rpx;
+}
+
+.recommend-cover {
+  width: 180rpx;
+  height: 135rpx;
   display: block;
-  margin-top: 10rpx;
-  font-size: 23rpx;
+}
+
+.recommend-info {
+  padding: 10rpx;
+}
+
+.recommend-title {
+  font-size: 22rpx;
   color: #111827;
-  white-space: nowrap;
+  font-weight: 600;
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 6rpx;
+}
+
+.recommend-review-bar {
+  position: absolute;
+  bottom: 0rpx;
+  left: 0rpx;
+  right: 0rpx;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8rpx);
+  -webkit-backdrop-filter: blur(8rpx);
+  height: 35rpx;
+  padding: 0 10rpx;
+  line-height: 25rpx;
+  border-radius: 0 0 12rpx 12rpx;
+}
+
+.recommend-review-text {
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 500;
+}
+
+.section-title {
+  font-size: 25rpx;
+  font-weight: 900;
+  margin-bottom: 20rpx;
+  color: #111827;
+}
+
+.review-card {
+  background: #fff;
+  border-radius: 18rpx;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 28rpx rgba(31, 41, 55, 0.08);
+  border: 1rpx solid #f1f5f9;
+}
+
+.feed-head {
+  display: flex;
+  padding: 24rpx 24rpx 18rpx;
+  gap: 14rpx;
+}
+
+.author-avatar {
+  width: 54rpx;
+  height: 54rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.head-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.feed-title {
+  flex: 1;
+  min-width: 0;
+  color: #1f2933;
+  font-size: 29rpx;
+  line-height: 1.3;
+}
+
+.rating-text {
+  color: #84cc16;
+  font-size: 22rpx;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.feed-desc {
+  display: block;
+  margin-top: 8rpx;
+  color: #6b7280;
+  font-size: 25rpx;
+  line-height: 1.45;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8rpx;
+  padding: 0 24rpx 24rpx;
+}
+
+.food-image {
+  width: 100%;
+  height: 186rpx;
+  border-radius: 8rpx;
+}
+
+.empty-reviews {
+  display: flex;
+  justify-content: center;
+  padding: 60rpx 0;
+}
+
+.empty-text {
+  font-size: 27rpx;
+  color: #999;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bottom-actions {
@@ -291,11 +469,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 132rpx;
+  height: 180rpx;
   background: #fff;
   display: flex;
   align-items: center;
-  padding: 18rpx 30rpx 22rpx;
+  padding: 0rpx 30rpx 22rpx;
   box-sizing: border-box;
   box-shadow: 0 -8rpx 24rpx rgba(15, 23, 42, 0.04);
 }

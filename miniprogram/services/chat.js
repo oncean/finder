@@ -1,7 +1,10 @@
 const request = require('../utils/request');
 
-function getGroupInfo(groupId) {
-  return request.get(`/chat/group/${groupId}`);
+function getGroupInfo(groupId, location) {
+  const params = location && location.lat && location.lng
+    ? { lat: location.lat, lng: location.lng }
+    : undefined;
+  return request.get(`/chat/group/${groupId}`, params);
 }
 
 function getOnlineUsers(groupId) {

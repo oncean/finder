@@ -10,6 +10,7 @@ import {
   Card,
   Form,
   Input,
+  InputNumber,
   Modal,
   message,
   Popconfirm,
@@ -81,6 +82,9 @@ const ChatGroupManagement: React.FC = () => {
       name: record.name,
       city: record.city,
       district: record.district,
+      centerLat: record.centerLat,
+      centerLng: record.centerLng,
+      coverageRadius: record.coverageRadius,
     });
     setIsModalVisible(true);
   };
@@ -186,6 +190,25 @@ const ChatGroupManagement: React.FC = () => {
       title: '区域',
       dataIndex: 'district',
       search: false,
+    },
+    {
+      title: '中心点',
+      dataIndex: 'center',
+      search: false,
+      render: (_, record) =>
+        record.centerLat !== null &&
+        record.centerLat !== undefined &&
+        record.centerLng !== null &&
+        record.centerLng !== undefined
+          ? `${record.centerLat}, ${record.centerLng}`
+          : '-',
+    },
+    {
+      title: '覆盖半径',
+      dataIndex: 'coverageRadius',
+      search: false,
+      render: (_, record) =>
+        record.coverageRadius ? `${record.coverageRadius} 米` : '-',
     },
     {
       title: '在线人数',
@@ -330,6 +353,40 @@ const ChatGroupManagement: React.FC = () => {
           </Form.Item>
           <Form.Item name="district" label="区域">
             <Input placeholder="请输入区域" />
+          </Form.Item>
+          <Form.Item
+            name="centerLat"
+            label="中心点纬度"
+            tooltip="用于小程序根据用户当前位置匹配最近群组"
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder="例如 32.0603"
+              precision={6}
+            />
+          </Form.Item>
+          <Form.Item
+            name="centerLng"
+            label="中心点经度"
+            tooltip="用于小程序根据用户当前位置匹配最近群组"
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder="例如 118.7969"
+              precision={6}
+            />
+          </Form.Item>
+          <Form.Item
+            name="coverageRadius"
+            label="覆盖半径（米）"
+            tooltip="用户位置距离中心点不超过该半径时，才会匹配到此群组"
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              min={1}
+              precision={0}
+              placeholder="例如 3000"
+            />
           </Form.Item>
         </Form>
       </Modal>

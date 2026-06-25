@@ -12,7 +12,8 @@
     </view>
 
     <!-- 店铺信息卡 -->
-    <shop-section
+    <view style="padding: 10rpx 20rpx;">
+      <shop-section
       shop="{{shop}}"
       shop-name="{{shop.name}}"
       location="{{shop.city}}"
@@ -23,6 +24,7 @@
       shop-id="{{shop.id}}"
       bind:tapShop="onTapShop"
     />
+    </view>
 
     <!-- 评价列表 -->
     <view class="review-list">

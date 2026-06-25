@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  margin-bottom: 12rpx;
+  margin-bottom: 30rpx;
   padding: 0 20rpx;
 }
 
@@ -24,13 +24,14 @@
 }
 
 .message-content {
-  max-width: 70%;
+  max-width: 85%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
 }
 
 .message-item.self .message-content {
-  align-items: flex-end;
+  align-items: center;
 }
 
 .sender-name {
@@ -46,7 +47,7 @@
 
 .text-bubble {
   background: #f2f3f5;
-  padding: 12rpx 16rpx;
+  padding: 20rpx 20rpx;
   font-size: 28rpx;
   color: #333;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
@@ -60,26 +61,41 @@
 
 .image-bubble {
   background: transparent;
-  max-width: 400rpx;
+  max-width: 560rpx;
+  max-height: 900rpx;
 }
 
 .image-bubble image {
   width: 100%;
   border-radius: 16rpx;
+  min-width: 300rpx;
+}
+
+/* 图片消息：放大显示 */
+.message-content.image-message {
+  max-width: 90%;
+}
+
+.image-message .image-bubble {
+  flex: 0 0 auto;
+  max-width: 620rpx;
+  max-height: 960rpx;
+}
+
+.image-message .image-bubble image {
+  max-width: 620rpx;
+  width: auto;
+  border-radius: 16rpx;
 }
 
 .shop-bubble {
-  background: #f7f7f7;
-  padding: 16rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
-  width: 540rpx;
-  border-radius: 16rpx;
-  border: 2rpx solid #e5e7eb;
+  background: transparent;
+  width: 590rpx;
+  border-radius: 24rpx;
 }
 
 .message-item.self .shop-bubble {
-  background: #fff;
-  border-color: #a3e635;
+  background: transparent;
 }
 
 .shop-card-top {
@@ -197,6 +213,14 @@
 .message-time {
   font-size: 20rpx;
   color: #999;
-  margin-top: 4rpx;
-  padding: 0 8rpx;
+  margin-left: 12rpx;
+  padding: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.message-item.self .message-time {
+  order: -1;
+  margin-left: 0;
+  margin-right: 12rpx;
 }

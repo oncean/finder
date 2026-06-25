@@ -30,6 +30,14 @@
   font-size: 28rpx;
 }
 
+.unsupported {
+  text-align: center;
+  padding: 180rpx 48rpx;
+  color: #8c8c8c;
+  font-size: 30rpx;
+  line-height: 1.5;
+}
+
 /* 登录弹窗样式 */
 .login-modal {
   position: fixed;

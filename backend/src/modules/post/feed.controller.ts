@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { PostService } from './post.service';
 
 @Controller('feed')
@@ -18,5 +18,10 @@ export class FeedController {
       page ? parseInt(page as any, 10) : 1,
       pageSize ? parseInt(pageSize as any, 10) : 20,
     );
+  }
+
+  @Get('recommendations/:id')
+  async getRecommendation(@Param('id') id: string) {
+    return this.postService.findOne(id);
   }
 }

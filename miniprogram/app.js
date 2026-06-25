@@ -61,16 +61,6 @@ App({
     }
   },
 
-  generateRandomUser() {
-    const randomNum = Math.random().toString(36).substr(2, 6);
-    const randomNick = '用户' + randomNum;
-    const defaultAvatar = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0';
-    return {
-      nickName: randomNick,
-      avatarUrl: defaultAvatar
-    };
-  },
-
   async wxLogin(userInfo = null) {
     return new Promise((resolve, reject) => {
       console.log('开始微信登录');

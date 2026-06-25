@@ -31,12 +31,11 @@
         bindtap="onSelectShop"
         data-shop="{{item}}"
       >
-        <image class="shop-thumb" src="{{item.coverImage || 'http://192.168.2.103/static/default-shop.png'}}" mode="aspectFill" />
+        <image wx:if="{{item.coverImage}}" class="shop-thumb" src="{{item.coverImage}}" mode="aspectFill" />
         <view class="shop-info">
           <text class="shop-name text-bold text-ellipsis">{{item.name}}</text>
-          <text class="shop-address text-muted text-ellipsis">{{item.address}}</text>
           <view class="shop-meta">
-            <text class="distance text-primary">{{item.distance}}m</text>
+            <text class="shop-address text-muted text-ellipsis">{{item.address}}</text>
             <text class="review-count text-muted">{{item.reviewCount}}人测评</text>
           </view>
         </view>

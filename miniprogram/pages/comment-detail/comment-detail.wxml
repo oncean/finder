@@ -9,19 +9,29 @@
       <text class="nav-title">详情</text>
     </view>
 
-    <image class="shop-cover" src="{{shop.coverImage}}" mode="aspectFill" wx:if="{{shop.coverImage}}" />
+    <view class="gallery-section" wx:if="{{galleryImages.length}}">
+      <swiper class="gallery-swiper" indicator-dots autoplay circular>
+        <swiper-item wx:for="{{galleryImages}}" wx:key="index">
+          <image class="gallery-image" src="{{item}}" mode="aspectFill" bindtap="onPreviewImage" data-url="{{item}}" data-images="{{galleryImages}}" />
+        </swiper-item>
+      </swiper>
+    </view>
 
-    <view class="shop-info-section">
-      <view class="shop-header">
-        <text class="shop-name text-bold">{{shop.name}}</text>
+    <view class="comment-info-section">
+      <view class="comment-header">
+        <text class="comment-title text-bold">{{comment.title || shop.name}}</text>
         <text class="rank-pill" wx:if="{{shop.rankText}}">{{shop.rankText}}</text>
       </view>
-      <text class="shop-desc" wx:if="{{shop.subtitle}}">{{shop.subtitle}}</text>
+      <text class="comment-content" wx:if="{{comment.content}}">{{comment.content}}</text>
+      <text class="shop-desc" wx:elif="{{shop.subtitle}}">{{shop.subtitle}}</text>
     </view>
 
     <view class="detail-section">
-      <view class="tester-row" wx:if="{{shop.testerCount || shop.reviewCount}}">
-        <view class="tester-count">
+      <view class="stats-row" wx:if="{{shop.testerCount || shop.reviewCount}}">
+        <view class="reviewer-avatars" wx:if="{{shop.commentAvatars && shop.commentAvatars.length}}">
+          <image class="reviewer-avatar {{index > 0 ? 'overlap' : ''}}" wx:for="{{shop.commentAvatars}}" wx:key="index" src="{{item}}" mode="aspectFill" />
+        </view>
+        <view class="review-count">
           <text class="count-num">{{shop.testerCount || shop.reviewCount}}</text>
           <text class="count-label"> 测评过</text>
         </view>
@@ -41,20 +51,37 @@
       </view>
 
       <ai-summary summary="{{shop.summaryTags}}" />
+    </view>
 
-      <image class="pay-record" src="{{shop.paymentRecord.image}}" mode="aspectFill" wx:if="{{shop.paymentRecord.image}}" />
+    <view class="consume-section" wx:if="{{comment.consumeRecord}}">
+      <view class="consume-card" wx:if="{{comment.consumeRecord.image}}" bindtap="onPreviewImage" data-url="{{comment.consumeRecord.image}}" data-images="{{[comment.consumeRecord.image]}}">
+        <image class="consume-receipt" src="{{comment.consumeRecord.image}}" mode="aspectFill" />
+        <view class="consume-overlay">
+          <text class="consume-cert">真实打卡认证</text>
+        </view>
+      </view>
+      <view class="consume-card consume-card--text" wx:elif="{{comment.consumeRecord.amount}}">
+        <view class="consume-overlay">
+          <text class="consume-amount-text">¥{{comment.consumeRecord.amount}}</text>
+          <text class="consume-cert">真实打卡认证</text>
+        </view>
+      </view>
     </view>
 
     <view class="recommend-section" wx:if="{{shop.recommendations && shop.recommendations.length}}">
       <view class="section-title">相关美食/景点推荐</view>
       <scroll-view class="recommend-scroll" scroll-x>
         <view class="recommend-list">
-          <view class="recommend-item" wx:for="{{shop.recommendations}}" wx:key="id">
-            <view class="reco-cover-wrap">
-              <image class="reco-cover" src="{{item.coverImage}}" mode="aspectFill" />
-              <text class="reco-count" wx:if="{{item.reviewCount}}">{{item.reviewCount}}人测评</text>
+          <view class="recommend-card" wx:for="{{shop.recommendations}}" wx:key="id" bindtap="onTapRecommendation" data-id="{{item.id}}">
+            <view class="recommend-cover-wrap">
+              <image class="recommend-cover" src="{{item.coverImage}}" mode="aspectFill" />
+              <view class="recommend-review-bar">
+                <text class="recommend-review-text">{{item.reviewCount || 0}}人测评</text>
+              </view>
             </view>
-            <text class="reco-name">{{item.name}}</text>
+            <view class="recommend-info">
+              <text class="recommend-title">{{item.name}}</text>
+            </view>
           </view>
         </view>
       </scroll-view>

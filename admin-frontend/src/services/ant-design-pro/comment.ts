@@ -19,6 +19,14 @@ export interface CommentItem {
     avatar?: string;
   };
   authorId: string;
+  images: string[];
+  consumeRecord?: {
+    amount: number;
+    tradeTime: string;
+  };
+  isFengxiangbiao: boolean;
+  fengxiangbiaoRank?: number;
+  createdAt: string;
 }
 
 export interface CommentListParams {
@@ -28,6 +36,7 @@ export interface CommentListParams {
   shopId?: string;
   authorId?: string;
   isFengxiangbiao?: string;
+  id?: string;
 }
 
 /** 获取评价列表 */

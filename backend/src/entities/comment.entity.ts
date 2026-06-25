@@ -37,6 +37,7 @@ export class Comment {
   consumeRecord: {
     amount: number;
     tradeTime: string;
+    image?: string;
   };
 
   @Column({ type: 'int', default: 0, name: 'like_count' })

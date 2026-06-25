@@ -13,6 +13,7 @@ import { assertCanDeleteEntity } from '../../common/utils/delete-dependency.util
 import * as fs from 'fs';
 import * as path from 'path';
 import { Request } from 'express';
+import { ChatRealtimeService } from '../../websocket/chat-realtime.service';
 
 @Controller('admin')
 @UseGuards(AuthGuard)
@@ -31,6 +32,7 @@ export class AdminController {
     @InjectRepository(ChatOnlineUser)
     private chatOnlineUserRepo: Repository<ChatOnlineUser>,
     private dataSource: DataSource,
+    private chatRealtimeService: ChatRealtimeService,
   ) {}
 
   @Get('users')
@@ -532,35 +534,22 @@ export class AdminController {
       throw new HttpException('店铺ID不能为空', HttpStatus.BAD_REQUEST);
     }
 
-    // 查找或创建系统通知群组
-    let group = await this.chatGroupRepo.findOne({ where: { name: '系统通知' } });
+    if (!groupId) {
+      throw new HttpException('群组ID不能为空', HttpStatus.BAD_REQUEST);
+    }
+
+    const group = await this.chatGroupRepo.findOne({ where: { id: groupId } });
     if (!group) {
-      group = this.chatGroupRepo.create({
-        name: '系统通知',
-        city: '全国',
-        district: '系统',
-      });
-      await this.chatGroupRepo.save(group);
+      throw new HttpException('群组不存在', HttpStatus.BAD_REQUEST);
     }
 
-    const targetGroupId = groupId || group.id;
-
-    let sender: User;
-
-    if (senderId) {
-      sender = await this.userRepo.findOne({ where: { id: senderId } });
-      if (!sender) {
-        throw new HttpException('发送用户不存在', HttpStatus.BAD_REQUEST);
-      }
+    if (!senderId) {
+      throw new HttpException('发送用户不能为空', HttpStatus.BAD_REQUEST);
     }
 
+    const sender = await this.userRepo.findOne({ where: { id: senderId } });
     if (!sender) {
-      // 创建一个系统发送者
-      sender = this.userRepo.create({
-        nickname: '系统管理员',
-        isAdmin: true,
-      });
-      await this.userRepo.save(sender);
+      throw new HttpException('发送用户不存在', HttpStatus.BAD_REQUEST);
     }
 
     let shopEntity: Shop;
@@ -572,7 +561,7 @@ export class AdminController {
     }
 
     const message = this.messageRepo.create({
-      groupId: targetGroupId,
+      groupId,
       senderId: sender.id,
       type,
       content: type === 'text' ? content : (type === 'image' ? content : null),
@@ -581,8 +570,9 @@ export class AdminController {
 
     await this.messageRepo.save(message);
 
-    return {
+    const result = {
         id: message.id,
+        groupId: message.groupId,
         type: message.type,
         content: message.content,
         shopId: message.shopId,
@@ -594,6 +584,10 @@ export class AdminController {
         },
         createdAt: message.createdAt,
     };
+
+    this.chatRealtimeService.broadcastToGroup(groupId, 'message', result);
+
+    return result;
   }
 
   private formatMessageShopCard(shop: Shop) {
@@ -605,6 +599,7 @@ export class AdminController {
       shopId: shop.id,
       name: shop.name,
       address: shop.address,
+      location: shop.location,
       coverImage: shop.coverImage,
       distance: 0,
       summaryTags: shop.summaryTags,
@@ -656,6 +651,9 @@ export class AdminController {
         name: group.name,
         city: group.city,
         district: group.district,
+        centerLat: group.centerLat,
+        centerLng: group.centerLng,
+        coverageRadius: group.coverageRadius,
         onlineCount: await this.countChatGroupOnlineUsers(group.id),
         createdAt: group.createdAt,
       }))),
@@ -667,6 +665,15 @@ export class AdminController {
     return this.chatOnlineUserRepo.count({
       where: { groupId, isOnline: true },
     });
+  }
+
+  private parseOptionalNumber(value: any) {
+    if (value === undefined || value === null || value === '') {
+      return null;
+    }
+
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
   }
 
   @Get('chat-groups/:id/online-users')
@@ -781,6 +788,9 @@ export class AdminController {
         name: group.name,
         city: group.city,
         district: group.district,
+        centerLat: group.centerLat,
+        centerLng: group.centerLng,
+        coverageRadius: group.coverageRadius,
         onlineCount: await this.countChatGroupOnlineUsers(group.id),
         createdAt: group.createdAt,
     };
@@ -797,6 +807,9 @@ export class AdminController {
       name: body.name,
       city: body.city || '',
       district: body.district || '',
+      centerLat: this.parseOptionalNumber(body.centerLat),
+      centerLng: this.parseOptionalNumber(body.centerLng),
+      coverageRadius: this.parseOptionalNumber(body.coverageRadius),
     });
 
     await this.chatGroupRepo.save(group);
@@ -806,6 +819,9 @@ export class AdminController {
         name: group.name,
         city: group.city,
         district: group.district,
+        centerLat: group.centerLat,
+        centerLng: group.centerLng,
+        coverageRadius: group.coverageRadius,
         onlineCount: 0,
         createdAt: group.createdAt,
     };
@@ -822,6 +838,9 @@ export class AdminController {
     if (body.name !== undefined) group.name = body.name;
     if (body.city !== undefined) group.city = body.city;
     if (body.district !== undefined) group.district = body.district;
+    if (body.centerLat !== undefined) group.centerLat = this.parseOptionalNumber(body.centerLat);
+    if (body.centerLng !== undefined) group.centerLng = this.parseOptionalNumber(body.centerLng);
+    if (body.coverageRadius !== undefined) group.coverageRadius = this.parseOptionalNumber(body.coverageRadius);
 
     await this.chatGroupRepo.save(group);
 
@@ -830,6 +849,9 @@ export class AdminController {
         name: group.name,
         city: group.city,
         district: group.district,
+        centerLat: group.centerLat,
+        centerLng: group.centerLng,
+        coverageRadius: group.coverageRadius,
         onlineCount: await this.countChatGroupOnlineUsers(group.id),
         createdAt: group.createdAt,
     };

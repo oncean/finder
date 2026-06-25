@@ -4,10 +4,11 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Request } from 'express';
 import { AuthGuard } from '../../common/guards/auth.guard';
+import { getRequiredEnv } from '../../config/env';
 
 @Controller('upload')
 export class UploadController {
-  private readonly uploadBaseUrl = process.env.UPLOAD_BASE_URL || 'http://localhost:3000';
+  private readonly uploadBaseUrl = getRequiredEnv('UPLOAD_BASE_URL');
 
   @Post('image')
   @HttpCode(HttpStatus.OK)
@@ -15,7 +16,7 @@ export class UploadController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: process.env.UPLOAD_DIR || './uploads',
+        destination: getRequiredEnv('UPLOAD_DIR'),
         filename: (req, file, callback) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           callback(null, uniqueSuffix + extname(file.originalname));

@@ -1,6 +1,6 @@
 {
   "component": true,
   "usingComponents": {
-    "ai-summary": "../ai-summary/ai-summary"
+    "shop-section": "../shop-section/shop-section"
   }
 }

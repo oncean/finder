@@ -15,26 +15,34 @@
     bindrefresherrefresh="onPullDownRefresh"
   >
     <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+    <view class="unsupported" wx:if="{{unsupported && !loading}}">
+      <text>{{unsupportedText || '该区域暂不支持'}}</text>
+    </view>
     
-    <block wx:for="{{messages}}" wx:key="id">
-      <message-item 
-        message="{{item}}" 
-        isSelf="{{item.sender.id === userId}}"
-        bindtapShop="onTapShopCard"
-      />
+    <block wx:if="{{!unsupported}}">
+      <block wx:for="{{messages}}" wx:key="id">
+        <message-item 
+          message="{{item}}" 
+          isSelf="{{item.sender.id === userId}}"
+          bindtapShop="onTapShopCard"
+        />
+      </block>
     </block>
     
-    <view class="empty" wx:if="{{messages.length === 0 && !loading}}">
+    <view class="empty" wx:if="{{messages.length === 0 && !loading && !unsupported}}">
       <text>暂无消息，来说点什么吧~</text>
     </view>
   </scroll-view>
   
   <chat-input 
+    wx:if="{{!unsupported}}"
     bindsend="onSendMessage"
     bindshowAddSheet="onShowAddSheet"
   />
   
   <add-sheet 
+    wx:if="{{!unsupported}}"
     visible="{{showAddSheet}}"
     bindclose="onCloseAddSheet"
     bindselectShop="onSelectShop"
@@ -46,11 +54,10 @@
     <view class="login-content" catchtap="stopPropagation">
       <view class="login-header">
         <text class="login-title">设置昵称和头像</text>
-        <text class="login-subtitle">请选择一种方式设置您的昵称和头像</text>
+      <text class="login-subtitle">请授权微信信息用于展示昵称和头像</text>
       </view>
       
       <button class="login-btn primary" bindtap="getUserProfile">使用微信信息</button>
-      <button class="login-btn secondary" bindtap="useRandomUser">使用随机</button>
       
       <view class="login-tip">
         <text>登录即表示同意</text>

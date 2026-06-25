@@ -2,6 +2,8 @@ const app = getApp();
 const chatService = require('../../services/chat');
 const ws = require('../../utils/websocket');
 const store = require('../../store/index');
+const { getCurrentLocation } = require('../../utils/location');
+const { updateMe } = require('../../services/auth');
 
 Page({
   data: {
@@ -15,7 +17,9 @@ Page({
     hasMore: true,
     isInitialized: false,
     showUserInfoModal: false,
-    pendingMessage: null
+    pendingMessage: null,
+    unsupported: false,
+    unsupportedText: ''
   },
 
   async onLoad() {
@@ -65,15 +69,37 @@ Page({
   async initChat() {
     console.log('initChat start');
     try {
-      const groupInfo = await chatService.getGroupInfo('default');
+      const location = await getCurrentLocation();
+      const groupInfo = await chatService.getGroupInfo('default', location);
       console.log('Group info:', groupInfo);
+
+      if (!groupInfo || !groupInfo.id) {
+        this.setData({
+          groupId: '',
+          groupInfo: {},
+          messages: [],
+          unsupported: true,
+          unsupportedText: '该区域暂不支持'
+        });
+        return;
+      }
+
       this.setData({ 
         groupId: groupInfo.id,
-        groupInfo
+        groupInfo,
+        unsupported: false,
+        unsupportedText: ''
       });
       this.connectWebSocket();
     } catch (error) {
       console.error('初始化群聊失败:', error);
+      this.setData({
+        groupId: '',
+        groupInfo: {},
+        messages: [],
+        unsupported: true,
+        unsupportedText: '该区域暂不支持'
+      });
     }
   },
 
@@ -117,22 +143,43 @@ Page({
     this.unsubscribeMessage = ws.onMessage((data) => {
       console.log('chat 页面收到 WebSocket 消息:', data);
       switch (data.type) {
+        case 'error':
+          if (data.message && data.message.includes('token')) {
+            this.handleWebSocketAuthError();
+          }
+          break;
         case 'message':
-          console.log('收到新消息:', data.data);
+          const newMessage = data.data || data.message || data;
+          console.log('收到新消息:', newMessage);
           this.setData({
-            messages: [...this.data.messages, data.data]
+            messages: [...this.data.messages, newMessage]
           });
           this.scrollToBottom();
           break;
         case 'history':
-          console.log('收到历史消息:', data.data.messages);
+          const historyMessages = data.messages || (data.data && data.data.messages) || [];
+          console.log('收到历史消息:', historyMessages);
           this.setData({
-            messages: data.data.messages
+            messages: historyMessages
           });
           this.scrollToBottom();
           break;
       }
     });
+  },
+
+  async handleWebSocketAuthError() {
+    try {
+      wx.showToast({ title: '登录已过期，正在重连', icon: 'none' });
+      ws.close();
+      await app.silentLogin();
+      if (this.data.groupId) {
+        this.connectWebSocket();
+      }
+    } catch (error) {
+      console.error('WebSocket 鉴权失败后重新登录失败:', error);
+      wx.showToast({ title: '登录失败，请重新进入页面', icon: 'none' });
+    }
   },
 
   checkUserInfo() {
@@ -158,6 +205,11 @@ Page({
   },
 
   sendMessage(content) {
+    if (!this.data.groupId || this.data.unsupported) {
+      wx.showToast({ title: '该区域暂不支持', icon: 'none' });
+      return;
+    }
+
     try {
       ws.send({
         type: 'message',
@@ -179,34 +231,10 @@ Page({
     // 阻止事件冒泡
   },
 
-  useRandomUser() {
-    const randomNum = Math.random().toString(36).substr(2, 6);
-    const randomNick = '用户' + randomNum;
-    const defaultAvatar = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0';
-    
-    app.globalData.userInfo = {
-      ...app.globalData.userInfo,
-      nickname: randomNick,
-      avatar: defaultAvatar
-    };
-    store.set('userInfo', app.globalData.userInfo);
-    
-    wx.showToast({ title: '已设置随机昵称', icon: 'success' });
-    
-    this.setData({
-      showUserInfoModal: false
-    });
-    
-    if (this.data.pendingMessage) {
-      this.sendMessage(this.data.pendingMessage);
-      this.setData({ pendingMessage: null });
-    }
-  },
-
   getUserProfile() {
     wx.getUserProfile({
       desc: '用于完善会员资料',
-      success: (res) => {
+      success: async (res) => {
         console.log('用户同意授权:', res.userInfo);
         
         const userInfo = {
@@ -221,6 +249,17 @@ Page({
           avatar: userInfo.avatarUrl
         };
         store.set('userInfo', app.globalData.userInfo);
+        
+        // 同步到后端
+        try {
+          await updateMe({
+            nickname: userInfo.nickName,
+            avatar: userInfo.avatarUrl
+          });
+          console.log('用户信息已同步到后端');
+        } catch (error) {
+          console.error('同步用户信息到后端失败:', error);
+        }
         
         wx.showToast({ title: '获取成功', icon: 'success' });
         

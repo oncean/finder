@@ -6,10 +6,12 @@ let isConnected = false;
 let isConnecting = false;
 let currentGroupId = null;
 let connectTaskId = 0;
+let lastPongAt = 0;
 
 const { WS_URL } = require('./config');
 const RECONNECT_INTERVAL = 3000;
 const HEARTBEAT_INTERVAL = 30000;
+const PONG_TIMEOUT = 90000;
 
 function connect(groupId) {
   const token = wx.getStorageSync('token');
@@ -36,7 +38,7 @@ function connect(groupId) {
   console.log(`WebSocket 开始连接... (任务ID: ${currentTaskId})`);
 
   ws = wx.connectSocket({
-    url: `${WS_URL}?token=${token}&groupId=${groupId}`
+    url: `${WS_URL}?token=${encodeURIComponent(token)}&groupId=${encodeURIComponent(groupId)}`
   });
 
   ws.onOpen(() => {
@@ -48,13 +50,7 @@ function connect(groupId) {
     console.log('WebSocket 连接成功');
     isConnected = true;
     isConnecting = false;
-    ws.send({
-      data: JSON.stringify({
-        type: 'join',
-        token: token,
-        groupId: groupId
-      })
-    });
+    lastPongAt = Date.now();
     startHeartbeat();
   });
 
@@ -63,6 +59,15 @@ function connect(groupId) {
       console.log('WebSocket 收到消息:', res.data);
       const data = JSON.parse(res.data);
       console.log('解析后的消息:', data.type, data);
+      if (data.type === 'pong') {
+        lastPongAt = Date.now();
+        return;
+      }
+      if (data.type === 'error' && data.message && data.message.includes('token')) {
+        wx.removeStorageSync('token');
+        currentGroupId = null;
+        stopHeartbeat();
+      }
       messageCallbacks.forEach(cb => cb(data));
     } catch (e) {
       console.error('消息解析失败:', e);
@@ -136,6 +141,13 @@ function scheduleReconnect(groupId) {
 function startHeartbeat() {
   stopHeartbeat();
   heartbeatTimer = setInterval(() => {
+    if (lastPongAt && Date.now() - lastPongAt > PONG_TIMEOUT) {
+      console.log('WebSocket 心跳超时，准备重连');
+      if (ws) {
+        ws.close();
+      }
+      return;
+    }
     send({ type: 'ping' });
   }, HEARTBEAT_INTERVAL);
 }

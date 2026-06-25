@@ -33,7 +33,9 @@ Component({
   methods: {
     onTapShopCard() {
       if (this.data.message.shopCard) {
-        this.triggerEvent('tapShop', { shopId: this.data.message.shopCard.shopId });
+        this.triggerEvent('tapShop', {
+          shopId: this.data.message.shopCard.shopId || this.data.message.shopId
+        });
       }
     },
 

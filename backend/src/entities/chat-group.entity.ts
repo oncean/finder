@@ -14,6 +14,15 @@ export class ChatGroup {
   @Column({ type: 'varchar', length: 32, nullable: true })
   district: string;
 
+  @Column({ type: 'double precision', nullable: true, name: 'center_lat' })
+  centerLat: number;
+
+  @Column({ type: 'double precision', nullable: true, name: 'center_lng' })
+  centerLng: number;
+
+  @Column({ type: 'int', nullable: true, name: 'coverage_radius' })
+  coverageRadius: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

@@ -1,25 +1,10 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Comment } from '../../entities/comment.entity';
 
 @Injectable()
 export class PostService {
-  private readonly staticBaseUrl =
-    process.env.STATIC_BASE_URL || 'http://192.168.2.103/static';
-
-  private get feedFoodImages() {
-    return [
-      `${this.staticBaseUrl}/feed-food-1.jpg`,
-      `${this.staticBaseUrl}/feed-food-2.jpg`,
-      `${this.staticBaseUrl}/feed-receipt.jpg`,
-    ];
-  }
-
-  private get feedShopImage() {
-    return `${this.staticBaseUrl}/feed-shop.jpg`;
-  }
-
   constructor(
     @InjectRepository(Comment)
     private commentRepo: Repository<Comment>,
@@ -44,8 +29,29 @@ export class PostService {
 
     const [comments, total] = await query.getManyAndCount();
 
+    // 批量获取每个店铺的评论头像（最多4个）
+    const shopIds = [...new Set(comments.map(c => c.shopId).filter(Boolean))];
+    const shopAvatarsMap = new Map<string, string[]>();
+
+    if (shopIds.length > 0) {
+      const shopComments = await this.commentRepo.find({
+        where: { shopId: In(shopIds) },
+        relations: ['author'],
+        order: { createdAt: 'DESC' },
+      });
+
+      for (const shopId of shopIds) {
+        const avatars = shopComments
+          .filter(c => c.shopId === shopId)
+          .slice(0, 4)
+          .map(c => c.author?.avatar)
+          .filter(Boolean);
+        shopAvatarsMap.set(shopId, avatars);
+      }
+    }
+
     return {
-      list: comments.map(comment => this.formatComment(comment)),
+      list: comments.map(comment => this.formatComment(comment, shopAvatarsMap.get(comment.shopId) || [])),
       total,
       page,
       pageSize,
@@ -99,12 +105,10 @@ export class PostService {
     return this.findOne(saved.id);
   }
 
-  private formatComment(comment: Comment) {
+  private formatComment(comment: Comment, commentAvatars: string[] = []) {
     const shop = comment.shop;
     const author = comment.author;
-    const images = Array.isArray(comment.images) && comment.images.length > 0
-      ? comment.images
-      : this.feedFoodImages;
+    const images = Array.isArray(comment.images) ? comment.images : [];
 
     return {
       id: comment.id,
@@ -122,22 +126,20 @@ export class PostService {
         id: shop.id,
         name: shop.name,
         address: shop.address,
-        coverImage: shop.coverImage || this.feedShopImage,
-        summaryTags: shop.summaryTags || {
-          positive: ['真实评价', '高分推荐'],
-          negative: [],
-        },
+        coverImage: shop.coverImage || '',
+        summaryTags: shop.summaryTags,
         reviewCount: shop.reviewCount,
+        commentAvatars,
       } : null,
       images,
-      coverImage: images[0] || shop?.coverImage || this.feedFoodImages[0],
+      coverImage: images[0] || shop?.coverImage || '',
       consumeRecord: comment.consumeRecord
         ? {
             amount: comment.consumeRecord.amount,
             merchantName: shop?.name || '',
             tradeTime: comment.consumeRecord.tradeTime,
             tradeNo: `COMMENT-${comment.id}`,
-            paymentMethod: '微信支付',
+            image: comment.consumeRecord.image,
           }
         : null,
       reviewCount: shop?.reviewCount || 0,

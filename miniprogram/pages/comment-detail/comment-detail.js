@@ -1,31 +1,47 @@
 const shopService = require('../../services/shop');
+const postService = require('../../services/post');
 const { openLocation } = require('../../utils/location');
 
 Page({
   data: {
     shop: {},
+    comment: {},
     reviews: [],
+    galleryImages: [],
     loading: true,
-    reviewPage: 1,
-    hasMoreReviews: true
   },
 
   onLoad(options) {
-    const { id } = options;
-    if (id) {
-      this.loadShopDetail(id);
+    const { commentId } = options;
+    if (commentId) {
+      this.loadCommentDetail(commentId);
     }
   },
 
-  // 加载店铺详情
-  async loadShopDetail(shopId) {
+  async loadCommentDetail(commentId) {
     try {
-      const shop = await shopService.getShopDetail(shopId);
-      this.setData({ shop, loading: false });
-      this.loadReviews(shopId);
+      const comment = await postService.getCommentDetail(commentId);
+      const shopId = comment.shopId;
+
+      let shop = comment.shop || {};
+      if (shopId) {
+        try {
+          shop = await shopService.getShopDetail(shopId);
+        } catch (e) {
+          console.error('加载店铺详情失败:', e);
+        }
+      }
+
+      this.setData({
+        comment,
+        shop,
+        reviews: [comment],
+        galleryImages: comment.images || [],
+        loading: false
+      });
     } catch (error) {
       this.setData({ loading: false });
-      console.error('加载店铺详情失败:', error);
+      console.error('加载评价详情失败:', error);
     }
   },
 
@@ -47,23 +63,6 @@ Page({
     });
   },
 
-  // 加载测评列表
-  async loadReviews(shopId) {
-    if (this.data.loading || !this.data.hasMoreReviews) return;
-    
-    try {
-      const data = await shopService.getShopReviews(shopId, this.data.reviewPage);
-      this.setData({
-        reviews: this.data.reviewPage === 1 ? data.list : [...this.data.reviews, ...data.list],
-        hasMoreReviews: data.list.length === 20,
-        reviewPage: this.data.reviewPage + 1
-      });
-    } catch (error) {
-      console.error('加载测评失败:', error);
-    }
-  },
-
-  // 导航到店铺
   onNavigate() {
     const { shop } = this.data;
     if (shop.location) {
@@ -71,27 +70,33 @@ Page({
     }
   },
 
-  // 点击AI总结查看，跳转到评价详情页
-  onViewReview() {
-    const { shop } = this.data;
-    // 跳转到 shop-detail 页面，传 shopId 让其加载该店铺的推荐帖子
-    wx.navigateTo({
-      url: `/pages/shop-detail/shop-detail?shopId=${shop.id}`
+  onTapRecommendation(e) {
+    const { id } = e.currentTarget.dataset;
+    if (id) {
+      wx.navigateTo({
+        url: `/pages/shop-detail/shop-detail?id=${id}`
+      });
+    }
+  },
+
+  onPreviewImage(e) {
+    const images = e.currentTarget.dataset.images || [];
+    const current = e.currentTarget.dataset.url || images[0];
+
+    if (!images.length) {
+      return;
+    }
+
+    wx.previewImage({
+      current,
+      urls: images
     });
   },
 
-  // 分享
   onShareAppMessage() {
     return {
-      title: this.data.shop.name,
-      path: `/pages/comment-detail/comment-detail?id=${this.data.shop.id}`
+      title: this.data.comment.title || this.data.shop.name,
+      path: `/pages/comment-detail/comment-detail?commentId=${this.data.comment.id}`
     };
-  },
-
-  // 上拉加载更多测评
-  onReachBottom() {
-    if (this.data.hasMoreReviews) {
-      this.loadReviews(this.data.shop.id);
-    }
   }
 });

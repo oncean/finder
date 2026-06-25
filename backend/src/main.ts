@@ -1,5 +1,10 @@
 import * as dotenv from 'dotenv';
-dotenv.config();
+import * as path from 'path';
+
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+const nodeEnv = process.env.NODE_ENV || 'development';
+process.env.NODE_ENV = nodeEnv;
+dotenv.config({ path: path.resolve(process.cwd(), `.env.${nodeEnv}`), override: true });
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
@@ -7,10 +12,12 @@ import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import * as express from 'express';
-import * as path from 'path';
 import { WsAdapter } from '@nestjs/platform-ws';
+import { getRequiredEnv, getRequiredNumberEnv, validateRequiredEnv } from './config/env';
 
 async function bootstrap() {
+  validateRequiredEnv();
+
   const app = await NestFactory.create(AppModule);
   app.useWebSocketAdapter(new WsAdapter(app));
 
@@ -23,8 +30,7 @@ async function bootstrap() {
   // 系统静态资源（默认图片、字体等）
   app.use('/static', express.static(path.join(__dirname, '..', 'static')));
   
-  // 用户上传文件
-  const uploadDir = process.env.UPLOAD_DIR || './uploads';
+  const uploadDir = getRequiredEnv('UPLOAD_DIR');
   app.use('/uploads', express.static(path.join(__dirname, '..', uploadDir.replace(/^\.\//, ''))));
 
   app.useGlobalPipes(
@@ -40,9 +46,9 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
 
-  const port = parseInt(process.env.PORT, 10) || 3000;
+  const port = getRequiredNumberEnv('PORT');
   await app.listen(port);
-  console.log(`API 服务运行在: http://localhost:${port}`);
-  console.log(`WebSocket 服务运行在: ws://localhost:${port}/ws/chat`);
+  console.log(`API 服务已启动，端口：${port}`);
+  console.log(`WebSocket 服务已启动，路径：/ws/chat`);
 }
 bootstrap();

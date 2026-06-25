@@ -17,6 +17,7 @@ import {
   Switch,
   Tag,
 } from 'antd';
+import { useNavigate } from '@umijs/max';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   deleteRecommendation,
@@ -29,6 +30,7 @@ import {
 const RecommendationPage: React.FC = () => {
   const actionRef = useRef<ActionType | null>(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -241,6 +243,15 @@ const RecommendationPage: React.FC = () => {
           key="edit"
         >
           编辑
+        </Button>,
+        <Button
+          type="link"
+          onClick={() =>
+            navigate(`/comment?id=${record.id}`)
+          }
+          key="view-comment"
+        >
+          查看评论
         </Button>,
         <Button
           type="link"

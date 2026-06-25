@@ -5,18 +5,22 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@umijs/max';
+import { useLocation, useNavigate } from '@umijs/max';
 import {
   Avatar,
   Button,
   Drawer,
   Form,
   Input,
+  InputNumber,
   message,
   Rate,
   Select,
   Space,
+  Switch,
+  Upload,
 } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   type CommentItem,
@@ -26,12 +30,18 @@ import {
   updateComment,
 } from '@/services/ant-design-pro/comment';
 import { fetchShopList, type ShopItem } from '@/services/ant-design-pro/shop';
+import { uploadImage } from '@/services/ant-design-pro/upload';
 
 const CommentPage: React.FC = () => {
   const actionRef = useRef<ActionType | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
   const [messageApi, contextHolder] = message.useMessage();
+
+  const urlParams = new URLSearchParams(location.search);
+  const keywordFromUrl = urlParams.get('keyword') || '';
+  const idFromUrl = urlParams.get('id') || '';
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<CommentItem | null>(null);
@@ -46,6 +56,13 @@ const CommentPage: React.FC = () => {
     content: '',
     rating: 5,
     shopId: '',
+    images: [] as string[],
+    consumeAmount: 0,
+    consumeTradeTime: '',
+    consumeReceiptImage: '',
+    likeCount: 0,
+    isFengxiangbiao: false,
+    fengxiangbiaoRank: 0,
   });
 
   React.useEffect(() => {
@@ -101,6 +118,13 @@ const CommentPage: React.FC = () => {
       content: '',
       rating: 5,
       shopId: '',
+      images: [] as string[],
+      consumeAmount: 0,
+      consumeTradeTime: '',
+      consumeReceiptImage: '',
+      likeCount: 0,
+      isFengxiangbiao: false,
+      fengxiangbiaoRank: 0,
     });
     setEditingItem(null);
   };
@@ -113,6 +137,13 @@ const CommentPage: React.FC = () => {
         content: item.content,
         rating: item.rating,
         shopId: item.shopId,
+        images: item.images || [],
+        consumeAmount: item.consumeRecord?.amount || 0,
+        consumeTradeTime: item.consumeRecord?.tradeTime || '',
+        consumeReceiptImage: (item.consumeRecord as any)?.image || '',
+        likeCount: item.likeCount || 0,
+        isFengxiangbiao: item.isFengxiangbiao || false,
+        fengxiangbiaoRank: item.fengxiangbiaoRank || 0,
       });
     } else {
       resetForm();
@@ -130,14 +161,30 @@ const CommentPage: React.FC = () => {
       return;
     }
 
+    const payload: Partial<CommentItem> = {
+      title: formData.title,
+      content: formData.content,
+      rating: formData.rating,
+      images: formData.images,
+      consumeRecord:
+        formData.consumeAmount > 0 || formData.consumeTradeTime || formData.consumeReceiptImage
+          ? {
+              amount: formData.consumeAmount,
+              tradeTime: formData.consumeTradeTime,
+              image: formData.consumeReceiptImage,
+            }
+          : undefined,
+      likeCount: formData.likeCount,
+      isFengxiangbiao: formData.isFengxiangbiao,
+      fengxiangbiaoRank: formData.isFengxiangbiao
+        ? formData.fengxiangbiaoRank
+        : undefined,
+    };
+
     if (editingItem) {
       updateRun({
         id: editingItem.id,
-        data: {
-          title: formData.title,
-          content: formData.content,
-          rating: formData.rating,
-        },
+        data: payload,
       });
     } else {
       if (!formData.shopId) {
@@ -146,11 +193,42 @@ const CommentPage: React.FC = () => {
       }
       createRun({
         shopId: formData.shopId,
-        title: formData.title,
-        content: formData.content,
-        rating: formData.rating,
+        ...payload,
       });
     }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    try {
+      const res = await uploadImage(file);
+      setFormData((prev) => ({ ...prev, images: [...prev.images, res.url] }));
+      messageApi.success('上传成功');
+    } catch {
+      messageApi.error('上传失败');
+    }
+    return false;
+  };
+
+  const handleRemoveImage = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((item) => item !== url),
+    }));
+  };
+
+  const handleReceiptUpload = async (file: File) => {
+    try {
+      const res = await uploadImage(file);
+      setFormData((prev) => ({ ...prev, consumeReceiptImage: res.url }));
+      messageApi.success('上传成功');
+    } catch {
+      messageApi.error('上传失败');
+    }
+    return false;
+  };
+
+  const handleRemoveReceipt = () => {
+    setFormData((prev) => ({ ...prev, consumeReceiptImage: '' }));
   };
 
   const handleDelete = useCallback(
@@ -285,6 +363,11 @@ const CommentPage: React.FC = () => {
         search={{
           labelWidth: 120,
         }}
+        form={{
+          initialValues: {
+            title: keywordFromUrl,
+          },
+        }}
         toolBarRender={() => [
           <Button
             type="primary"
@@ -298,6 +381,8 @@ const CommentPage: React.FC = () => {
           fetchCommentList({
             current: params.current,
             pageSize: params.pageSize,
+            keyword: (params.title as string) || keywordFromUrl,
+            id: idFromUrl,
           }).then((res) => ({
             data: res.list || [],
             success: true,
@@ -375,7 +460,7 @@ const CommentPage: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item label="内容" required style={{ marginBottom: 24 }}>
+          <Form.Item label="内容" required style={{ marginBottom: 16 }}>
             <Input.TextArea
               value={formData.content}
               onChange={(e) =>
@@ -385,6 +470,115 @@ const CommentPage: React.FC = () => {
               rows={4}
             />
           </Form.Item>
+
+          <Form.Item label="图片" style={{ marginBottom: 16 }}>
+            <Upload
+              listType="picture-card"
+              fileList={formData.images.map((url, index) => ({
+                uid: `-${index}`,
+                name: `image-${index}`,
+                status: 'done',
+                url,
+              }))}
+              beforeUpload={handleImageUpload}
+              onRemove={(file) => {
+                handleRemoveImage(file.url || '');
+                return true;
+              }}
+            >
+              {formData.images.length >= 9 ? null : (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>上传图片</div>
+                </div>
+              )}
+            </Upload>
+          </Form.Item>
+
+          <Form.Item label="消费金额" style={{ marginBottom: 16 }}>
+            <InputNumber
+              value={formData.consumeAmount}
+              onChange={(val) =>
+                setFormData({ ...formData, consumeAmount: val || 0 })
+              }
+              min={0}
+              precision={2}
+              style={{ width: '100%' }}
+              placeholder="请输入消费金额"
+            />
+          </Form.Item>
+
+          <Form.Item label="消费时间" style={{ marginBottom: 16 }}>
+            <Input
+              value={formData.consumeTradeTime}
+              onChange={(e) =>
+                setFormData({ ...formData, consumeTradeTime: e.target.value })
+              }
+              placeholder="请输入消费时间"
+            />
+          </Form.Item>
+
+          <Form.Item label="消费凭证" style={{ marginBottom: 16 }}>
+            <Upload
+              listType="picture-card"
+              fileList={formData.consumeReceiptImage ? [{
+                uid: '-1',
+                name: 'receipt',
+                status: 'done',
+                url: formData.consumeReceiptImage,
+              }] : []}
+              beforeUpload={handleReceiptUpload}
+              onRemove={() => {
+                handleRemoveReceipt();
+                return true;
+              }}
+              maxCount={1}
+            >
+              {formData.consumeReceiptImage ? null : (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>上传凭证</div>
+                </div>
+              )}
+            </Upload>
+          </Form.Item>
+
+          <Form.Item label="点赞数" style={{ marginBottom: 16 }}>
+            <InputNumber
+              value={formData.likeCount}
+              onChange={(val) =>
+                setFormData({ ...formData, likeCount: val || 0 })
+              }
+              min={0}
+              style={{ width: '100%' }}
+              placeholder="请输入点赞数"
+            />
+          </Form.Item>
+
+          <Form.Item label="风向标" style={{ marginBottom: 16 }}>
+            <Switch
+              checked={formData.isFengxiangbiao}
+              onChange={(checked) =>
+                setFormData({ ...formData, isFengxiangbiao: checked })
+              }
+              checkedChildren="是"
+              unCheckedChildren="否"
+            />
+          </Form.Item>
+
+          {formData.isFengxiangbiao && (
+            <Form.Item label="风向标排名" style={{ marginBottom: 16 }}>
+              <InputNumber
+                value={formData.fengxiangbiaoRank}
+                onChange={(val) =>
+                  setFormData({ ...formData, fengxiangbiaoRank: val || 0 })
+                }
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="数字越小排名越靠前"
+              />
+            </Form.Item>
+          )}
 
           <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
             <Button onClick={() => setDrawerOpen(false)}>取消</Button>

@@ -1,8 +1,7 @@
 <view class="message-item {{isSelf ? 'self' : ''}}">
-  <image wx:if="{{!isSelf}}" class="avatar avatar-small" src="{{message.sender.avatar || 'http://192.168.2.103/static/default-avatar.png'}}" mode="aspectFill" />
+  <image wx:if="{{!isSelf && message.sender.avatar}}" class="avatar avatar-small" src="{{message.sender.avatar}}" mode="aspectFill" />
   
-  <view class="message-content">
-    <text class="sender-name text-muted">{{message.sender.nickname}}</text>
+  <view class="message-content {{message.type === 'image' ? 'image-message' : ''}}">
     
     <!-- 文字消息 -->
     <view class="bubble text-bubble" wx:if="{{message.type === 'text'}}">
@@ -15,35 +14,20 @@
     </view>
     
     <!-- 店铺卡片消息 -->
-    <view class="bubble shop-bubble" wx:if="{{message.type === 'shop_card'}}" bindtap="onTapShopCard">
-      <view class="shop-card-top">
-        <image class="shop-logo" src="{{message.shopCard.logo || message.shopCard.coverImage || 'http://192.168.2.103/static/default-shop.png'}}" mode="aspectFill" />
-        <view class="shop-info">
-          <view class="shop-name-row">
-            <text class="shop-name text-bold">{{message.shopCard.name}}</text>
-            <view class="rank-badge" wx:if="{{message.shopCard.summaryTags}}">
-              <text>推荐榜第一</text>
-            </view>
-          </view>
-          <view class="shop-address-row">
-            <image class="pin-icon" src="/static/icons/dingwei.svg" mode="aspectFit" />
-            <text class="shop-address text-muted">{{message.shopCard.address}}</text>
-            <text class="nav-text">导航</text>
-          </view>
-        </view>
-      </view>
-      
-      <view class="shop-summary" wx:if="{{message.shopCard.summaryTags}}">
-        <ai-summary summary="{{message.shopCard.summaryTags}}" />
-        <view class="shop-footer">
-          <view class="tester-row" wx:if="{{message.shopCard.reviewCount}}">
-            <text class="tester-text">{{message.shopCard.reviewCount}}+ 真实测评过</text>
-          </view>
-          <view class="view-btn">查看</view>
-        </view>
-      </view>
+    <view class="bubble shop-bubble" wx:if="{{message.type === 'shop_card' && message.shopCard}}">
+      <shop-section
+        shop="{{message.shopCard}}"
+        shop-name="{{message.shopCard.name}}"
+        location="{{message.shopCard.address}}"
+        summary-tags="{{message.shopCard.summaryTags}}"
+        comment-avatars="{{message.shopCard.commentAvatars}}"
+        comment-count="{{message.shopCard.reviewCount || 0}}"
+        show-ai-summary="{{message.shopCard.summaryTags ? true : false}}"
+        shop-id="{{message.shopCard.shopId || message.shopId}}"
+        bindtapShop="onTapShopCard"
+      />
     </view>
     
-    <text class="message-time">{{displayTime}}</text>
+    <text class="message-time" wx:if="{{message.type !== 'shop_card'}}">{{displayTime}}</text>
   </view>
 </view>

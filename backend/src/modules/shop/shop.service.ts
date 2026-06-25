@@ -6,9 +6,6 @@ import { Comment } from '../../entities/comment.entity';
 
 @Injectable()
 export class ShopService {
-  private readonly staticBaseUrl =
-    process.env.STATIC_BASE_URL || 'http://192.168.2.103/static';
-
   constructor(
     @InjectRepository(Shop)
     private shopRepo: Repository<Shop>,
@@ -30,6 +27,8 @@ export class ShopService {
         'shop.name',
         'shop.category',
         'shop.address',
+        'shop.location',
+        'shop.city',
         'shop.coverImage',
         'shop.logo',
         'shop.rating',
@@ -38,51 +37,35 @@ export class ShopService {
         'shop.isVerified',
       ]);
 
-    // 地理位置过滤
-    if (lat && lng) {
-      query.where(
-        `ST_DWithin(
-          shop.location::geography,
-          ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
-          :radius
-        )`,
-        { lat, lng, radius },
-      );
-    }
-
     // 关键词搜索
     if (keyword) {
-      query.andWhere(
+      query.where(
         '(shop.name ILIKE :keyword OR shop.address ILIKE :keyword)',
         { keyword: `%${keyword}%` },
       );
     }
 
-    // 排序：距离优先
-    if (lat && lng) {
-      query.addSelect(
-        `ST_Distance(
-          shop.location::geography,
-          ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
-        )`,
-        'distance',
-      )
-      .orderBy('distance', 'ASC')
-      .setParameter('lat', lat)
-      .setParameter('lng', lng);
-    } else {
-      query.orderBy('shop.reviewCount', 'DESC');
-    }
+    query.orderBy('shop.reviewCount', 'DESC');
 
-    // 分页
-    query.skip((page - 1) * pageSize).take(pageSize);
+    const shops = await query.getMany();
+    const hasLocation = Number.isFinite(lat) && Number.isFinite(lng);
+    const filteredShops = hasLocation
+      ? shops
+          .map((shop) => ({
+            shop,
+            distance: shop.location ? this.calculateDistance(lat, lng, shop.location) : null,
+          }))
+          .filter((item) => item.distance !== null && item.distance <= radius)
+          .sort((a, b) => a.distance - b.distance)
+      : shops.map((shop) => ({ shop, distance: null }));
 
-    const [shops, total] = await query.getManyAndCount();
+    const total = filteredShops.length;
+    const pagedShops = filteredShops.slice((page - 1) * pageSize, page * pageSize);
 
     return {
-      list: shops.map(shop => ({
+      list: pagedShops.map(({ shop, distance }) => ({
         ...shop,
-        distance: lat && lng ? this.calculateDistance(lat, lng, shop.location) : null,
+        distance,
       })),
       total,
       page,

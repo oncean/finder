@@ -1,9 +1,38 @@
-// 配置文件 - 统一管理API地址
-// 使用 localhost，小程序开发工具需要开启「不校验合法域名」
-const API_BASE = 'http://localhost:3000';
-const WS_BASE = 'ws://localhost:3000';
+const VERSION_ENV_MAP = {
+  develop: 'dev',
+  trial: 'test',
+  release: 'prod'
+};
+
+const ENV_CONFIG = {
+  dev: {
+    API_BASE: 'http://localhost:3000',
+    WS_BASE: 'ws://localhost:3000'
+  },
+  test: {
+    API_BASE: 'https://test-api.example.com',
+    WS_BASE: 'wss://test-api.example.com'
+  },
+  prod: {
+    API_BASE: 'https://api.example.com',
+    WS_BASE: 'wss://api.example.com'
+  }
+};
+
+const wxEnvVersion = typeof __wxConfig !== 'undefined' && __wxConfig.envVersion
+  ? __wxConfig.envVersion
+  : 'develop';
+const ENV = VERSION_ENV_MAP[wxEnvVersion] || 'dev';
+const currentConfig = ENV_CONFIG[ENV];
+
+if (!currentConfig) {
+  throw new Error(`未知小程序运行环境：${ENV}`);
+}
+
+const { API_BASE, WS_BASE } = currentConfig;
 
 module.exports = {
+  ENV,
   API_BASE,
   WS_BASE,
   API_URL: `${API_BASE}/api/v1`,

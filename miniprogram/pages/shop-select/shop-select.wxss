@@ -105,7 +105,7 @@
 
 .shop-address {
   font-size: 24rpx;
-  margin-bottom: 10rpx;
+  margin-right: 10rpx;
 }
 
 .shop-meta {
@@ -120,7 +120,7 @@
 }
 
 .review-count {
-  font-size: 22rpx;
+  font-size: 24rpx;
 }
 
 .select-icon {

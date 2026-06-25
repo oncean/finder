@@ -19,10 +19,15 @@ export class CommentService {
     shopId?: string,
     authorId?: string,
     isFengxiangbiao?: string,
+    id?: string,
   ) {
     const query = this.commentRepo.createQueryBuilder('comment')
       .leftJoinAndSelect('comment.shop', 'shop')
       .leftJoinAndSelect('comment.author', 'author');
+
+    if (id) {
+      query.andWhere('comment.id = :id', { id });
+    }
 
     if (keyword) {
       query.andWhere('comment.title LIKE :keyword OR comment.content LIKE :keyword', {

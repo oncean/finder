@@ -1,3 +1,5 @@
+const { openLocation } = require('../../utils/location');
+
 Component({
   properties: {
     shop: {
@@ -43,6 +45,20 @@ Component({
       this.triggerEvent('tapShop', {
         shopId: this.data.shopId
       });
+    },
+
+    onNavigate() {
+      const shop = this.data.shop || {};
+      const location = shop.location || {};
+      const lat = Number(location.lat || location.latitude);
+      const lng = Number(location.lng || location.longitude);
+
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        wx.showToast({ title: '暂无店铺位置', icon: 'none' });
+        return;
+      }
+
+      openLocation(lat, lng, shop.name || this.data.shopName, shop.address || this.data.location);
     }
   }
 });

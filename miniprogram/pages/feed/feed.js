@@ -122,16 +122,16 @@ Page({
     }, 0);
   },
 
-  // 点击卡片普通区域 -> 店铺详情页
+  // 点击卡片普通区域 -> 评价详情页
   onTapPost(e) {
     const { shopId, postId } = e.detail;
-    if (shopId) {
+    if (postId) {
       wx.navigateTo({
-        url: `/pages/comment-detail/comment-detail?id=${shopId}`
+        url: `/pages/comment-detail/comment-detail?commentId=${postId}`
       });
-    } else if (postId) {
+    } else if (shopId) {
       wx.navigateTo({
-        url: `/pages/shop-detail/shop-detail?id=${postId}`
+        url: `/pages/shop-detail/shop-detail?shopId=${shopId}`
       });
     }
   },

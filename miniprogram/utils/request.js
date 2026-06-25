@@ -1,10 +1,10 @@
-const BASE_URL = 'http://localhost:3000/api/v1';
+const { API_URL } = require('./config');
 
 function request(options) {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('token');
     wx.request({
-      url: BASE_URL + options.url,
+      url: API_URL + options.url,
       method: options.method || 'GET',
       data: options.data,
       header: {
@@ -57,7 +57,7 @@ module.exports = {
       const token = wx.getStorageSync('token');
       
       wx.uploadFile({
-        url: BASE_URL + url,
+        url: API_URL + url,
         filePath: filePath,
         name: 'file',
         header: {

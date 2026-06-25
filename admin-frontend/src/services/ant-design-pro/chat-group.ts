@@ -6,6 +6,9 @@ export interface ChatGroupItem {
   name: string;
   city: string;
   district: string;
+  centerLat?: number | null;
+  centerLng?: number | null;
+  coverageRadius?: number | null;
   onlineCount: number;
   createdAt: string;
 }
@@ -64,6 +67,9 @@ export async function createChatGroup(
     name: string;
     city?: string;
     district?: string;
+    centerLat?: number | null;
+    centerLng?: number | null;
+    coverageRadius?: number | null;
   },
   options?: RequestOptions,
 ) {
@@ -81,6 +87,9 @@ export async function updateChatGroup(
     name?: string;
     city?: string;
     district?: string;
+    centerLat?: number | null;
+    centerLng?: number | null;
+    coverageRadius?: number | null;
   },
   options?: RequestOptions,
 ) {

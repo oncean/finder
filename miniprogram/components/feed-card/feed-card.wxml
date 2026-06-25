@@ -23,16 +23,20 @@
     </view>
   </view>
 
-  <shop-section
+  <view style="padding: 15rpx;">
+  
+    <shop-section
     wx:if="{{post.shopName}}"
     shop="{{post.shop}}"
     shop-name="{{post.shopName}}"
     location="{{post.city}}"
     summary-tags="{{post.shop.summaryTags}}"
-    author-avatar="{{post.author.avatar}}"
+    comment-avatars="{{post.shop.commentAvatars}}"
+    comment-count="{{post.shop.reviewCount || 0}}"
     tester-count-text="{{testerCountText}}"
     show-ai-summary="{{true}}"
     shop-id="{{post.shopId}}"
     bind:tapShop="onTapShop"
   />
+  </view>
 </view>

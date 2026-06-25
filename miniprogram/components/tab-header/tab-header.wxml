@@ -30,13 +30,14 @@
         <text class="online-count">{{onlineCount}}人</text>
       </view>
       <view class="online-avatars" wx:if="{{onlineUsers.length > 0}}">
-        <image
-          wx:for="{{onlineUsers}}"
-          wx:key="id"
-          class="avatar-preview"
-          src="{{item.avatar || 'http://192.168.2.103/static/default-avatar.png'}}"
-          mode="aspectFill"
-        />
+        <block wx:for="{{onlineUsers}}" wx:key="id">
+          <image
+            wx:if="{{item.avatar}}"
+            class="avatar-preview"
+            src="{{item.avatar}}"
+            mode="aspectFill"
+          />
+        </block>
       </view>
     </view>
   </view>

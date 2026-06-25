@@ -6,13 +6,13 @@ import { Admin } from '../../entities/admin.entity';
 import { LoginDto } from './dto/login.dto';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
+import { getRequiredEnv } from '../../config/env';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
   private readonly jwtSecret: string;
   private readonly wxAppId: string;
   private readonly wxSecret: string;
-  private readonly staticBaseUrl: string;
 
   constructor(
     @InjectRepository(User)
@@ -20,10 +20,9 @@ export class AuthService implements OnModuleInit {
     @InjectRepository(Admin)
     private adminRepo: Repository<Admin>,
   ) {
-    this.jwtSecret = process.env.JWT_SECRET || 'fengxiangbiao-secret-key-2024';
-    this.wxAppId = process.env.WX_APPID || '';
-    this.wxSecret = process.env.WX_SECRET || '';
-    this.staticBaseUrl = process.env.STATIC_BASE_URL || 'http://192.168.2.103/static';
+    this.jwtSecret = getRequiredEnv('JWT_SECRET');
+    this.wxAppId = getRequiredEnv('WX_APPID');
+    this.wxSecret = getRequiredEnv('WX_SECRET');
   }
 
   async onModuleInit() {
@@ -31,8 +30,13 @@ export class AuthService implements OnModuleInit {
   }
 
   private async initDefaultAdmin() {
-    const defaultUsername = 'admin';
-    const defaultPassword = '123456';
+    const defaultUsername = process.env.ADMIN_USERNAME;
+    const defaultPassword = process.env.ADMIN_PASSWORD;
+
+    if (!defaultUsername || !defaultPassword) {
+      console.log('未配置默认管理员账号，跳过自动创建');
+      return;
+    }
     
     const existingAdmin = await this.adminRepo.findOne({ 
       where: { username: defaultUsername } 
@@ -47,7 +51,7 @@ export class AuthService implements OnModuleInit {
         permissions: ['all'],
       });
       await this.adminRepo.save(admin);
-      console.log('✅ 默认管理员账户已创建: admin / 123456');
+      console.log(`✅ 默认管理员账户已创建: ${defaultUsername}`);
     } else {
       console.log('ℹ️ 管理员账户已存在');
     }
@@ -67,13 +71,9 @@ export class AuthService implements OnModuleInit {
       user = this.userRepo.create({
         openid,
         unionid,
-        nickname: dto.userInfo?.nickName || '用户' + Math.random().toString(36).substr(2, 6),
-        avatar: dto.userInfo?.avatarUrl || `${this.staticBaseUrl}/default-avatar.png`,
-        location: dto.location || {
-          lat: 32.0603,
-          lng: 118.7969,
-          city: '南京市',
-        },
+        nickname: dto.userInfo?.nickName || '',
+        avatar: dto.userInfo?.avatarUrl || '',
+        location: dto.location || null,
       });
       await this.userRepo.save(user);
     } else {
@@ -271,17 +271,9 @@ export class AuthService implements OnModuleInit {
   }
 
   private async getWxSession(code: string): Promise<{ openid: string; session_key: string; unionid?: string }> {
-    const isMockAppId = !this.wxAppId || !this.wxSecret ||
-                        this.wxAppId === 'your-wx-appid' ||
-                        this.wxSecret === 'your-wx-secret';
-
-    if (isMockAppId) {
-      console.log('未配置微信 AppID，使用模拟登录');
-      return {
-        openid: process.env.DEV_OPENID || 'mock_openid_developer',
-        session_key: 'mock_session_key',
-        unionid: process.env.DEV_UNIONID || 'mock_unionid_developer',
-      };
+    if (this.wxAppId === 'your-wx-appid' ||
+        this.wxSecret === 'your-wx-secret') {
+      throw new HttpException('未配置微信小程序 AppID 或 Secret', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     const url = `https://api.weixin.qq.com/sns/jscode2session`;
