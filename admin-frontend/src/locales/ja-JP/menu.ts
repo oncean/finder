@@ -1,0 +1,18 @@
+export default {
+  'menu.welcome': 'ようこそ',
+  'menu.more-blocks': 'その他のブロック',
+  'menu.home': 'ホーム',
+  'menu.admin': '管理者',
+  'menu.admin.sub-page': 'サブページ',
+  'menu.login': 'ログイン',
+  'menu.register': '登録',
+  'menu.register-result': '登録結果',
+  'menu.dashboard': 'ダッシュボード',
+  'menu.dashboard.analysis': '分析',
+  'menu.dashboard.monitor': 'モニター',
+  'menu.dashboard.workplace': '職場',
+  'menu.editor': 'グラフィックエディタ',
+  'menu.editor.flow': 'フローエディタ',
+  'menu.editor.mind': 'マインドエディター',
+  'menu.editor.koni': 'コニエディター',
+};

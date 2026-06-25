@@ -1,0 +1,18 @@
+export default {
+  'menu.welcome': 'خوش آمدید',
+  'menu.more-blocks': 'بلوک های بیشتر',
+  'menu.home': 'خانه',
+  'menu.admin': 'مدیر',
+  'menu.admin.sub-page': 'زیر صفحه',
+  'menu.login': 'ورود',
+  'menu.register': 'ثبت نام',
+  'menu.register-result': 'ثبت نام نتیجه',
+  'menu.dashboard': 'داشبورد',
+  'menu.dashboard.analysis': 'تحلیل و بررسی',
+  'menu.dashboard.monitor': 'نظارت',
+  'menu.dashboard.workplace': 'محل کار',
+  'menu.editor': 'ویرایشگر گرافیک',
+  'menu.editor.flow': 'ویرایشگر جریان',
+  'menu.editor.mind': 'ویرایشگر ذهن',
+  'menu.editor.koni': 'ویرایشگر Koni',
+};

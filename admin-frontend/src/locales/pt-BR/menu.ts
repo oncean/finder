@@ -1,0 +1,18 @@
+export default {
+  'menu.welcome': 'Welcome',
+  'menu.more-blocks': 'More Blocks',
+  'menu.home': 'Início',
+  'menu.admin': 'Admin',
+  'menu.admin.sub-page': 'Sub-Page',
+  'menu.login': 'Login',
+  'menu.register': 'Registro',
+  'menu.register-result': 'Resultado de registro',
+  'menu.dashboard': 'Dashboard',
+  'menu.dashboard.analysis': 'Análise',
+  'menu.dashboard.monitor': 'Monitor',
+  'menu.dashboard.workplace': 'Ambiente de Trabalho',
+  'menu.editor': 'Graphic Editor',
+  'menu.editor.flow': 'Flow Editor',
+  'menu.editor.mind': 'Mind Editor',
+  'menu.editor.koni': 'Koni Editor',
+};

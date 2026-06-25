@@ -1,0 +1,18 @@
+export default {
+  'menu.welcome': 'স্বাগতম',
+  'menu.more-blocks': 'আরও ব্লক',
+  'menu.home': 'নীড়',
+  'menu.admin': 'অ্যাডমিন',
+  'menu.admin.sub-page': 'উপ-পৃষ্ঠা',
+  'menu.login': 'প্রবেশ',
+  'menu.register': 'নিবন্ধন',
+  'menu.register-result': 'নিবন্ধনে ফলাফল',
+  'menu.dashboard': 'ড্যাশবোর্ড',
+  'menu.dashboard.analysis': 'বিশ্লেষণ',
+  'menu.dashboard.monitor': 'নিরীক্ষণ',
+  'menu.dashboard.workplace': 'কর্মক্ষেত্র',
+  'menu.editor': 'গ্রাফিক সম্পাদক',
+  'menu.editor.flow': 'ফ্লো এডিটর',
+  'menu.editor.mind': 'মাইন্ড এডিটর',
+  'menu.editor.koni': 'কোনি সম্পাদক',
+};

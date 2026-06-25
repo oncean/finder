@@ -1,0 +1,18 @@
+export default {
+  'menu.welcome': 'Selamat Datang',
+  'menu.more-blocks': 'Blocks Lainnya',
+  'menu.home': 'Halaman Awal',
+  'menu.admin': 'Admin',
+  'menu.admin.sub-page': 'Sub-Halaman',
+  'menu.login': 'Masuk',
+  'menu.register': 'Pendaftaran',
+  'menu.register-result': 'Hasil Pendaftaran',
+  'menu.dashboard': 'Dasbor',
+  'menu.dashboard.analysis': 'Analisis',
+  'menu.dashboard.monitor': 'Monitor',
+  'menu.dashboard.workplace': 'Workplace',
+  'menu.editor': 'Penyusun Grafis',
+  'menu.editor.flow': 'Penyusun Alur',
+  'menu.editor.mind': 'Penyusun Mind',
+  'menu.editor.koni': 'Penyusun Koni',
+};

@@ -1,0 +1,18 @@
+export default {
+  'menu.welcome': '歡迎',
+  'menu.more-blocks': '更多區塊',
+  'menu.home': '首頁',
+  'menu.admin': '权限',
+  'menu.admin.sub-page': '二级管理页',
+  'menu.login': '登錄',
+  'menu.register': '註冊',
+  'menu.register-result': '註冊結果',
+  'menu.dashboard': 'Dashboard',
+  'menu.dashboard.analysis': '分析頁',
+  'menu.dashboard.monitor': '監控頁',
+  'menu.dashboard.workplace': '工作臺',
+  'menu.editor': '圖形編輯器',
+  'menu.editor.flow': '流程編輯器',
+  'menu.editor.mind': '腦圖編輯器',
+  'menu.editor.koni': '拓撲編輯器',
+};
