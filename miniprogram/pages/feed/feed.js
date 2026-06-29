@@ -99,7 +99,7 @@ Page({
       const nextList = data.list || [];
       
       this.setData({
-        recommendations: [...nextList, ...this.data.recommendations],
+        recommendations: [...this.data.recommendations, ...nextList],
         page: nextPage,
         hasMore: nextList.length === 10,
         loading: false,
@@ -142,10 +142,6 @@ Page({
     if (shopId) {
       wx.navigateTo({
         url: `/pages/shop-detail/shop-detail?shopId=${shopId}`
-      });
-    } else if (postId) {
-      wx.navigateTo({
-        url: `/pages/shop-detail/shop-detail?id=${postId}`
       });
     }
   },

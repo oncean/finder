@@ -6,6 +6,7 @@
 }
 
 .feed-list {
+  height: 0;
   flex: 1;
   background: #ffffff;
 }

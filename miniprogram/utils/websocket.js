@@ -8,12 +8,17 @@ let currentGroupId = null;
 let connectTaskId = 0;
 let lastPongAt = 0;
 
-const { WS_URL } = require('./config');
+const {
+  WS_URL,
+  CLOUD_ENV_ID,
+  CLOUD_SERVICE,
+  USE_CLOUD_CONTAINER
+} = require('./config');
 const RECONNECT_INTERVAL = 3000;
 const HEARTBEAT_INTERVAL = 30000;
 const PONG_TIMEOUT = 90000;
 
-function connect(groupId) {
+async function connect(groupId) {
   const token = wx.getStorageSync('token');
   if (!token || !groupId) return;
 
@@ -25,7 +30,7 @@ function connect(groupId) {
     return;
   }
 
-  if (ws && (isConnected || ws.readyState === 0 || ws.readyState === 1)) {
+  if (ws && (isConnected || isConnecting || ws.readyState === 0 || ws.readyState === 1)) {
     console.log('WebSocket 已有活跃连接，关闭旧连接');
     ws.close();
     ws = null;
@@ -37,9 +42,33 @@ function connect(groupId) {
 
   console.log(`WebSocket 开始连接... (任务ID: ${currentTaskId})`);
 
-  ws = wx.connectSocket({
-    url: `${WS_URL}?token=${encodeURIComponent(token)}&groupId=${encodeURIComponent(groupId)}`
-  });
+  const path = `/ws/chat?token=${encodeURIComponent(token)}&groupId=${encodeURIComponent(groupId)}`;
+
+  try {
+    if (shouldUseCloudContainer()) {
+      console.log(`WebSocket 使用微信云托管 connectContainer 连接: service=${CLOUD_SERVICE}, path=${path}`);
+      const { socketTask } = await wx.cloud.connectContainer({
+        config: {
+          env: CLOUD_ENV_ID
+        },
+        service: CLOUD_SERVICE,
+        path
+      });
+      ws = socketTask;
+    } else {
+      const url = `${WS_URL}?token=${encodeURIComponent(token)}&groupId=${encodeURIComponent(groupId)}`;
+      console.log(`WebSocket 使用 wx.connectSocket 直连: ${url}`);
+      ws = wx.connectSocket({ url });
+    }
+  } catch (error) {
+    console.error('WebSocket 创建连接失败:', error);
+    isConnected = false;
+    isConnecting = false;
+    if (currentGroupId && currentTaskId === connectTaskId) {
+      scheduleReconnect(currentGroupId);
+    }
+    return;
+  }
 
   ws.onOpen(() => {
     if (currentTaskId !== connectTaskId) {
@@ -89,6 +118,16 @@ function connect(groupId) {
     isConnected = false;
     isConnecting = false;
   });
+}
+
+function shouldUseCloudContainer() {
+  return !!(
+    USE_CLOUD_CONTAINER &&
+    CLOUD_ENV_ID &&
+    CLOUD_SERVICE &&
+    wx.cloud &&
+    wx.cloud.connectContainer
+  );
 }
 
 function close() {

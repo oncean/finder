@@ -1,17 +1,34 @@
 const store = require('./store/index');
 const { login, checkLogin, updateMe } = require('./services/auth');
 const { getCurrentLocation } = require('./utils/location');
+const {
+  CLOUD_ENV_ID
+} = require('./utils/config');
 
 App({
   globalData: {
     userInfo: null,
-    location: null
+    location: null,
+    statusBarHeight: wx.getWindowInfo().statusBarHeight || 20
   },
 
   async onLaunch() {
     console.log('App onLaunch');
+    this.initCloud();
     await this.checkLoginStatus();
-    await this.initLocation();
+    this.initLocationPromise = this.initLocation();
+    await this.initLocationPromise;
+  },
+
+  initCloud() {
+    if (!CLOUD_ENV_ID || !wx.cloud) {
+      return;
+    }
+
+    wx.cloud.init({
+      env: CLOUD_ENV_ID
+    });
+    console.log('微信云托管环境已初始化:', CLOUD_ENV_ID);
   },
 
   async checkLoginStatus() {

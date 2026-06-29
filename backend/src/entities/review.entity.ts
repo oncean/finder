@@ -1,26 +1,20 @@
-import { BeforeInsert, Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 import { Shop } from './shop.entity';
-import { generateSnowflakeId } from '../common/utils/snowflake.util';
 
 @Entity('comments')
 export class Comment {
-  @PrimaryColumn({ type: 'bigint' })
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @BeforeInsert()
-  assignId() {
-    this.id = this.id || generateSnowflakeId();
-  }
-
-  @Column({ type: 'bigint', name: 'shop_id' })
+  @Column({ name: 'shop_id' })
   shopId: string;
 
   @ManyToOne(() => Shop)
   @JoinColumn({ name: 'shop_id' })
   shop: Shop;
 
-  @Column({ type: 'bigint', name: 'author_id' })
+  @Column({ name: 'author_id' })
   authorId: string;
 
   @ManyToOne(() => User)

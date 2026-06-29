@@ -9,17 +9,12 @@ export class CommentController {
 
   @Get()
   async findAll(
-    @Query('current') current: any = 1,
-    @Query('pageSize') pageSize: any = 10,
+    @Query('current') current: string = '1',
+    @Query('pageSize') pageSize: string = '10',
     @Query('keyword') keyword?: string,
     @Query('shopId') shopId?: string,
-    @Query('authorId') authorId?: string,
-    @Query('isFengxiangbiao') isFengxiangbiao?: string,
-    @Query('id') id?: string,
   ) {
-    const page = parseInt(current, 10) || 1;
-    const limit = parseInt(pageSize, 10) || 10;
-    return this.commentService.findAll(page, limit, keyword, shopId, authorId, isFengxiangbiao, id);
+    return this.commentService.findAll(Number(current), Number(pageSize), keyword, shopId);
   }
 
   @Get(':id')

@@ -2,7 +2,6 @@ import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Comment } from '../../entities/comment.entity';
-import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class PostService {
@@ -11,7 +10,6 @@ export class PostService {
   constructor(
     @InjectRepository(Comment)
     private commentRepo: Repository<Comment>,
-    private storageService: StorageService,
   ) {}
 
   async getRecommendations(
@@ -113,12 +111,10 @@ export class PostService {
     return this.findOne(saved.id);
   }
 
-  private async formatComment(comment: Comment, commentAvatars: string[] = []) {
+  private formatComment(comment: Comment, commentAvatars: string[] = []) {
     const shop = comment.shop;
     const author = comment.author;
-    const images = Array.isArray(comment.images)
-      ? await this.storageService.resolveUrls(comment.images)
-      : [];
+    const images = Array.isArray(comment.images) ? comment.images : [];
 
     return {
       id: comment.id,
@@ -128,7 +124,7 @@ export class PostService {
       author: author ? {
         id: author.id,
         nickname: author.nickname,
-        avatar: await this.storageService.resolveUrl(author.avatar),
+        avatar: author.avatar || '',
       } : null,
       shopId: comment.shopId,
       shopName: shop?.name,
@@ -136,20 +132,20 @@ export class PostService {
         id: shop.id,
         name: shop.name,
         address: shop.address,
-        coverImage: await this.storageService.resolveUrl(shop.coverImage || ''),
+        coverImage: shop.coverImage || '',
         summaryTags: shop.summaryTags,
         reviewCount: shop.reviewCount,
-        commentAvatars: await this.storageService.resolveUrls(commentAvatars),
+        commentAvatars,
       } : null,
       images,
-      coverImage: images[0] || await this.storageService.resolveUrl(shop?.coverImage || ''),
+      coverImage: images[0] || shop?.coverImage || '',
       consumeRecord: comment.consumeRecord
         ? {
             amount: comment.consumeRecord.amount,
             merchantName: shop?.name || '',
             tradeTime: comment.consumeRecord.tradeTime,
             tradeNo: `COMMENT-${comment.id}`,
-            image: await this.storageService.resolveUrl(comment.consumeRecord.image),
+            image: comment.consumeRecord.image || '',
           }
         : null,
       reviewCount: shop?.reviewCount || 0,

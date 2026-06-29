@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Comment } from '../../entities/comment.entity';
@@ -74,7 +74,7 @@ export class CommentService {
     this.logger.log(`findOne: commentId=${id}`);
     const comment = await this.commentRepo.findOne({
       where: { id },
-      relations: ['shop'],
+      relations: ['shop', 'author'],
     });
     return comment ? await this.formatComment(comment) : null;
   }
@@ -97,6 +97,12 @@ export class CommentService {
             coverImage: await this.storageService.resolveUrl(comment.shop.coverImage),
           }
         : null,
+      author: comment.author
+        ? {
+            ...comment.author,
+            avatar: await this.storageService.resolveUrl(comment.author.avatar),
+          }
+        : null,
     };
   }
 
@@ -106,16 +112,20 @@ export class CommentService {
   }
 
   async create(data: Partial<Comment>) {
-    // 获取第一个管理员作为作者，或创建一个系统用户ID
+    if (!data.authorId) {
+      throw new BadRequestException('用户ID不能为空');
+    }
     const comment = this.commentRepo.create({
       shopId: data.shopId,
-      authorId: data.authorId || null,
+      authorId: data.authorId,
       title: data.title,
       content: data.content,
       rating: data.rating || 5,
       images: data.images || [],
       consumeRecord: data.consumeRecord,
-      likeCount: 0,
+      likeCount: data.likeCount || 0,
+      isFengxiangbiao: data.isFengxiangbiao ?? false,
+      fengxiangbiaoRank: data.fengxiangbiaoRank ?? null,
     });
     await this.commentRepo.save(comment);
     return this.findOne(comment.id);

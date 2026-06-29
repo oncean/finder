@@ -45,6 +45,7 @@ const MessageManagement: React.FC = () => {
     { label: string; value: string }[]
   >([]);
   const actionRef = useRef<ActionType | undefined>(undefined);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
   const messageType = Form.useWatch('type', form);
   const imageUrl = Form.useWatch('content', form);
 
@@ -69,9 +70,9 @@ const MessageManagement: React.FC = () => {
   const loadShopOptions = async () => {
     try {
       const res = await fetchShopList({ pageSize: 100, current: 1 });
-      if (res.list) {
+      if (res.data) {
         setShopOptions(
-          res.list.map((shop: any) => ({
+          res.data.map((shop: any) => ({
             label: shop.name,
             value: shop.id,
           })),
@@ -86,9 +87,9 @@ const MessageManagement: React.FC = () => {
   const loadUserOptions = async () => {
     try {
       const res = await fetchWechatUserList({ pageSize: 100, current: 1 });
-      if (res.list) {
+      if (res.data) {
         setUserOptions(
-          res.list.map((user: any) => ({
+          res.data.map((user: any) => ({
             label: user.nickname || user.openid || user.id,
             value: user.id,
           })),
@@ -149,6 +150,7 @@ const MessageManagement: React.FC = () => {
     loadUserOptions();
     form.resetFields();
     form.setFieldsValue({ type: 'text' });
+    setImagePreviewUrl('');
     setIsModalVisible(true);
   };
 
@@ -235,7 +237,7 @@ const MessageManagement: React.FC = () => {
               current: params.current || 1,
             });
             return {
-              data: res.list || [],
+              data: res.data || [],
               success: true,
               total: res.total || 0,
             };
@@ -328,7 +330,8 @@ const MessageManagement: React.FC = () => {
                     setUploading(true);
                     try {
                       const res = await uploadImage(file);
-                      form.setFieldsValue({ content: res.url });
+                      form.setFieldsValue({ content: res.fileId });
+                      setImagePreviewUrl(res.url);
                       message.success('图片上传成功');
                     } catch (error: any) {
                       message.error(error?.message || '图片上传失败');
@@ -339,13 +342,13 @@ const MessageManagement: React.FC = () => {
                   }}
                 >
                   <Button icon={<UploadOutlined />} loading={uploading}>
-                    {imageUrl ? '更换图片' : '上传图片'}
+                    {imagePreviewUrl ? '更换图片' : '上传图片'}
                   </Button>
                 </Upload>
-                {imageUrl && (
+                {imagePreviewUrl && (
                   <div style={{ marginTop: 8 }}>
                     <img
-                      src={imageUrl}
+                      src={imagePreviewUrl}
                       alt="图片预览"
                       style={{
                         width: 200,

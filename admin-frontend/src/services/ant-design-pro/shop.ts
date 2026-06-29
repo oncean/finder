@@ -1,24 +1,27 @@
 import type { RequestOptions } from '@umijs/max';
 import { request } from '@umijs/max';
 
+export interface ShopLocation {
+  lat: number;
+  lng: number;
+}
+
 export interface ShopItem {
   id: string;
   name: string;
-  category: string;
-  address: string;
+  category?: string;
+  address?: string;
+  location?: ShopLocation;
   city?: string;
-  coverImage: string;
-  logo: string;
-  phone: string;
-  businessHours: string;
-  rating: number;
-  commentCount: number;
-  summaryTags?: {
-    positive: string[];
-    negative: string[];
-  };
-  createdAt: string;
-  updatedAt: string;
+  coverImage?: string;
+  logo?: string;
+  phone?: string;
+  businessHours?: string;
+  rating?: number;
+  reviewCount?: number;
+  summaryTags?: { positive: string[]; negative: string[] };
+  isVerified?: boolean;
+  createdAt?: string;
 }
 
 export interface ShopListParams {
@@ -33,7 +36,7 @@ export async function fetchShopList(
   params: ShopListParams,
   options?: RequestOptions,
 ) {
-  return request<{
+  const res = await request<{
     list: ShopItem[];
     total: number;
   }>('/api/v1/admin/shops', {
@@ -41,6 +44,7 @@ export async function fetchShopList(
     params,
     ...(options || {}),
   });
+  return { data: res.list, total: res.total, success: true };
 }
 
 /** 获取店铺详情 */
@@ -84,9 +88,7 @@ export async function deleteShop(
   id: string,
   options?: RequestOptions,
 ) {
-  return request<{
-    message?: string;
-  }>('/api/v1/admin/shops/' + id, {
+  return request<{ message?: string }>('/api/v1/admin/shops/' + id, {
     method: 'DELETE',
     ...(options || {}),
   });

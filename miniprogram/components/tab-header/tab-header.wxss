@@ -1,7 +1,6 @@
 .tab-header {
   background: linear-gradient(180deg, #efffda 0%, #efffda 72%, #ffffff 100%);
-  padding-top: calc(88rpx + env(safe-area-inset-top));
-  padding-top: calc(88rpx + constant(safe-area-inset-top));
+  padding-top: 88rpx;
   flex-shrink: 0;
   position: relative;
 }

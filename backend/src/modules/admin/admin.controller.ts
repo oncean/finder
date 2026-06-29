@@ -162,16 +162,16 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      list: admins.map(admin => ({
+      list: await Promise.all(admins.map(async admin => ({
         id: admin.id,
         username: admin.username,
         nickname: admin.nickname,
-        avatar: admin.avatar,
+        avatar: await this.storageService.resolveUrl(admin.avatar),
         phone: admin.phone,
         permissions: admin.permissions,
         createdAt: admin.createdAt,
         updatedAt: admin.updatedAt,
-      })),
+      }))),
       total,
     };
   }
@@ -188,7 +188,7 @@ export class AdminController {
         id: admin.id,
         username: admin.username,
         nickname: admin.nickname,
-        avatar: admin.avatar,
+        avatar: await this.storageService.resolveUrl(admin.avatar),
         phone: admin.phone,
         permissions: admin.permissions,
         createdAt: admin.createdAt,
@@ -307,15 +307,15 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      list: shops.map(shop => ({
+      list: await Promise.all(shops.map(async shop => ({
         id: shop.id,
         name: shop.name,
         category: shop.category,
         address: shop.address,
         location: shop.location,
         city: shop.city,
-        coverImage: shop.coverImage,
-        logo: shop.logo,
+        coverImage: await this.storageService.resolveUrl(shop.coverImage),
+        logo: await this.storageService.resolveUrl(shop.logo),
         phone: shop.phone,
         businessHours: shop.businessHours,
         rating: shop.rating,
@@ -323,7 +323,7 @@ export class AdminController {
         summaryTags: shop.summaryTags,
         isVerified: shop.isVerified,
         createdAt: shop.createdAt,
-      })),
+      }))),
       total,
     };
   }
@@ -343,8 +343,8 @@ export class AdminController {
         address: shop.address,
         location: shop.location,
         city: shop.city,
-        coverImage: shop.coverImage,
-        logo: shop.logo,
+        coverImage: await this.storageService.resolveUrl(shop.coverImage),
+        logo: await this.storageService.resolveUrl(shop.logo),
         phone: shop.phone,
         businessHours: shop.businessHours,
         rating: shop.rating,
@@ -463,10 +463,10 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      list: messages.map(msg => ({
+      list: await Promise.all(messages.map(async msg => ({
         id: msg.id,
         type: msg.type,
-        content: msg.content,
+        content: msg.type === 'image' ? await this.storageService.resolveUrl(msg.content) : msg.content,
         shopId: msg.shopId,
         shopCard: msg.type === 'shop_card' ? this.formatMessageShopCard(msg.shop) : null,
         groupId: msg.groupId,
@@ -475,10 +475,10 @@ export class AdminController {
         sender: msg.sender ? {
           id: msg.sender.id,
           nickname: msg.sender.nickname,
-          avatar: msg.sender.avatar,
+          avatar: await this.storageService.resolveUrl(msg.sender.avatar),
         } : null,
         createdAt: msg.createdAt,
-      })),
+      }))),
       total,
     };
   }
@@ -550,13 +550,13 @@ export class AdminController {
         id: message.id,
         groupId: message.groupId,
         type: message.type,
-        content: message.content,
+        content: type === 'image' ? await this.storageService.resolveUrl(message.content) : message.content,
         shopId: message.shopId,
         shopCard: type === 'shop_card' ? this.formatMessageShopCard(shopEntity) : null,
         sender: {
           id: sender.id,
           nickname: sender.nickname,
-          avatar: sender.avatar,
+          avatar: await this.storageService.resolveUrl(sender.avatar),
         },
         createdAt: message.createdAt,
     };
@@ -566,7 +566,7 @@ export class AdminController {
     return result;
   }
 
-  private formatMessageShopCard(shop: Shop) {
+  private async formatMessageShopCard(shop: Shop) {
     if (!shop) {
       return null;
     }
@@ -576,7 +576,7 @@ export class AdminController {
       name: shop.name,
       address: shop.address,
       location: shop.location,
-      coverImage: shop.coverImage,
+      coverImage: await this.storageService.resolveUrl(shop.coverImage),
       distance: 0,
       summaryTags: shop.summaryTags,
       reviewCount: shop.reviewCount,
@@ -667,7 +667,7 @@ export class AdminController {
     });
 
     return {
-      list: onlineUsers.map((item) => ({
+      list: await Promise.all(onlineUsers.map(async (item) => ({
         id: item.id,
         groupId: item.groupId,
         userId: item.userId,
@@ -678,10 +678,10 @@ export class AdminController {
         user: item.user ? {
           id: item.user.id,
           nickname: item.user.nickname,
-          avatar: item.user.avatar,
+          avatar: await this.storageService.resolveUrl(item.user.avatar),
           phone: item.user.phone,
         } : null,
-      })),
+      }))),
       total: onlineUsers.length,
     };
   }

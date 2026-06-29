@@ -1,42 +1,36 @@
 import type { RequestOptions } from '@umijs/max';
 import { request } from '@umijs/max';
+import type { ShopItem } from './shop';
 
 export interface CommentItem {
   id: string;
-  title: string;
-  content: string;
-  rating: number;
-  likeCount: number;
   shopId: string;
-  shop?: {
-    id: string;
-    name: string;
-    logo?: string;
-  };
+  shop?: ShopItem;
+  authorId: string;
   author?: {
     id: string;
     nickname: string;
     avatar?: string;
   };
-  authorId: string;
+  title: string;
+  content: string;
   images: string[];
-  consumeRecord?: {
+  rating: number;
+  consumeRecord: {
     amount: number;
     tradeTime: string;
+    image?: string;
   };
-  isFengxiangbiao: boolean;
-  fengxiangbiaoRank?: number;
+  likeCount: number;
   createdAt: string;
 }
 
 export interface CommentListParams {
   pageSize?: number;
   current?: number;
-  keyword?: string;
   shopId?: string;
-  authorId?: string;
+  keyword?: string;
   isFengxiangbiao?: string;
-  id?: string;
 }
 
 /** 获取评价列表 */
@@ -44,7 +38,7 @@ export async function fetchCommentList(
   params: CommentListParams,
   options?: RequestOptions,
 ) {
-  return request<{
+  const res = await request<{
     list: CommentItem[];
     total: number;
   }>('/api/v1/admin/comments', {
@@ -52,6 +46,7 @@ export async function fetchCommentList(
     params,
     ...(options || {}),
   });
+  return { data: res.list, total: res.total, success: true };
 }
 
 /** 获取评价详情 */
@@ -67,7 +62,7 @@ export async function fetchCommentDetail(
 
 /** 创建评价 */
 export async function createComment(
-  data: Partial<Omit<CommentItem, 'id' | 'shop'>>,
+  data: Partial<Pick<CommentItem, 'title' | 'content' | 'rating' | 'authorId' | 'shopId'>>,
   options?: RequestOptions,
 ) {
   return request<CommentItem>('/api/v1/admin/comments', {
@@ -80,7 +75,7 @@ export async function createComment(
 /** 更新评价 */
 export async function updateComment(
   id: string,
-  data: Partial<CommentItem>,
+  data: Partial<Pick<CommentItem, 'title' | 'content' | 'rating' | 'authorId'>>,
   options?: RequestOptions,
 ) {
   return request<CommentItem>('/api/v1/admin/comments/' + id, {
@@ -95,9 +90,7 @@ export async function deleteComment(
   id: string,
   options?: RequestOptions,
 ) {
-  return request<{
-    message?: string;
-  }>('/api/v1/admin/comments/' + id, {
+  return request<{ message?: string }>('/api/v1/admin/comments/' + id, {
     method: 'DELETE',
     ...(options || {}),
   });

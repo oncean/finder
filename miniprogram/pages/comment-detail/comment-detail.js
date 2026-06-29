@@ -13,6 +13,7 @@ Page({
 
   onLoad(options) {
     const { commentId } = options;
+    console.info("commentid"+ commentId)
     if (commentId) {
       this.loadCommentDetail(commentId);
     }
@@ -74,7 +75,7 @@ Page({
     const { id } = e.currentTarget.dataset;
     if (id) {
       wx.navigateTo({
-        url: `/pages/shop-detail/shop-detail?id=${id}`
+        url: `/pages/shop-detail/shop-detail?shopId=${id}`
       });
     }
   },

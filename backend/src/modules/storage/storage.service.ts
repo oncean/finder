@@ -70,18 +70,22 @@ export class StorageService {
     action: string,
     url: string,
     request: () => Promise<T>,
+    context?: string,
   ): Promise<T> {
     const safeUrl = this.getSafeUrl(url);
-    this.logger.log(`${action}: ${safeUrl}`);
+    const ctx = context ? ` | ${context}` : '';
+    this.logger.log(`[云存储] ${action}: ${safeUrl}${ctx}`);
 
     try {
-      return await request();
+      const result = await request();
+      this.logger.log(`[云存储] ${action} 成功: ${safeUrl}${ctx}`);
+      return result;
     } catch (error) {
       const err = error as { code?: string; message?: string };
       if (this.isCertificateError(error)) {
-        this.logger.error(`${action} 证书校验失败: ${safeUrl}, code=${err?.code || ''}, message=${err?.message || ''}`);
+        this.logger.error(`[云存储] ${action} 证书校验失败: ${safeUrl}, code=${err?.code || ''}, message=${err?.message || ''}${ctx}`);
       } else {
-        this.logger.error(`${action} 请求失败: ${safeUrl}, code=${err?.code || ''}, message=${err?.message || ''}`);
+        this.logger.error(`[云存储] ${action} 请求失败: ${safeUrl}, code=${err?.code || ''}, message=${err?.message || ''}${ctx}`);
       }
       throw error;
     }
@@ -134,13 +138,15 @@ export class StorageService {
     const filename = `${Date.now()}-${Math.round(Math.random() * 1e6)}.${ext}`;
     const cloudPath = `${folder}/${filename}`;
 
+    this.logger.log(`[云存储] 准备上传文件: originalName=${originalName}, cloudPath=${cloudPath}, size=${fileBuffer.length} bytes, mode=${this.mode}`);
+
     if (this.mode === 'local') {
       const dirPath = join(this.localDir, folder);
       if (!existsSync(dirPath)) {
         mkdirSync(dirPath, { recursive: true });
       }
       writeFileSync(join(this.localDir, cloudPath), fileBuffer);
-      this.logger.log(`本地文件保存成功: ${cloudPath}`);
+      this.logger.log(`[云存储] 本地文件保存成功: ${cloudPath}`);
       return { fileId: cloudPath };
     }
 
@@ -161,6 +167,7 @@ export class StorageService {
         { env: this.envId, path: cloudPath },
         { timeout: 10000 },
       ),
+      `env=${this.envId}, path=${cloudPath}`,
     );
 
     if (uploadRes.errcode !== 0) {
@@ -180,9 +187,9 @@ export class StorageService {
         headers: form.getHeaders(),
         timeout: 30000,
       });
-    });
+    }, `cloudPath=${cloudPath}, size=${fileBuffer.length} bytes`);
 
-    this.logger.log(`云端文件上传成功: ${cloudPath}`);
+    this.logger.log(`[云存储] 云端文件上传成功: cloudPath=${cloudPath}, fileId=${uploadRes.file_id}`);
 
     // 返回微信官方 file_id（cloud://envId.bucket/path）
     return { fileId: uploadRes.file_id };
@@ -213,19 +220,25 @@ export class StorageService {
     if (!fileId) return '';
 
     if (/^https?:\/\//i.test(fileId) || fileId.startsWith('/')) {
+      this.logger.log(`[云存储] resolveUrl 跳过（已是完整 URL）: ${fileId}`);
       return fileId;
     }
 
     // 本地模式（非 cloud:// 开头）
     if (!fileId.startsWith('cloud://')) {
-      return `${this.localBaseUrl.replace(/\/$/, '')}/${fileId}`;
+      const url = `${this.localBaseUrl.replace(/\/$/, '')}/${fileId}`;
+      this.logger.log(`[云存储] resolveUrl 本地模式拼接: fileId=${fileId} -> ${url}`);
+      return url;
     }
 
     // 检查缓存
     const cached = this.urlCache.get(fileId);
     if (cached && Date.now() < cached.expireAt) {
+      this.logger.log(`[云存储] resolveUrl 缓存命中: fileId=${fileId}, expireAt=${new Date(cached.expireAt).toISOString()}`);
       return cached.url;
     }
+
+    this.logger.log(`[云存储] resolveUrl 缓存未命中，请求云端: fileId=${fileId}`);
 
     // 云端模式：调用 batchdownloadfile
     // https://developers.weixin.qq.com/miniprogram/dev/wxcloudservice/wxcloudrun/src/development/storage/service/download.html
@@ -239,6 +252,7 @@ export class StorageService {
         { env: this.envId, file_list: [{ fileid: fileId, max_age: 7200 }] },
         { timeout: 10000 },
       ),
+      `env=${this.envId}, fileId=${fileId}`,
     );
 
     if (data.errcode !== 0) {
@@ -253,6 +267,7 @@ export class StorageService {
     const url = fileInfo.download_url;
     // 缓存有效期 = max_age - 300秒（提前5分钟过期）
     this.urlCache.set(fileId, { url, expireAt: Date.now() + 6900 * 1000 });
+    this.logger.log(`[云存储] resolveUrl 成功: fileId=${fileId}, url=${this.getSafeUrl(url)}`);
     return url;
   }
 
@@ -263,6 +278,8 @@ export class StorageService {
     const results: string[] = new Array(fileIds.length).fill('');
     const cloudIds: string[] = [];
     const cloudIndices: number[] = [];
+
+    this.logger.log(`[云存储] resolveUrls 开始: 共 ${fileIds.length} 个 fileId`);
 
     for (let i = 0; i < fileIds.length; i++) {
       if (!fileIds[i]) continue;
@@ -279,6 +296,7 @@ export class StorageService {
         // 检查缓存
         const cached = this.urlCache.get(fileIds[i]);
         if (cached && Date.now() < cached.expireAt) {
+          this.logger.log(`[云存储] resolveUrls 缓存命中: fileId=${fileIds[i]}`);
           results[i] = cached.url;
         } else {
           cloudIds.push(fileIds[i]);
@@ -287,7 +305,12 @@ export class StorageService {
       }
     }
 
-    if (cloudIds.length === 0) return results;
+    this.logger.log(`[云存储] resolveUrls 统计: 缓存/本地命中=${fileIds.length - cloudIds.length}, 需请求云端=${cloudIds.length}`);
+
+    if (cloudIds.length === 0) {
+      this.logger.log(`[云存储] resolveUrls 完成: 无需云端请求`);
+      return results;
+    }
 
     // 批量调用 batchdownloadfile
     const accessToken = await this.getAccessToken();
@@ -300,21 +323,25 @@ export class StorageService {
         { env: this.envId, file_list: cloudIds.map(id => ({ fileid: id, max_age: 7200 })) },
         { timeout: 10000 },
       ),
+      `env=${this.envId}, count=${cloudIds.length}`,
     );
 
     if (data.errcode !== 0) {
       throw new Error(`获取下载链接失败: ${data.errmsg}`);
     }
 
+    let successCount = 0;
     for (let j = 0; j < cloudIds.length; j++) {
       const fileInfo = data.file_list?.[j];
       if (fileInfo && fileInfo.status === 0) {
         const url = fileInfo.download_url;
         this.urlCache.set(cloudIds[j], { url, expireAt: Date.now() + 6900 * 1000 });
         results[cloudIndices[j]] = url;
+        successCount++;
       }
     }
 
+    this.logger.log(`[云存储] resolveUrls 完成: 云端请求成功=${successCount}/${cloudIds.length}`);
     return results;
   }
 
@@ -326,10 +353,14 @@ export class StorageService {
       throw new Error('fileId 不能为空');
     }
 
+    this.logger.log(`[云存储] getFile 开始: fileId=${fileId}, mode=${this.mode}`);
+
     // 本地模式
     if (!fileId.startsWith('cloud://')) {
       const filePath = join(this.localDir, fileId);
-      return { buffer: readFileSync(filePath) };
+      const buffer = readFileSync(filePath);
+      this.logger.log(`[云存储] getFile 本地读取成功: ${filePath}, size=${buffer.length} bytes`);
+      return { buffer };
     }
 
     // 云端模式：获取 download_url 后下载
@@ -341,8 +372,11 @@ export class StorageService {
         responseType: 'arraybuffer',
         timeout: 30000,
       }),
+      `fileId=${fileId}`,
     );
 
-    return { buffer: Buffer.from(data) };
+    const buffer = Buffer.from(data);
+    this.logger.log(`[云存储] getFile 云端下载成功: fileId=${fileId}, size=${buffer.length} bytes`);
+    return { buffer };
   }
 }

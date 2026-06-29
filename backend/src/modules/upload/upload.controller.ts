@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -25,11 +25,15 @@ export class UploadController {
       },
     }),
   )
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Query('folder') folder?: string,
+  ) {
+    const targetFolder = folder || 'uploads/avatar';
     const result = await this.storageService.uploadFile(
       file.buffer,
       file.originalname,
-      'uploads/avatar',
+      targetFolder,
     );
     const url = await this.storageService.resolveUrl(result.fileId);
 

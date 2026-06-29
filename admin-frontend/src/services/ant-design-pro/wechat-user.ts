@@ -11,7 +11,6 @@ export interface WechatUserItem {
   phone?: string;
   location?: { lat: number; lng: number; city: string };
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface WechatUserListParams {
@@ -25,7 +24,7 @@ export async function fetchWechatUserList(
   params: WechatUserListParams,
   options?: RequestOptions,
 ) {
-  return request<{
+  const res = await request<{
     list: WechatUserItem[];
     total: number;
   }>('/api/v1/admin/users', {
@@ -33,6 +32,7 @@ export async function fetchWechatUserList(
     params,
     ...(options || {}),
   });
+  return { data: res.list, total: res.total, success: true };
 }
 
 /** 获取微信用户详情 */
@@ -76,9 +76,7 @@ export async function deleteWechatUser(
   id: string,
   options?: RequestOptions,
 ) {
-  return request<{
-    message?: string;
-  }>('/api/v1/admin/users/' + id, {
+  return request<{ message?: string }>('/api/v1/admin/users/' + id, {
     method: 'DELETE',
     ...(options || {}),
   });

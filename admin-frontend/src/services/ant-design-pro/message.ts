@@ -39,7 +39,7 @@ export async function fetchMessageList(
   params: MessageListParams,
   options?: RequestOptions,
 ) {
-  return request<{
+  const res = await request<{
     list: MessageItem[];
     total: number;
   }>('/api/v1/admin/messages', {
@@ -47,6 +47,7 @@ export async function fetchMessageList(
     params,
     ...(options || {}),
   });
+  return { data: res.list, total: res.total, success: true };
 }
 
 /** 发送消息 */
@@ -78,9 +79,7 @@ export async function deleteMessage(
   id: string,
   options?: RequestOptions,
 ) {
-  return request<{
-    message: string;
-  }>('/api/v1/admin/messages/' + id, {
+  return request<{ message: string }>('/api/v1/admin/messages/' + id, {
     method: 'DELETE',
     ...(options || {}),
   });

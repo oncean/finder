@@ -1,5 +1,6 @@
-const postService = require('../../services/post');
 const shopService = require('../../services/shop');
+const { openLocation } = require('../../utils/location');
+const app = getApp();
 
 const RANK_LABELS = ['', '第一', '第二', '第三', '第四', '第五', '第六', '第七', '第八', '第九', '第十'];
 
@@ -48,34 +49,16 @@ Page({
     page: 1,
     pageSize: 10,
     shopId: '',
+    statusBarHeight: 0,
   },
 
   onLoad(options) {
-    const { id, shopId } = options;
+    this.setData({ statusBarHeight: app.globalData.statusBarHeight });
+    const { shopId } = options;
     if (shopId) {
       this.setData({ shopId });
       this.loadShopDetail(shopId);
       this.loadReviews(shopId, 1);
-    } else if (id) {
-      // 兼容旧的 id 参数，先加载帖子再取 shopId
-      this.loadPostThenShop(id);
-    }
-  },
-
-  // 通过帖子 id 加载，再获取店铺评价列表
-  async loadPostThenShop(postId) {
-    try {
-      const post = await postService.getPostDetail(postId);
-      if (post.shopId) {
-        this.setData({ shop: post.shop || {}, shopId: post.shopId });
-        this.loadShopDetail(post.shopId);
-        this.loadReviews(post.shopId, 1);
-      } else {
-        this.setData({ loading: false });
-      }
-    } catch (error) {
-      this.setData({ loading: false });
-      console.error('加载失败:', error);
     }
   },
 
@@ -148,6 +131,16 @@ Page({
     }
   },
 
+  // 点击评论卡片跳转到评论详情
+  onTapReview(e) {
+    const { id } = e.currentTarget.dataset;
+    if (id) {
+      wx.navigateTo({
+        url: `/pages/comment-detail/comment-detail?commentId=${id}`
+      });
+    }
+  },
+
   // 分享
   onShareTap() {
     wx.showShareMenu({ withShareTicket: true });
@@ -157,7 +150,7 @@ Page({
   onShareAppMessage() {
     return {
       title: this.data.shop.name || '店铺详情',
-      path: `/pages/shop-detail/shop-detail?shopId=${this.data.shop.id}`
+      path: `/pages/shop-detail/shop-detail?shopId=${this.data.shopId}`
     };
   }
 });

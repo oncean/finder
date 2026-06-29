@@ -5,7 +5,7 @@
 
   <block wx:if="{{!loading && (shop.id || reviews.length > 0)}}">
     <!-- 顶部返回栏 -->
-    <view class="top-nav">
+    <view class="top-nav" style="padding-top: calc({{statusBarHeight}}px + 88rpx)">
       <view class="back-btn" bindtap="onBack"><image class="back-icon" src="/static/icons/return.svg" mode="aspectFit" /></view>
       <text class="nav-title">店铺详情</text>
       <view class="nav-placeholder"></view>
@@ -22,13 +22,14 @@
       comment-count="{{shop.commentCount}}"
       show-ai-summary="{{true}}"
       shop-id="{{shop.id}}"
+      show-share="{{true}}"
       bind:tapShop="onTapShop"
     />
     </view>
 
     <!-- 评价列表 -->
     <view class="review-list">
-      <view class="review-card" wx:for="{{reviews}}" wx:key="id">
+      <view class="review-card" wx:for="{{reviews}}" wx:key="id" bindtap="onTapReview" data-id="{{item.id}}">
         <!-- feed-head -->
         <view class="feed-head">
           <view class="head-main">
@@ -46,10 +47,10 @@
 
         <!-- image-grid -->
         <view class="image-grid" wx:if="{{item.images.length}}">
-          <image class="food-image" src="{{item.images[0]}}" mode="aspectFill" wx:if="{{item.images[0]}}" bindtap="onPreviewImage" data-url="{{item.images[0]}}" data-images="{{item.images}}" />
-          <image class="food-image" src="{{item.images[1]}}" mode="aspectFill" wx:if="{{item.images[1]}}" bindtap="onPreviewImage" data-url="{{item.images[1]}}" data-images="{{item.images}}" />
+          <image class="food-image" src="{{item.images[0]}}" mode="aspectFill" wx:if="{{item.images[0]}}" catchtap="onPreviewImage" data-url="{{item.images[0]}}" data-images="{{item.images}}" />
+          <image class="food-image" src="{{item.images[1]}}" mode="aspectFill" wx:if="{{item.images[1]}}" catchtap="onPreviewImage" data-url="{{item.images[1]}}" data-images="{{item.images}}" />
           <view class="receipt-card" wx:if="{{item.images[2]}}">
-            <image class="receipt-bg" src="{{item.images[2]}}" mode="aspectFill" bindtap="onPreviewImage" data-url="{{item.images[2]}}" data-images="{{item.images}}" />
+            <image class="receipt-bg" src="{{item.images[2]}}" mode="aspectFill" catchtap="onPreviewImage" data-url="{{item.images[2]}}" data-images="{{item.images}}" />
             <text class="receipt-amount" wx:if="{{item.amountText}}">-{{item.amountText}}</text>
           </view>
         </view>

@@ -8,8 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(88rpx + env(safe-area-inset-top)) 32rpx 16rpx;
-  padding-top: calc(88rpx + constant(safe-area-inset-top));
+  padding: 88rpx 32rpx 16rpx;
   background: #fff;
 }
 

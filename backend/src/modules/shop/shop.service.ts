@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Shop } from '../../entities/shop.entity';
 import { Comment } from '../../entities/comment.entity';
-import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class ShopService {
@@ -14,7 +13,6 @@ export class ShopService {
     private shopRepo: Repository<Shop>,
     @InjectRepository(Comment)
     private commentRepo: Repository<Comment>,
-    private storageService: StorageService,
   ) {}
 
   async findNearby(
@@ -68,19 +66,9 @@ export class ShopService {
 
     this.logger.log(`findNearby: lat=${lat}, lng=${lng}, radius=${radius}, keyword=${keyword || 'null'}, total=${total}`);
 
-    // 批量解析图片 URL
-    const coverImageIds = pagedShops.map(({ shop }) => shop.coverImage);
-    const logoIds = pagedShops.map(({ shop }) => shop.logo);
-    const [coverUrls, logoUrls] = await Promise.all([
-      this.storageService.resolveUrls(coverImageIds),
-      this.storageService.resolveUrls(logoIds),
-    ]);
-
     return {
-      list: pagedShops.map(({ shop, distance }, idx) => ({
+      list: pagedShops.map(({ shop, distance }) => ({
         ...shop,
-        coverImage: coverUrls[idx],
-        logo: logoUrls[idx],
         distance,
       })),
       total,
@@ -108,24 +96,20 @@ export class ShopService {
       relations: ['author'],
     });
     const avatarIds = recentComments.map(c => c.author?.avatar).filter(Boolean);
-    const [coverUrl, avatarUrls, recommendations] = await Promise.all([
-      this.storageService.resolveUrl(shop.coverImage || shop.logo || ''),
-      this.storageService.resolveUrls(avatarIds),
-      this.findRelatedShops(shop),
-    ]);
+    const recommendations = await this.findRelatedShops(shop);
 
     return {
       id: shop.id,
       name: shop.name,
       category: shop.category,
       address: shop.address,
-      coverImage: coverUrl,
+      coverImage: shop.coverImage || shop.logo || '',
       phone: shop.phone,
       businessHours: shop.businessHours,
       rating: shop.rating,
       reviewCount: shop.reviewCount || commentCount,
       commentCount,
-      commentAvatars: avatarUrls,
+      commentAvatars: avatarIds,
       summaryTags: shop.summaryTags,
       isVerified: shop.isVerified,
       location: shop.location,
@@ -149,52 +133,22 @@ export class ShopService {
 
     this.logger.log(`getReviews: shopId=${shopId}, total=${total}`);
 
-    // 批量解析所有图片 ID
-    const avatarIds = comments.map(c => c.author?.avatar);
-    const imageIds = comments.flatMap(c =>
-      Array.isArray(c.images) ? c.images : [],
-    );
-    const consumeImageIds = comments.map(c => c.consumeRecord?.image).filter(Boolean);
-
-    const [avatarUrls, imageUrls, consumeImageUrls] = await Promise.all([
-      this.storageService.resolveUrls(avatarIds),
-      this.storageService.resolveUrls(imageIds),
-      this.storageService.resolveUrls(consumeImageIds),
-    ]);
-
-    // 重建 images URL 映射（扁平数组 -> 按顺序分配）
-    let imageIdx = 0;
-    const consumeIdx = { val: 0 };
-
     return {
-      list: comments.map(comment => {
-        const images: string[] = [];
-        if (Array.isArray(comment.images)) {
-          for (let i = 0; i < comment.images.length; i++) {
-            images.push(imageUrls[imageIdx++] || '');
-          }
-        }
-        return {
-          id: comment.id,
-          author: {
-            id: comment.author.id,
-            nickname: comment.author.nickname,
-            avatar: avatarUrls[comments.indexOf(comment)] || '',
-          },
-          title: comment.title,
-          content: comment.content,
-          images,
-          rating: comment.rating,
-          consumeRecord: comment.consumeRecord
-            ? {
-                ...comment.consumeRecord,
-                image: comment.consumeRecord.image ? consumeImageUrls[consumeIdx.val++] || '' : null,
-              }
-            : null,
-          likeCount: comment.likeCount,
-          createdAt: comment.createdAt,
-        };
-      }),
+      list: comments.map(comment => ({
+        id: comment.id,
+        author: {
+          id: comment.author.id,
+          nickname: comment.author.nickname,
+          avatar: comment.author.avatar || '',
+        },
+        title: comment.title,
+        content: comment.content,
+        images: Array.isArray(comment.images) ? comment.images : [],
+        rating: comment.rating,
+        consumeRecord: comment.consumeRecord || null,
+        likeCount: comment.likeCount,
+        createdAt: comment.createdAt,
+      })),
       total,
       page,
       pageSize,
@@ -248,15 +202,12 @@ export class ShopService {
       .take(4)
       .getMany();
 
-    const ids = relatedShops.map(item => item.coverImage || item.logo || '');
-    const urls = await this.storageService.resolveUrls(ids);
-
-    return relatedShops.map((item, idx) => ({
+    return relatedShops.map(item => ({
       id: item.id,
       name: item.name,
       category: item.category,
       address: item.address,
-      coverImage: urls[idx],
+      coverImage: item.coverImage || item.logo || '',
       reviewCount: item.reviewCount || 0,
       rating: item.rating,
     }));

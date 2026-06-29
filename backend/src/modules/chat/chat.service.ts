@@ -8,7 +8,6 @@ import { ChatOnlineUser } from '../../entities/chat-online-user.entity';
 import { Shop } from '../../entities/shop.entity';
 import { Comment } from '../../entities/comment.entity';
 import { SendMessageDto } from './dto/send-message.dto';
-import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class ChatService {
@@ -25,7 +24,6 @@ export class ChatService {
     private shopRepo: Repository<Shop>,
     @InjectRepository(Comment)
     private commentRepo: Repository<Comment>,
-    private storageService: StorageService,
   ) {}
 
   private async getOrCreateGroup(groupId: string, lat?: number, lng?: number) {
@@ -45,14 +43,6 @@ export class ChatService {
   }
 
   private async findDefaultGroupByLocation(lat?: number, lng?: number) {
-    const fixedGroup = await this.groupRepo.findOne({
-      where: { name: '吃喝玩乐群' },
-    });
-
-    if (fixedGroup) {
-      return fixedGroup;
-    }
-
     if (lat === undefined || lng === undefined || Number.isNaN(lat) || Number.isNaN(lng)) {
       return null;
     }
@@ -125,11 +115,11 @@ export class ChatService {
       order: { updatedAt: 'DESC' },
     });
 
-    return await Promise.all(onlineUsers.map(async (onlineUser) => ({
+    return onlineUsers.map((onlineUser) => ({
       id: onlineUser.user.id,
       nickname: onlineUser.user.nickname,
-      avatar: await this.storageService.resolveUrl(onlineUser.user.avatar),
-    })));
+      avatar: onlineUser.user.avatar,
+    }));
   }
 
   private calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -214,25 +204,19 @@ export class ChatService {
     const shopMap = new Map(shops.map((shop) => [shop.id, shop]));
 
     const reversedMessages = messages.reverse();
-    const shopCards = await Promise.all(
-      reversedMessages.map(async (msg) => {
-        if (msg.type !== 'shop_card') return null;
-        return this.formatShopCard(shopMap.get(msg.shopId));
-      }),
-    );
 
-    return await Promise.all(reversedMessages.map(async (msg, index) => ({
+    return await Promise.all(reversedMessages.map(async (msg) => ({
       id: msg.id,
       groupId: msg.groupId,
       sender: {
         id: msg.sender.id,
         nickname: msg.sender.nickname,
-        avatar: await this.storageService.resolveUrl(msg.sender.avatar),
+        avatar: msg.sender.avatar,
       },
       type: msg.type,
       content: msg.content,
       shopId: msg.shopId,
-      shopCard: shopCards[index],
+      shopCard: msg.type === 'shop_card' ? await this.formatShopCard(shopMap.get(msg.shopId)) : null,
       createdAt: msg.createdAt,
     })));
   }
@@ -266,7 +250,7 @@ export class ChatService {
       sender: {
         id: sender.id,
         nickname: sender.nickname,
-        avatar: await this.storageService.resolveUrl(sender.avatar),
+        avatar: sender.avatar,
       },
       type: message.type,
       content: message.content,
@@ -276,32 +260,27 @@ export class ChatService {
     };
   }
 
-  private async formatShopCard(shop: Shop) {
+  private formatShopCard(shop: Shop) {
     if (!shop) {
       return null;
     }
 
-    const recentComments = await this.commentRepo.find({
+    const recentComments = this.commentRepo.find({
       where: { shopId: shop.id },
       order: { createdAt: 'DESC' },
       take: 4,
       relations: ['author'],
     });
-    const commentAvatars = await this.storageService.resolveUrls(
-      recentComments
-        .map((c) => c.author?.avatar)
-        .filter(Boolean),
-    );
 
-    return {
+    return recentComments.then((comments) => ({
       shopId: shop.id,
       name: shop.name,
       address: shop.address,
       location: shop.location,
-      coverImage: await this.storageService.resolveUrl(shop.coverImage || shop.logo || ''),
+      coverImage: shop.coverImage || shop.logo || '',
       summaryTags: shop.summaryTags,
       reviewCount: shop.reviewCount || 0,
-      commentAvatars,
-    };
+      commentAvatars: comments.map(c => c.author?.avatar).filter(Boolean),
+    }));
   }
 }

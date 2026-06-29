@@ -6,11 +6,9 @@ WORKDIR /usr/src/app
 
 ENV PORT=80
 ENV NODE_TLS_REJECT_UNAUTHORIZED=0
+ENV TZ=Asia/Shanghai
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates \
-  && update-ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN npm config set registry https://registry.npmmirror.com
 
@@ -22,12 +20,6 @@ RUN npm install
 
 # 复制后端应用程序文件
 COPY backend/ .
-
-RUN if [ -d certs ]; then \
-    cp certs/*.crt /usr/local/share/ca-certificates/ && update-ca-certificates; \
-  fi
-
-ENV NODE_EXTRA_CA_CERTS=/usr/src/app/certs/api.weixin.qq.com-chain.pem
 
 # 构建 NestJS 应用程序
 RUN npm run build

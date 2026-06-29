@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
@@ -6,26 +6,51 @@ import { Admin } from '../../entities/admin.entity';
 import { LoginDto } from './dto/login.dto';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
-import { getRequiredEnv } from '../../config/env';
-import { StorageService } from '../storage/storage.service';
 
 @Injectable()
-export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
+export class AuthService implements OnModuleInit {
   private readonly jwtSecret: string;
   private readonly wxAppId: string;
   private readonly wxSecret: string;
+  private readonly staticBaseUrl: string;
 
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
     @InjectRepository(Admin)
     private adminRepo: Repository<Admin>,
-    private storageService: StorageService,
   ) {
-    this.jwtSecret = getRequiredEnv('JWT_SECRET');
-    this.wxAppId = getRequiredEnv('WX_APPID');
-    this.wxSecret = getRequiredEnv('WX_SECRET');
+    this.jwtSecret = process.env.JWT_SECRET || 'fengxiangbiao-secret-key-2024';
+    this.wxAppId = process.env.WX_APPID || '';
+    this.wxSecret = process.env.WX_SECRET || '';
+    this.staticBaseUrl = process.env.STATIC_BASE_URL || 'http://192.168.2.103/static';
+  }
+
+  async onModuleInit() {
+    await this.initDefaultAdmin();
+  }
+
+  private async initDefaultAdmin() {
+    const defaultUsername = 'admin';
+    const defaultPassword = '123456';
+    
+    const existingAdmin = await this.adminRepo.findOne({ 
+      where: { username: defaultUsername } 
+    });
+    
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+      const admin = this.adminRepo.create({
+        username: defaultUsername,
+        password: hashedPassword,
+        nickname: '管理员',
+        permissions: ['all'],
+      });
+      await this.adminRepo.save(admin);
+      console.log('✅ 默认管理员账户已创建: admin / 123456');
+    } else {
+      console.log('ℹ️ 管理员账户已存在');
+    }
   }
 
   async wxLogin(dto: LoginDto) {
@@ -42,9 +67,13 @@ export class AuthService {
       user = this.userRepo.create({
         openid,
         unionid,
-        nickname: dto.userInfo?.nickName || '',
-        avatar: dto.userInfo?.avatarUrl || '',
-        location: dto.location || null,
+        nickname: dto.userInfo?.nickName || '用户' + Math.random().toString(36).substr(2, 6),
+        avatar: dto.userInfo?.avatarUrl || `${this.staticBaseUrl}/default-avatar.png`,
+        location: dto.location || {
+          lat: 32.0603,
+          lng: 118.7969,
+          city: '南京市',
+        },
       });
       await this.userRepo.save(user);
     } else {
@@ -67,14 +96,12 @@ export class AuthService {
       { expiresIn: '7d' },
     );
 
-    this.logger.log(`用户登录成功: userId=${user.id}, openid=${openid}`);
-
     return {
       token,
       user: {
         id: user.id,
         nickname: user.nickname,
-        avatar: await this.storageService.resolveUrl(user.avatar),
+        avatar: user.avatar,
         location: user.location,
         openid: user.openid,
         unionid: user.unionid,
@@ -84,16 +111,14 @@ export class AuthService {
 
   async adminLogin(username: string, password: string) {
     const admin = await this.adminRepo.findOne({ where: { username } });
-
+    
     if (!admin) {
-      this.logger.warn(`管理员登录失败: 用户名 ${username} 不存在`);
       throw new HttpException('管理员不存在', HttpStatus.UNAUTHORIZED);
     }
 
     const isPasswordValid = await bcrypt.compare(password, admin.password);
-
+    
     if (!isPasswordValid) {
-      this.logger.warn(`管理员登录失败: 用户名 ${username} 密码错误`);
       throw new HttpException('密码错误', HttpStatus.UNAUTHORIZED);
     }
 
@@ -102,8 +127,6 @@ export class AuthService {
       this.jwtSecret,
       { expiresIn: '24h' },
     );
-
-    this.logger.log(`管理员登录成功: adminId=${admin.id}, username=${username}`);
 
     // 返回符合前端期望的格式
     return {
@@ -115,7 +138,7 @@ export class AuthService {
         id: admin.id,
         username: admin.username,
         nickname: admin.nickname,
-        avatar: await this.storageService.resolveUrl(admin.avatar),
+        avatar: admin.avatar,
         permissions: admin.permissions,
       },
     };
@@ -128,32 +151,29 @@ export class AuthService {
 
     try {
       const decoded = jwt.verify(token, this.jwtSecret) as { userId: string; type: string };
-
+      
       if (decoded.type !== 'user') {
-        this.logger.warn(`Token验证失败: 无效的用户类型, userId=${decoded.userId}`);
         throw new HttpException('无效的用户类型', HttpStatus.UNAUTHORIZED);
       }
-
+      
       const user = await this.userRepo.findOne({
         where: { id: decoded.userId },
       });
 
       if (!user) {
-        this.logger.warn(`Token验证失败: 用户不存在, userId=${decoded.userId}`);
         throw new HttpException('用户不存在', HttpStatus.UNAUTHORIZED);
       }
 
       return {
         id: user.id,
         nickname: user.nickname,
-        avatar: await this.storageService.resolveUrl(user.avatar),
+        avatar: user.avatar,
         phone: user.phone,
         location: user.location,
         openid: user.openid,
         unionid: user.unionid,
       };
     } catch (error) {
-      this.logger.warn(`Token验证失败: ${error.message}`);
       throw new HttpException('token无效或已过期', HttpStatus.UNAUTHORIZED);
     }
   }
@@ -165,18 +185,16 @@ export class AuthService {
 
     try {
       const decoded = jwt.verify(token, this.jwtSecret) as { userId: string; type: string };
-
+      
       if (decoded.type !== 'admin') {
-        this.logger.warn(`Token验证失败: 无效的管理员类型, adminId=${decoded.userId}`);
         throw new HttpException('无效的管理员类型', HttpStatus.UNAUTHORIZED);
       }
-
+      
       const admin = await this.adminRepo.findOne({
         where: { id: decoded.userId },
       });
 
       if (!admin) {
-        this.logger.warn(`Token验证失败: 管理员不存在, adminId=${decoded.userId}`);
         throw new HttpException('管理员不存在', HttpStatus.UNAUTHORIZED);
       }
 
@@ -184,11 +202,11 @@ export class AuthService {
       return {
         userid: admin.id,
         name: admin.nickname || admin.username,
-        avatar: await this.storageService.resolveUrl(admin.avatar),
+        avatar: admin.avatar,
         username: admin.username,
+        access: 'admin',
       };
     } catch (error) {
-      this.logger.warn(`Token验证失败: ${error.message}`);
       throw new HttpException('token无效或已过期', HttpStatus.UNAUTHORIZED);
     }
   }
@@ -197,7 +215,6 @@ export class AuthService {
     try {
       return jwt.verify(token, this.jwtSecret) as { userId: string; openid?: string; type: string };
     } catch (error) {
-      this.logger.warn(`Token验证失败: ${error.message}`);
       return null;
     }
   }
@@ -209,18 +226,16 @@ export class AuthService {
 
     try {
       const decoded = jwt.verify(token, this.jwtSecret) as { userId: string; type: string };
-
+      
       if (decoded.type !== 'user') {
-        this.logger.warn(`Token验证失败: 无效的用户类型, userId=${decoded.userId}`);
         throw new HttpException('无效的用户类型', HttpStatus.UNAUTHORIZED);
       }
-
+      
       const user = await this.userRepo.findOne({
         where: { id: decoded.userId },
       });
 
       if (!user) {
-        this.logger.warn(`Token验证失败: 用户不存在, userId=${decoded.userId}`);
         throw new HttpException('用户不存在', HttpStatus.UNAUTHORIZED);
       }
 
@@ -245,22 +260,29 @@ export class AuthService {
       return {
         id: user.id,
         nickname: user.nickname,
-        avatar: await this.storageService.resolveUrl(user.avatar),
+        avatar: user.avatar,
         phone: user.phone,
         location: user.location,
         openid: user.openid,
         unionid: user.unionid,
       };
     } catch (error) {
-      this.logger.warn(`Token验证失败: ${error.message}`);
       throw new HttpException('token无效或已过期', HttpStatus.UNAUTHORIZED);
     }
   }
 
   private async getWxSession(code: string): Promise<{ openid: string; session_key: string; unionid?: string }> {
-    if (this.wxAppId === 'your-wx-appid' ||
-        this.wxSecret === 'your-wx-secret') {
-      throw new HttpException('未配置微信小程序 AppID 或 Secret', HttpStatus.INTERNAL_SERVER_ERROR);
+    const isMockAppId = !this.wxAppId || !this.wxSecret ||
+                        this.wxAppId === 'your-wx-appid' ||
+                        this.wxSecret === 'your-wx-secret';
+
+    if (isMockAppId) {
+      console.log('未配置微信 AppID，使用模拟登录');
+      return {
+        openid: process.env.DEV_OPENID || 'mock_openid_developer',
+        session_key: 'mock_session_key',
+        unionid: process.env.DEV_UNIONID || 'mock_unionid_developer',
+      };
     }
 
     const url = `https://api.weixin.qq.com/sns/jscode2session`;

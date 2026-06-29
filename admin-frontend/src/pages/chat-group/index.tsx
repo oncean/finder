@@ -105,7 +105,7 @@ const ChatGroupManagement: React.FC = () => {
         fetchWechatUserList({ current: 1, pageSize: 100 }),
       ]);
       setOnlineUsers(onlineRes.list || []);
-      setWechatUsers(userRes.list || []);
+      setWechatUsers(userRes.data || []);
     } catch (error: any) {
       message.error(getErrorMessage(error, '加载在线用户失败'));
     } finally {

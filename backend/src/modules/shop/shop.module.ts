@@ -5,10 +5,9 @@ import { ShopService } from './shop.service';
 import { Shop } from '../../entities/shop.entity';
 import { Comment } from '../../entities/comment.entity';
 import { AuthModule } from '../auth/auth.module';
-import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Shop, Comment]), AuthModule, StorageModule],
+  imports: [TypeOrmModule.forFeature([Shop, Comment]), AuthModule],
   controllers: [ShopController],
   providers: [ShopService],
   exports: [ShopService],

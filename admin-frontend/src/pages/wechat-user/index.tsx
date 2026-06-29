@@ -256,7 +256,7 @@ const WechatUserPage: React.FC = () => {
             pageSize: params.pageSize,
             keyword: params.keyword as string,
           }).then((res) => ({
-            data: res.list || [],
+            data: res.data || [],
             success: true,
             total: res.total || 0,
           }))
@@ -353,8 +353,8 @@ const WechatUserPage: React.FC = () => {
                     setUploadingAvatar(true);
                     try {
                       const data = await uploadImage(file);
-                      if (data.url) {
-                        setFormData({ ...formData, avatar: data.fileId || data.url });
+                      if (data.fileId) {
+                        setFormData({ ...formData, avatar: data.fileId });
                         setAvatarPreview(data.url);
                         messageApi.success('头像上传成功');
                       } else {
@@ -388,8 +388,8 @@ const WechatUserPage: React.FC = () => {
                         : {},
                     });
                     const data = await res.json();
-                    if (data.url) {
-                      setFormData({ ...formData, avatar: data.fileId || data.url });
+                    if (data.fileId) {
+                      setFormData({ ...formData, avatar: data.fileId });
                       setAvatarPreview(data.url);
                       setAvatarFileList([]);
                       messageApi.success('已随机选择头像');

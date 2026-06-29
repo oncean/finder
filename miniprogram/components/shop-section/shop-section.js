@@ -33,14 +33,14 @@ Component({
     shopId: {
       type: String,
       value: ''
+    },
+    showShare: {
+      type: Boolean,
+      value: false
     }
   },
 
   methods: {
-    onViewReview() {
-      this.triggerEvent('tapReview');
-    },
-
     onTapShop() {
       this.triggerEvent('tapShop', {
         shopId: this.data.shopId
@@ -59,6 +59,9 @@ Component({
       }
 
       openLocation(lat, lng, shop.name || this.data.shopName, shop.address || this.data.location);
+    },
+
+    onShareTap() {
     }
   }
 });

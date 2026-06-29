@@ -1,4 +1,5 @@
 const chatService = require('../../services/chat');
+const app = getApp();
 
 Component({
   properties: {
@@ -18,11 +19,13 @@ Component({
 
   data: {
     onlineCount: 0,
-    onlineUsers: []
+    onlineUsers: [],
+    statusBarHeight: 0
   },
 
   lifetimes: {
     attached() {
+      this.setData({ statusBarHeight: app.globalData.statusBarHeight });
       if (this.properties.activeTab === 'chat') {
         this.loadOnlineUsers();
         this.startOnlineUsersTimer();

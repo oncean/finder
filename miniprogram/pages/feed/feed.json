@@ -1,6 +1,5 @@
 {
   "navigationBarTitleText": "风向标",
-  "enablePullDownRefresh": true,
   "usingComponents": {
     "feed-card": "../../components/feed-card/feed-card"
   }

@@ -102,3 +102,14 @@
   font-weight: 800;
   font-style: italic;
 }
+
+.share-btn {
+  padding: 0;
+  margin: 0;
+  border: none;
+  outline: none;
+}
+
+.share-btn::after {
+  border: none;
+}

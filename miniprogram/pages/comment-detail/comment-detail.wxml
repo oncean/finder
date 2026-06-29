@@ -41,13 +41,11 @@
       <view class="info-row" wx:if="{{shop.businessHours}}">
         <text class="row-icon clock">◷</text>
         <text class="row-text">{{shop.businessHours}}</text>
-        <text class="row-arrow">›</text>
       </view>
 
       <view class="info-row" bindtap="onNavigate" wx:if="{{shop.address}}">
         <image class="dingwei-pin" src="/static/icons/dingwei-white.svg" mode="aspectFit" />
         <text class="row-text">{{shop.address}}</text>
-        <text class="row-arrow">›</text>
       </view>
 
       <ai-summary summary="{{shop.summaryTags}}" />

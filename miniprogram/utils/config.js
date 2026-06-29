@@ -7,15 +7,20 @@ const VERSION_ENV_MAP = {
 const ENV_CONFIG = {
   dev: {
     API_BASE: 'http://192.168.0.2:3000',
-    WS_BASE: 'ws://192.168.0.2:3000'
+    WS_BASE: 'ws://192.168.0.2:3000',
+    CLOUD_ENV_ID: 'prod-d0go4c43b289bc3bb',
+    CLOUD_SERVICE: 'finder',
+    USE_CLOUD_CONTAINER: true
   },
   test: {
-    API_BASE: 'https://test-api.example.com',
-    WS_BASE: 'wss://test-api.example.com'
+    CLOUD_ENV_ID: 'prod-d0go4c43b289bc3bb',
+    CLOUD_SERVICE: 'finder',
+    USE_CLOUD_CONTAINER: true
   },
   prod: {
-    API_BASE: 'https://api.example.com',
-    WS_BASE: 'wss://api.example.com'
+    CLOUD_ENV_ID: 'prod-d0go4c43b289bc3bb',
+    CLOUD_SERVICE: 'finder',
+    USE_CLOUD_CONTAINER: true
   }
 };
 
@@ -29,12 +34,20 @@ if (!currentConfig) {
   throw new Error(`未知小程序运行环境：${ENV}`);
 }
 
-const { API_BASE, WS_BASE } = currentConfig;
+const {
+  API_BASE = '',
+  WS_BASE = '',
+  CLOUD_ENV_ID,
+  CLOUD_SERVICE,
+  USE_CLOUD_CONTAINER,
+} = currentConfig;
 
 module.exports = {
   ENV,
-  API_BASE,
-  WS_BASE,
+  CLOUD_ENV_ID,
+  CLOUD_SERVICE,
+  USE_CLOUD_CONTAINER,
+  // 仅本地开发环境使用，线上走云托管不需要
   API_URL: `${API_BASE}/api/v1`,
   WS_URL: `${WS_BASE}/ws/chat`
 };

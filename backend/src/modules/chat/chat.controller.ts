@@ -1,17 +1,11 @@
-import { Controller, Get, Post, Body, Query, Param, UseGuards, Request, HttpCode, HttpStatus, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { AuthGuard } from '../../common/guards/auth.guard';
-import { ChatRealtimeService } from '../../websocket/chat-realtime.service';
 
 @Controller('chat')
 export class ChatController {
-  private readonly logger = new Logger(ChatController.name);
-
-  constructor(
-    private readonly chatService: ChatService,
-    private readonly chatRealtimeService: ChatRealtimeService,
-  ) {}
+  constructor(private readonly chatService: ChatService) {}
 
   @Get('group/:groupId/online-users')
   async getOnlineUsers(@Param('groupId') groupId: string) {
@@ -21,14 +15,12 @@ export class ChatController {
   @Get('group/:groupId')
   async getGroupInfo(
     @Param('groupId') groupId: string,
-    @Query('lat') lat?: number,
-    @Query('lng') lng?: number,
+    @Query('lat') lat?: string,
+    @Query('lng') lng?: string,
   ) {
-    return this.chatService.getGroupInfo(
-      groupId,
-      lat !== undefined ? parseFloat(lat as any) : undefined,
-      lng !== undefined ? parseFloat(lng as any) : undefined,
-    );
+    const parsedLat = lat ? parseFloat(lat) : undefined;
+    const parsedLng = lng ? parseFloat(lng) : undefined;
+    return this.chatService.getGroupInfo(groupId, parsedLat, parsedLng);
   }
 
   @Get('messages')
@@ -44,10 +36,6 @@ export class ChatController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
   async sendMessage(@Body() dto: SendMessageDto, @Request() req) {
-    this.logger.log(`收到消息请求: groupId=${dto.groupId}, type=${dto.type}`);
-    this.logger.debug(`发送者: ${req.user?.userId || 'unknown'}`);
-    const message = await this.chatService.sendMessage(dto, req.user.userId);
-    this.chatRealtimeService.broadcastToGroup(message.groupId, 'message', message);
-    return message;
+    return this.chatService.sendMessage(dto, req.user.userId);
   }
 }
