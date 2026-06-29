@@ -5,6 +5,7 @@ FROM node:20
 WORKDIR /usr/src/app
 
 ENV PORT=80
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates \

@@ -4,6 +4,7 @@ import * as path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 const nodeEnv = process.env.NODE_ENV || 'development';
 process.env.NODE_ENV = nodeEnv;
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED || '0';
 dotenv.config({ path: path.resolve(process.cwd(), `.env.${nodeEnv}`), override: true });
 
 import { NestFactory } from '@nestjs/core';
