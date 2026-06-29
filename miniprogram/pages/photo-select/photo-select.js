@@ -60,7 +60,7 @@ Page({
         await chatService.sendMessage(
           chatPage.data.groupId,
           'image',
-          result.url
+          result.fileId
         );
       }
 

@@ -1,16 +1,20 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Shop } from '../../entities/shop.entity';
 import { Comment } from '../../entities/comment.entity';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class ShopService {
+  private readonly logger = new Logger(ShopService.name);
+
   constructor(
     @InjectRepository(Shop)
     private shopRepo: Repository<Shop>,
     @InjectRepository(Comment)
     private commentRepo: Repository<Comment>,
+    private storageService: StorageService,
   ) {}
 
   async findNearby(
@@ -37,10 +41,10 @@ export class ShopService {
         'shop.isVerified',
       ]);
 
-    // 关键词搜索
+    // 关键词搜索（跨数据库兼容写法）
     if (keyword) {
       query.where(
-        '(shop.name ILIKE :keyword OR shop.address ILIKE :keyword)',
+        '(LOWER(shop.name) LIKE LOWER(:keyword) OR LOWER(shop.address) LIKE LOWER(:keyword))',
         { keyword: `%${keyword}%` },
       );
     }
@@ -62,9 +66,21 @@ export class ShopService {
     const total = filteredShops.length;
     const pagedShops = filteredShops.slice((page - 1) * pageSize, page * pageSize);
 
+    this.logger.log(`findNearby: lat=${lat}, lng=${lng}, radius=${radius}, keyword=${keyword || 'null'}, total=${total}`);
+
+    // 批量解析图片 URL
+    const coverImageIds = pagedShops.map(({ shop }) => shop.coverImage);
+    const logoIds = pagedShops.map(({ shop }) => shop.logo);
+    const [coverUrls, logoUrls] = await Promise.all([
+      this.storageService.resolveUrls(coverImageIds),
+      this.storageService.resolveUrls(logoIds),
+    ]);
+
     return {
-      list: pagedShops.map(({ shop, distance }) => ({
+      list: pagedShops.map(({ shop, distance }, idx) => ({
         ...shop,
+        coverImage: coverUrls[idx],
+        logo: logoUrls[idx],
         distance,
       })),
       total,
@@ -74,8 +90,10 @@ export class ShopService {
   }
 
   async findOne(id: string) {
+    this.logger.log(`findOne: shopId=${id}`);
     const shop = await this.shopRepo.findOne({ where: { id } });
     if (!shop) {
+      this.logger.warn(`findOne: 店铺不存在, shopId=${id}`);
       throw new HttpException('店铺不存在', HttpStatus.NOT_FOUND);
     }
 
@@ -89,23 +107,25 @@ export class ShopService {
       take: 4,
       relations: ['author'],
     });
-    const commentAvatars = recentComments
-      .map(c => c.author?.avatar)
-      .filter(Boolean);
-    const recommendations = await this.findRelatedShops(shop);
+    const avatarIds = recentComments.map(c => c.author?.avatar).filter(Boolean);
+    const [coverUrl, avatarUrls, recommendations] = await Promise.all([
+      this.storageService.resolveUrl(shop.coverImage || shop.logo || ''),
+      this.storageService.resolveUrls(avatarIds),
+      this.findRelatedShops(shop),
+    ]);
 
     return {
       id: shop.id,
       name: shop.name,
       category: shop.category,
       address: shop.address,
-      coverImage: shop.coverImage || shop.logo || '',
+      coverImage: coverUrl,
       phone: shop.phone,
       businessHours: shop.businessHours,
       rating: shop.rating,
       reviewCount: shop.reviewCount || commentCount,
       commentCount,
-      commentAvatars,
+      commentAvatars: avatarUrls,
       summaryTags: shop.summaryTags,
       isVerified: shop.isVerified,
       location: shop.location,
@@ -118,6 +138,7 @@ export class ShopService {
   }
 
   async getReviews(shopId: string, page: number = 1, pageSize: number = 20) {
+    this.logger.log(`getReviews: shopId=${shopId}, page=${page}, pageSize=${pageSize}`);
     const [comments, total] = await this.commentRepo.findAndCount({
       where: { shopId },
       order: { createdAt: 'DESC' },
@@ -126,22 +147,54 @@ export class ShopService {
       relations: ['author'],
     });
 
+    this.logger.log(`getReviews: shopId=${shopId}, total=${total}`);
+
+    // 批量解析所有图片 ID
+    const avatarIds = comments.map(c => c.author?.avatar);
+    const imageIds = comments.flatMap(c =>
+      Array.isArray(c.images) ? c.images : [],
+    );
+    const consumeImageIds = comments.map(c => c.consumeRecord?.image).filter(Boolean);
+
+    const [avatarUrls, imageUrls, consumeImageUrls] = await Promise.all([
+      this.storageService.resolveUrls(avatarIds),
+      this.storageService.resolveUrls(imageIds),
+      this.storageService.resolveUrls(consumeImageIds),
+    ]);
+
+    // 重建 images URL 映射（扁平数组 -> 按顺序分配）
+    let imageIdx = 0;
+    const consumeIdx = { val: 0 };
+
     return {
-      list: comments.map(comment => ({
-        id: comment.id,
-        author: {
-          id: comment.author.id,
-          nickname: comment.author.nickname,
-          avatar: comment.author.avatar,
-        },
-        title: comment.title,
-        content: comment.content,
-        images: comment.images,
-        rating: comment.rating,
-        consumeRecord: comment.consumeRecord,
-        likeCount: comment.likeCount,
-        createdAt: comment.createdAt,
-      })),
+      list: comments.map(comment => {
+        const images: string[] = [];
+        if (Array.isArray(comment.images)) {
+          for (let i = 0; i < comment.images.length; i++) {
+            images.push(imageUrls[imageIdx++] || '');
+          }
+        }
+        return {
+          id: comment.id,
+          author: {
+            id: comment.author.id,
+            nickname: comment.author.nickname,
+            avatar: avatarUrls[comments.indexOf(comment)] || '',
+          },
+          title: comment.title,
+          content: comment.content,
+          images,
+          rating: comment.rating,
+          consumeRecord: comment.consumeRecord
+            ? {
+                ...comment.consumeRecord,
+                image: comment.consumeRecord.image ? consumeImageUrls[consumeIdx.val++] || '' : null,
+              }
+            : null,
+          likeCount: comment.likeCount,
+          createdAt: comment.createdAt,
+        };
+      }),
       total,
       page,
       pageSize,
@@ -195,12 +248,15 @@ export class ShopService {
       .take(4)
       .getMany();
 
-    return relatedShops.map((item) => ({
+    const ids = relatedShops.map(item => item.coverImage || item.logo || '');
+    const urls = await this.storageService.resolveUrls(ids);
+
+    return relatedShops.map((item, idx) => ({
       id: item.id,
       name: item.name,
       category: item.category,
       address: item.address,
-      coverImage: item.coverImage || item.logo || '',
+      coverImage: urls[idx],
       reviewCount: item.reviewCount || 0,
       rating: item.rating,
     }));

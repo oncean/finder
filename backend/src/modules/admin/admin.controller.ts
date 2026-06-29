@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus, HttpException, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus, HttpException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
@@ -12,8 +12,8 @@ import { ChatOnlineUser } from '../../entities/chat-online-user.entity';
 import { assertCanDeleteEntity } from '../../common/utils/delete-dependency.util';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Request } from 'express';
 import { ChatRealtimeService } from '../../websocket/chat-realtime.service';
+import { StorageService } from '../storage/storage.service';
 
 @Controller('admin')
 @UseGuards(AuthGuard)
@@ -33,7 +33,23 @@ export class AdminController {
     private chatOnlineUserRepo: Repository<ChatOnlineUser>,
     private dataSource: DataSource,
     private chatRealtimeService: ChatRealtimeService,
+    private storageService: StorageService,
   ) {}
+
+  private async mapUserResponse(user: User) {
+    return {
+      id: user.id,
+      nickname: user.nickname,
+      avatar: user.avatar,
+      avatarUrl: await this.storageService.resolveUrl(user.avatar),
+      phone: user.phone,
+      location: user.location,
+      openid: user.openid,
+      unionid: user.unionid,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
 
   @Get('users')
   async getUsers(
@@ -57,18 +73,7 @@ export class AdminController {
       .getManyAndCount();
 
     return {
-      list: users.map(user => ({
-        id: user.id,
-        nickname: user.nickname,
-        avatar: user.avatar,
-        phone: user.phone,
-        location: user.location,
-        openid: user.openid,
-        unionid: user.unionid,
-        isAdmin: user.isAdmin,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      })),
+      list: await Promise.all(users.map(user => this.mapUserResponse(user))),
       total,
     };
   }
@@ -81,18 +86,7 @@ export class AdminController {
       throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
     }
 
-    return {
-        id: user.id,
-        nickname: user.nickname,
-        avatar: user.avatar,
-        phone: user.phone,
-        location: user.location,
-        openid: user.openid,
-        unionid: user.unionid,
-        isAdmin: user.isAdmin,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-    };
+    return this.mapUserResponse(user);
   }
 
   @Post('users')
@@ -103,20 +97,11 @@ export class AdminController {
       avatar: body.avatar,
       phone: body.phone,
       location: body.location,
-      isAdmin: body.isAdmin || false,
     });
 
     await this.userRepo.save(user);
 
-    return {
-        id: user.id,
-        nickname: user.nickname,
-        avatar: user.avatar,
-        phone: user.phone,
-        location: user.location,
-        isAdmin: user.isAdmin,
-        createdAt: user.createdAt,
-    };
+    return this.mapUserResponse(user);
   }
 
   @Put('users/:id')
@@ -131,19 +116,10 @@ export class AdminController {
     if (body.avatar !== undefined) user.avatar = body.avatar;
     if (body.phone !== undefined) user.phone = body.phone;
     if (body.location !== undefined) user.location = body.location;
-    if (body.isAdmin !== undefined) user.isAdmin = body.isAdmin;
 
     await this.userRepo.save(user);
 
-    return {
-        id: user.id,
-        nickname: user.nickname,
-        avatar: user.avatar,
-        phone: user.phone,
-        location: user.location,
-        isAdmin: user.isAdmin,
-        updatedAt: user.updatedAt,
-    };
+    return this.mapUserResponse(user);
   }
 
   @Delete('users/:id')
@@ -872,8 +848,8 @@ export class AdminController {
   }
 
   @Get('random-avatar')
-  async getRandomAvatar(@Req() req: Request) {
-    const avatarDir = 'D:\\developer\\code\\finder\\assets\\avatar';
+  async getRandomAvatar() {
+    const avatarDir = process.env.AVATAR_DIR || path.join(process.cwd(), 'assets', 'avatar');
     
     try {
       const files = fs.readdirSync(avatarDir).filter(f => 
@@ -886,23 +862,14 @@ export class AdminController {
       
       const randomFile = files[Math.floor(Math.random() * files.length)];
       const filePath = path.join(avatarDir, randomFile);
+      const result = await this.storageService.uploadFile(
+        fs.readFileSync(filePath),
+        `avatar-${Date.now()}-${randomFile}`,
+        'uploads/avatar',
+      );
+      const url = await this.storageService.resolveUrl(result.fileId);
       
-      // 复制到 uploads 目录并返回 URL
-      const uploadsDir = process.env.UPLOAD_DIR || './uploads';
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
-      
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const destFileName = `avatar-${uniqueSuffix}${path.extname(randomFile)}`;
-      const destPath = path.join(uploadsDir, destFileName);
-      
-      fs.copyFileSync(filePath, destPath);
-      
-      const host = req.protocol + '://' + req.get('host');
-      const url = `${host}/uploads/${destFileName}`;
-      
-      return { url, filename: destFileName };
+      return { fileId: result.fileId, url, filename: randomFile };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;

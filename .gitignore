@@ -17,6 +17,8 @@
 # Temp files
 *.tmp
 *.temp
+runtime-config.json
+backend/test-uploads/
 
 # Test files
 test-*.ps1

@@ -1,4 +1,5 @@
 const { Client } = require('pg');
+const { generateSnowflakeId } = require('./scripts/snowflake.cjs');
 
 const client = new Client({
   host: 'localhost',
@@ -40,9 +41,10 @@ async function main() {
   } else {
     console.log('   ⚠ 没有用户，创建系统用户...');
     const sysUserRes = await client.query(
-      `INSERT INTO users (id, nickname, is_admin, created_at)
-       VALUES (gen_random_uuid(), '系统用户', true, NOW())
-       RETURNING id`
+      `INSERT INTO users (id, nickname, created_at)
+       VALUES ($1, '系统用户', NOW())
+       RETURNING id`,
+      [generateSnowflakeId()]
     );
     defaultAuthorId = sysUserRes.rows[0].id;
     console.log(`   ✓ 创建系统用户: ${defaultAuthorId}`);
@@ -76,9 +78,9 @@ async function main() {
     const shopId = shops[i % shops.length].id;
     const res = await client.query(
       `INSERT INTO posts (id, title, content, author_id, shop_id, is_recommended, recommend_rank, created_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, true, $5, NOW())
+       VALUES ($1, $2, $3, $4, $5, true, $6, NOW())
        RETURNING id`,
-      [post.title, post.content, defaultAuthorId, shopId, i + 1]
+      [generateSnowflakeId(), post.title, post.content, defaultAuthorId, shopId, i + 1]
     );
     postIds.push(res.rows[0].id);
     console.log(`   ✓ 创建帖子: ${post.title} (${res.rows[0].id})`);
@@ -91,9 +93,9 @@ async function main() {
     const postId = postIds[i % postIds.length];
     const res = await client.query(
       `INSERT INTO comments (id, post_id, shop_id, title, content, rating, like_count, created_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, 0, NOW())
+       VALUES ($1, $2, $3, $4, $5, $6, 0, NOW())
        RETURNING id`,
-      [postId, shopId, comment.title, comment.content, comment.rating]
+      [generateSnowflakeId(), postId, shopId, comment.title, comment.content, comment.rating]
     );
     console.log(`   ✓ 评价 ${i + 1}: ${comment.title} -> 帖子 ${postId}, 店铺 ${shopId}`);
   }

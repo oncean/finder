@@ -1,6 +1,5 @@
 const REQUIRED_ENV_KEYS = [
   'NODE_ENV',
-  'PORT',
   'DB_HOST',
   'DB_PORT',
   'DB_NAME',
@@ -9,8 +8,6 @@ const REQUIRED_ENV_KEYS = [
   'JWT_SECRET',
   'WX_APPID',
   'WX_SECRET',
-  'UPLOAD_DIR',
-  'UPLOAD_BASE_URL',
 ] as const;
 
 type RequiredEnvKey = (typeof REQUIRED_ENV_KEYS)[number];

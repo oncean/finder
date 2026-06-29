@@ -13,8 +13,6 @@ import {
   Form,
   Input,
   message,
-  Switch,
-  Tag,
   Upload,
 } from 'antd';
 import React, { useCallback, useRef, useState } from 'react';
@@ -25,6 +23,7 @@ import {
   updateWechatUser,
   type WechatUserItem,
 } from '@/services/ant-design-pro/wechat-user';
+import { uploadImage } from '@/services/ant-design-pro/upload';
 
 const WechatUserPage: React.FC = () => {
   const actionRef = useRef<ActionType | null>(null);
@@ -39,10 +38,10 @@ const WechatUserPage: React.FC = () => {
     nickname: '',
     avatar: '',
     phone: '',
-    isAdmin: false,
   });
 
   const [avatarFileList, setAvatarFileList] = useState<any[]>([]);
+  const [avatarPreview, setAvatarPreview] = useState('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const getErrorMessage = (error: any, fallback: string) =>
@@ -94,9 +93,9 @@ const WechatUserPage: React.FC = () => {
       nickname: '',
       avatar: '',
       phone: '',
-      isAdmin: false,
     });
     setAvatarFileList([]);
+    setAvatarPreview('');
     setEditingItem(null);
   };
 
@@ -107,8 +106,8 @@ const WechatUserPage: React.FC = () => {
         nickname: item.nickname || '',
         avatar: item.avatar || '',
         phone: item.phone || '',
-        isAdmin: item.isAdmin || false,
       });
+      setAvatarPreview(item.avatarUrl || item.avatar || '');
     } else {
       resetForm();
     }
@@ -128,7 +127,6 @@ const WechatUserPage: React.FC = () => {
           nickname: formData.nickname,
           avatar: formData.avatar,
           phone: formData.phone,
-          isAdmin: formData.isAdmin,
         },
       });
     } else {
@@ -136,7 +134,6 @@ const WechatUserPage: React.FC = () => {
         nickname: formData.nickname,
         avatar: formData.avatar,
         phone: formData.phone,
-        isAdmin: formData.isAdmin,
       });
     }
   };
@@ -173,10 +170,10 @@ const WechatUserPage: React.FC = () => {
       dataIndex: 'avatar',
       width: 80,
       search: false,
-      render: (avatar) => (
+      render: (_, record) => (
         <Avatar
-          src={avatar as string}
-          icon={!avatar ? '👤' : undefined}
+          src={record.avatarUrl || record.avatar}
+          icon={!record.avatar && !record.avatarUrl ? '👤' : undefined}
           shape="circle"
           size={40}
         />
@@ -207,18 +204,6 @@ const WechatUserPage: React.FC = () => {
       search: false,
       render: (location) =>
         (location as WechatUserItem['location'])?.city || '-',
-    },
-    {
-      title: '身份',
-      dataIndex: 'isAdmin',
-      width: 100,
-      search: false,
-      render: (isAdmin) =>
-        isAdmin ? (
-          <Tag color="red">管理员</Tag>
-        ) : (
-          <Tag color="blue">普通用户</Tag>
-        ),
     },
     {
       title: '注册时间',
@@ -345,6 +330,7 @@ const WechatUserPage: React.FC = () => {
                 onChange={({ fileList }) => setAvatarFileList(fileList)}
                 onRemove={() => {
                   setFormData({ ...formData, avatar: '' });
+                  setAvatarPreview('');
                   return true;
                 }}
               >
@@ -366,22 +352,21 @@ const WechatUserPage: React.FC = () => {
 
                     setUploadingAvatar(true);
                     try {
-                      const uploadFormData = new FormData();
-                      uploadFormData.append('file', file);
-
-                      const res = await fetch('/api/v1/upload/image', {
-                        method: 'POST',
-                        body: uploadFormData,
-                      });
-                      const data = await res.json();
+                      const data = await uploadImage(file);
                       if (data.url) {
-                        setFormData({ ...formData, avatar: data.url });
+                        setFormData({ ...formData, avatar: data.fileId || data.url });
+                        setAvatarPreview(data.url);
                         messageApi.success('头像上传成功');
                       } else {
                         messageApi.error('上传失败');
                       }
-                    } catch {
-                      messageApi.error('上传失败，请重试');
+                    } catch (error: any) {
+                      messageApi.error(
+                        error?.info?.errorMessage ||
+                          error?.response?.data?.message ||
+                          error?.message ||
+                          '上传失败，请重试',
+                      );
                     } finally {
                       setUploadingAvatar(false);
                     }
@@ -404,7 +389,8 @@ const WechatUserPage: React.FC = () => {
                     });
                     const data = await res.json();
                     if (data.url) {
-                      setFormData({ ...formData, avatar: data.url });
+                      setFormData({ ...formData, avatar: data.fileId || data.url });
+                      setAvatarPreview(data.url);
                       setAvatarFileList([]);
                       messageApi.success('已随机选择头像');
                     } else {
@@ -422,17 +408,18 @@ const WechatUserPage: React.FC = () => {
 
             <Input
               value={formData.avatar}
-              onChange={(e) =>
-                setFormData({ ...formData, avatar: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, avatar: e.target.value });
+                setAvatarPreview(e.target.value);
+              }}
               placeholder="或输入头像图片URL"
               style={{ marginTop: 12 }}
             />
 
-            {formData.avatar && (
+            {(avatarPreview || formData.avatar) && (
               <div style={{ marginTop: 12 }}>
                 <Avatar
-                  src={formData.avatar}
+                  src={avatarPreview || formData.avatar}
                   shape="circle"
                   size={64}
                   style={{ border: '1px solid #f0f0f0' }}
@@ -448,15 +435,6 @@ const WechatUserPage: React.FC = () => {
                 setFormData({ ...formData, phone: e.target.value })
               }
               placeholder="请输入手机号"
-            />
-          </Form.Item>
-
-          <Form.Item label="管理员身份" style={{ marginBottom: 24 }}>
-            <Switch
-              checked={formData.isAdmin}
-              onChange={(checked) =>
-                setFormData({ ...formData, isAdmin: checked })
-              }
             />
           </Form.Item>
 

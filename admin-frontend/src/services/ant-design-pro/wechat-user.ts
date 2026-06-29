@@ -7,9 +7,9 @@ export interface WechatUserItem {
   unionid?: string;
   nickname: string;
   avatar?: string;
+  avatarUrl?: string;
   phone?: string;
   location?: { lat: number; lng: number; city: string };
-  isAdmin: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -48,7 +48,7 @@ export async function fetchWechatUserDetail(
 
 /** 创建微信用户 */
 export async function createWechatUser(
-  data: Partial<Pick<WechatUserItem, 'nickname' | 'avatar' | 'phone' | 'location' | 'isAdmin'>>,
+  data: Partial<Pick<WechatUserItem, 'nickname' | 'avatar' | 'phone' | 'location'>>,
   options?: RequestOptions,
 ) {
   return request<WechatUserItem>('/api/v1/admin/users', {
@@ -61,7 +61,7 @@ export async function createWechatUser(
 /** 更新微信用户 */
 export async function updateWechatUser(
   id: string,
-  data: Partial<Pick<WechatUserItem, 'nickname' | 'avatar' | 'phone' | 'location' | 'isAdmin'>>,
+  data: Partial<Pick<WechatUserItem, 'nickname' | 'avatar' | 'phone' | 'location'>>,
   options?: RequestOptions,
 ) {
   return request<WechatUserItem>('/api/v1/admin/users/' + id, {

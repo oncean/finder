@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, Param, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param, UseGuards, Request, HttpCode, HttpStatus, Logger } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -6,6 +6,8 @@ import { ChatRealtimeService } from '../../websocket/chat-realtime.service';
 
 @Controller('chat')
 export class ChatController {
+  private readonly logger = new Logger(ChatController.name);
+
   constructor(
     private readonly chatService: ChatService,
     private readonly chatRealtimeService: ChatRealtimeService,
@@ -42,8 +44,8 @@ export class ChatController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
   async sendMessage(@Body() dto: SendMessageDto, @Request() req) {
-    console.log('[ChatController] 收到消息请求:', JSON.stringify(dto, null, 2));
-    console.log('[ChatController] 发送者信息:', req.user);
+    this.logger.log(`收到消息请求: groupId=${dto.groupId}, type=${dto.type}`);
+    this.logger.debug(`发送者: ${req.user?.userId || 'unknown'}`);
     const message = await this.chatService.sendMessage(dto, req.user.userId);
     this.chatRealtimeService.broadcastToGroup(message.groupId, 'message', message);
     return message;

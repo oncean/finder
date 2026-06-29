@@ -1,27 +1,19 @@
-import { Controller, Post, Req, UseGuards, UseInterceptors, UploadedFile, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, HttpCode, HttpStatus } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { Request } from 'express';
+import { memoryStorage } from 'multer';
 import { AuthGuard } from '../../common/guards/auth.guard';
-import { getRequiredEnv } from '../../config/env';
+import { StorageService } from '../storage/storage.service';
 
 @Controller('upload')
 export class UploadController {
-  private readonly uploadBaseUrl = getRequiredEnv('UPLOAD_BASE_URL');
+  constructor(private readonly storageService: StorageService) {}
 
   @Post('image')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: getRequiredEnv('UPLOAD_DIR'),
-        filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, uniqueSuffix + extname(file.originalname));
-        },
-      }),
+      storage: memoryStorage(),
       limits: {
         fileSize: 10 * 1024 * 1024, // 10MB
       },
@@ -33,10 +25,18 @@ export class UploadController {
       },
     }),
   )
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    const result = await this.storageService.uploadFile(
+      file.buffer,
+      file.originalname,
+      'uploads/avatar',
+    );
+    const url = await this.storageService.resolveUrl(result.fileId);
+
     return {
-      url: `${this.uploadBaseUrl}/uploads/${file.filename}`,
-      filename: file.filename,
+      fileId: result.fileId,
+      url,
+      filename: file.originalname,
       size: file.size,
     };
   }

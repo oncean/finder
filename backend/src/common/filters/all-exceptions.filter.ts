@@ -1,7 +1,9 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
+  private readonly logger = new Logger(AllExceptionsFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
@@ -18,13 +20,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
       ? exceptionResponse
       : (exceptionResponse as any).message || '服务器错误';
 
-    console.error('请求错误:', {
-      path: request.url,
-      method: request.method,
-      status,
-      message: exceptionResponse,
-      stack: exception instanceof Error ? exception.stack : undefined,
-    });
+    this.logger.error(
+      `请求错误: ${request.method} ${request.url} ${status} - ${message}`,
+      exception instanceof Error ? exception.stack : undefined,
+    );
 
     const body: Record<string, any> = {
       code: status,

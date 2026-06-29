@@ -1,9 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { BeforeInsert, Entity, PrimaryColumn, Column, CreateDateColumn } from 'typeorm';
+import { generateSnowflakeId } from '../common/utils/snowflake.util';
 
 @Entity('chat_groups')
 export class ChatGroup {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'bigint' })
   id: string;
+
+  @BeforeInsert()
+  assignId() {
+    this.id = this.id || generateSnowflakeId();
+  }
 
   @Column({ type: 'varchar', length: 64 })
   name: string;

@@ -4,12 +4,12 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { OnModuleDestroy } from '@nestjs/common';
+import { OnModuleDestroy, Logger } from '@nestjs/common';
 import { Server, WebSocket } from 'ws';
 import { AuthService } from '../modules/auth/auth.service';
 import { ChatService } from '../modules/chat/chat.service';
 import { ChatRealtimeService } from './chat-realtime.service';
-import { randomUUID } from 'crypto';
+import { generateSnowflakeId } from '../common/utils/snowflake.util';
 
 interface ClientInfo {
   userId: string;
@@ -32,6 +32,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   private socketMap = new Map<string, WebSocket>();
   private readonly heartbeatTimeout = 90 * 1000;
   private readonly cleanupTimer: NodeJS.Timeout;
+  private readonly logger = new Logger(ChatGateway.name);
 
   constructor(
     private authService: AuthService,
@@ -52,7 +53,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   }
 
   async handleConnection(client: WebSocket, request?: any) {
-    const clientId = randomUUID();
+    const clientId = generateSnowflakeId();
     (client as any).id = clientId;
 
     try {
@@ -111,7 +112,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             this.sendToClient(client, 'error', { message: '未知消息类型' });
         }
       } catch (error) {
-        console.error('消息处理错误:', error);
+        this.logger.error(`消息处理错误: ${error.message}`, error.stack);
         this.sendToClient(client, 'error', { message: '消息格式错误' });
       }
     });
@@ -152,8 +153,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   private async handleMessage(client: WebSocket, payload: { type: string; messageType?: string; content: string; shopCard?: any; shopId?: string }) {
     const clientId = (client as any).id;
     const info = this.clients.get(clientId);
-    console.log('[ChatGateway] 收到 WebSocket 消息:', JSON.stringify(payload, null, 2));
-    console.log('[ChatGateway] 发送者信息:', info);
+    this.logger.debug(`收到 WebSocket 消息: ${JSON.stringify(payload)}`);
+    this.logger.debug(`发送者: ${info?.userId || 'unknown'}`);
     if (!info) {
       this.sendToClient(client, 'error', { message: '未加入群聊' });
       return;

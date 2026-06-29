@@ -11,7 +11,7 @@ async function main() {
 
   await client.connect();
   const result = await client.query(
-    `SELECT id, nickname, phone, "isAdmin", created_at FROM users ORDER BY created_at ASC LIMIT 15`
+    `SELECT id, nickname, phone, created_at FROM users ORDER BY created_at ASC LIMIT 15`
   );
   console.log(JSON.stringify(result.rows, null, 2));
   await client.end();

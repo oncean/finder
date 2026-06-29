@@ -8,6 +8,7 @@ import { ChatOnlineUser } from '../../entities/chat-online-user.entity';
 import { Shop } from '../../entities/shop.entity';
 import { Comment } from '../../entities/comment.entity';
 import { SendMessageDto } from './dto/send-message.dto';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class ChatService {
@@ -24,6 +25,7 @@ export class ChatService {
     private shopRepo: Repository<Shop>,
     @InjectRepository(Comment)
     private commentRepo: Repository<Comment>,
+    private storageService: StorageService,
   ) {}
 
   private async getOrCreateGroup(groupId: string, lat?: number, lng?: number) {
@@ -123,11 +125,11 @@ export class ChatService {
       order: { updatedAt: 'DESC' },
     });
 
-    return onlineUsers.map((onlineUser) => ({
+    return await Promise.all(onlineUsers.map(async (onlineUser) => ({
       id: onlineUser.user.id,
       nickname: onlineUser.user.nickname,
-      avatar: onlineUser.user.avatar,
-    }));
+      avatar: await this.storageService.resolveUrl(onlineUser.user.avatar),
+    })));
   }
 
   private calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -219,20 +221,20 @@ export class ChatService {
       }),
     );
 
-    return reversedMessages.map((msg, index) => ({
+    return await Promise.all(reversedMessages.map(async (msg, index) => ({
       id: msg.id,
       groupId: msg.groupId,
       sender: {
         id: msg.sender.id,
         nickname: msg.sender.nickname,
-        avatar: msg.sender.avatar,
+        avatar: await this.storageService.resolveUrl(msg.sender.avatar),
       },
       type: msg.type,
       content: msg.content,
       shopId: msg.shopId,
       shopCard: shopCards[index],
       createdAt: msg.createdAt,
-    }));
+    })));
   }
 
   async sendMessage(dto: SendMessageDto, senderId: string) {
@@ -264,7 +266,7 @@ export class ChatService {
       sender: {
         id: sender.id,
         nickname: sender.nickname,
-        avatar: sender.avatar,
+        avatar: await this.storageService.resolveUrl(sender.avatar),
       },
       type: message.type,
       content: message.content,
@@ -285,16 +287,18 @@ export class ChatService {
       take: 4,
       relations: ['author'],
     });
-    const commentAvatars = recentComments
-      .map((c) => c.author?.avatar)
-      .filter(Boolean);
+    const commentAvatars = await this.storageService.resolveUrls(
+      recentComments
+        .map((c) => c.author?.avatar)
+        .filter(Boolean),
+    );
 
     return {
       shopId: shop.id,
       name: shop.name,
       address: shop.address,
       location: shop.location,
-      coverImage: shop.coverImage || shop.logo || '',
+      coverImage: await this.storageService.resolveUrl(shop.coverImage || shop.logo || ''),
       summaryTags: shop.summaryTags,
       reviewCount: shop.reviewCount || 0,
       commentAvatars,

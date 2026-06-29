@@ -1,9 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { BeforeInsert, Entity, PrimaryColumn, Column, CreateDateColumn } from 'typeorm';
+import { generateSnowflakeId } from '../common/utils/snowflake.util';
 
 @Entity('shops')
 export class Shop {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'bigint' })
   id: string;
+
+  @BeforeInsert()
+  assignId() {
+    this.id = this.id || generateSnowflakeId();
+  }
 
   @Column({ type: 'varchar', length: 128 })
   name: string;
@@ -14,7 +20,7 @@ export class Shop {
   @Column({ type: 'varchar', length: 255, nullable: true })
   address: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'json', nullable: true })
   location: {
     lat: number;
     lng: number;
@@ -41,7 +47,7 @@ export class Shop {
   @Column({ type: 'int', default: 0, name: 'review_count' })
   reviewCount: number;
 
-  @Column({ type: 'jsonb', nullable: true, name: 'summary_tags' })
+  @Column({ type: 'json', nullable: true, name: 'summary_tags' })
   summaryTags: {
     positive: string[];
     negative: string[];

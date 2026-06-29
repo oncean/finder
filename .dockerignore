@@ -1,0 +1,35 @@
+# Dependencies
+backend/node_modules
+backend/.pnpm-store
+admin-frontend/node_modules
+miniprogram/node_modules
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Logs
+*.log
+logs
+
+# Tests
+coverage
+.nyc_output
+
+# Misc
+README.md
+DATABASE_INIT.md
+BUSINESS_FLOWS.md

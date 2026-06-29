@@ -1,9 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { BeforeInsert, Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { generateSnowflakeId } from '../common/utils/snowflake.util';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'bigint' })
   id: string;
+
+  @BeforeInsert()
+  assignId() {
+    this.id = this.id || generateSnowflakeId();
+  }
 
   @Column({ type: 'varchar', length: 64, unique: true, nullable: true })
   openid: string;
@@ -26,14 +32,8 @@ export class User {
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'json', nullable: true })
   location: { lat: number; lng: number; city: string };
-
-  @Column({ type: 'jsonb', nullable: true })
-  permissions: string[];
-
-  @Column({ type: 'boolean', default: false })
-  isAdmin: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -1,21 +1,27 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { BeforeInsert, Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 import { ChatGroup } from './chat-group.entity';
 import { Shop } from './shop.entity';
+import { generateSnowflakeId } from '../common/utils/snowflake.util';
 
 @Entity('messages')
 export class Message {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'bigint' })
   id: string;
 
-  @Column({ name: 'group_id' })
+  @BeforeInsert()
+  assignId() {
+    this.id = this.id || generateSnowflakeId();
+  }
+
+  @Column({ type: 'bigint', name: 'group_id' })
   groupId: string;
 
   @ManyToOne(() => ChatGroup)
   @JoinColumn({ name: 'group_id' })
   group: ChatGroup;
 
-  @Column({ name: 'sender_id' })
+  @Column({ type: 'bigint', name: 'sender_id' })
   senderId: string;
 
   @ManyToOne(() => User)
@@ -28,7 +34,7 @@ export class Message {
   @Column({ type: 'text', nullable: true })
   content: string;
 
-  @Column({ name: 'shop_id', nullable: true })
+  @Column({ type: 'bigint', name: 'shop_id', nullable: true })
   shopId: string;
 
   @ManyToOne(() => Shop, { nullable: true })

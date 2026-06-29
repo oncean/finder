@@ -1,13 +1,17 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Comment } from '../../entities/comment.entity';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class PostService {
+  private readonly logger = new Logger(PostService.name);
+
   constructor(
     @InjectRepository(Comment)
     private commentRepo: Repository<Comment>,
+    private storageService: StorageService,
   ) {}
 
   async getRecommendations(
@@ -28,6 +32,8 @@ export class PostService {
       .take(pageSize);
 
     const [comments, total] = await query.getManyAndCount();
+
+    this.logger.log(`getRecommendations: lat=${lat || 'null'}, lng=${lng || 'null'}, page=${page}, pageSize=${pageSize}, total=${total}`);
 
     // 批量获取每个店铺的评论头像（最多4个）
     const shopIds = [...new Set(comments.map(c => c.shopId).filter(Boolean))];
@@ -51,7 +57,7 @@ export class PostService {
     }
 
     return {
-      list: comments.map(comment => this.formatComment(comment, shopAvatarsMap.get(comment.shopId) || [])),
+      list: await Promise.all(comments.map(comment => this.formatComment(comment, shopAvatarsMap.get(comment.shopId) || []))),
       total,
       page,
       pageSize,
@@ -68,7 +74,7 @@ export class PostService {
       throw new HttpException('评价不存在', HttpStatus.NOT_FOUND);
     }
 
-    return this.formatComment(comment);
+    return await this.formatComment(comment);
   }
 
   async getRelated(commentId: string) {
@@ -85,10 +91,12 @@ export class PostService {
       take: 10,
     });
 
-    return related
-      .filter(item => item.id !== commentId)
-      .slice(0, 6)
-      .map(item => this.formatComment(item));
+    return (await Promise.all(
+      related
+        .filter(item => item.id !== commentId)
+        .slice(0, 6)
+        .map(item => this.formatComment(item)),
+    ));
   }
 
   async create(dto: any, authorId: string) {
@@ -105,10 +113,12 @@ export class PostService {
     return this.findOne(saved.id);
   }
 
-  private formatComment(comment: Comment, commentAvatars: string[] = []) {
+  private async formatComment(comment: Comment, commentAvatars: string[] = []) {
     const shop = comment.shop;
     const author = comment.author;
-    const images = Array.isArray(comment.images) ? comment.images : [];
+    const images = Array.isArray(comment.images)
+      ? await this.storageService.resolveUrls(comment.images)
+      : [];
 
     return {
       id: comment.id,
@@ -118,7 +128,7 @@ export class PostService {
       author: author ? {
         id: author.id,
         nickname: author.nickname,
-        avatar: author.avatar,
+        avatar: await this.storageService.resolveUrl(author.avatar),
       } : null,
       shopId: comment.shopId,
       shopName: shop?.name,
@@ -126,20 +136,20 @@ export class PostService {
         id: shop.id,
         name: shop.name,
         address: shop.address,
-        coverImage: shop.coverImage || '',
+        coverImage: await this.storageService.resolveUrl(shop.coverImage || ''),
         summaryTags: shop.summaryTags,
         reviewCount: shop.reviewCount,
-        commentAvatars,
+        commentAvatars: await this.storageService.resolveUrls(commentAvatars),
       } : null,
       images,
-      coverImage: images[0] || shop?.coverImage || '',
+      coverImage: images[0] || await this.storageService.resolveUrl(shop?.coverImage || ''),
       consumeRecord: comment.consumeRecord
         ? {
             amount: comment.consumeRecord.amount,
             merchantName: shop?.name || '',
             tradeTime: comment.consumeRecord.tradeTime,
             tradeNo: `COMMENT-${comment.id}`,
-            image: comment.consumeRecord.image,
+            image: await this.storageService.resolveUrl(comment.consumeRecord.image),
           }
         : null,
       reviewCount: shop?.reviewCount || 0,

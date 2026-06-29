@@ -6,8 +6,8 @@ const VERSION_ENV_MAP = {
 
 const ENV_CONFIG = {
   dev: {
-    API_BASE: 'http://localhost:3000',
-    WS_BASE: 'ws://localhost:3000'
+    API_BASE: 'http://192.168.0.2:3000',
+    WS_BASE: 'ws://192.168.0.2:3000'
   },
   test: {
     API_BASE: 'https://test-api.example.com',

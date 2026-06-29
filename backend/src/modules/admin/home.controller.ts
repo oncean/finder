@@ -1,5 +1,4 @@
 import { Controller, Get } from '@nestjs/common';
-import { join } from 'path';
 
 @Controller()
 export class HomeController {
@@ -7,7 +6,7 @@ export class HomeController {
   getHome() {
     return {
       message: '风向标管理后台',
-      adminPage: '/admin.html',
+      adminPage: '/',
       api: '/api/v1',
     };
   }

@@ -10,9 +10,10 @@ import { ChatGroup } from '../../entities/chat-group.entity';
 import { ChatOnlineUser } from '../../entities/chat-online-user.entity';
 import { AuthModule } from '../auth/auth.module';
 import { ChatModule } from '../chat/chat.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Admin, Shop, Message, ChatGroup, ChatOnlineUser]), AuthModule, ChatModule],
+  imports: [TypeOrmModule.forFeature([User, Admin, Shop, Message, ChatGroup, ChatOnlineUser]), AuthModule, ChatModule, StorageModule],
   controllers: [HomeController, AdminController],
 })
 export class AdminModule {}

@@ -1,30 +1,37 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
   Index,
+  BeforeInsert,
 } from 'typeorm';
 import { ChatGroup } from './chat-group.entity';
 import { User } from './user.entity';
+import { generateSnowflakeId } from '../common/utils/snowflake.util';
 
 @Entity('chat_online_users')
 @Index(['groupId', 'userId'], { unique: true })
 export class ChatOnlineUser {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'bigint' })
   id: string;
 
-  @Column({ name: 'group_id' })
+  @BeforeInsert()
+  assignId() {
+    this.id = this.id || generateSnowflakeId();
+  }
+
+  @Column({ type: 'bigint', name: 'group_id' })
   groupId: string;
 
   @ManyToOne(() => ChatGroup)
   @JoinColumn({ name: 'group_id' })
   group: ChatGroup;
 
-  @Column({ name: 'user_id' })
+  @Column({ type: 'bigint', name: 'user_id' })
   userId: string;
 
   @ManyToOne(() => User)

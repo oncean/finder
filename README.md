@@ -20,8 +20,8 @@
 | 层级 | 技术选型 | 说明 |
 |------|---------|------|
 | 客户端 | 微信小程序原生框架 | WXML + WXSS + JS |
-| 网关层 | Nginx | 反向代理、SSL 终止、静态文件服务 |
-| 业务层 | Node.js + NestJS | RESTful API + WebSocket 实时通信 |
+| 管理后台 | Umi / Ant Design Pro | 构建后由 NestJS 托管静态文件 |
+| 业务层 | Node.js + NestJS | 前端静态资源 + RESTful API + WebSocket |
 | 数据层 | PostgreSQL + PostGIS | 主数据库 + 地理位置查询支持 |
 | 文件存储 | 本地文件系统 | 用户上传图片、店铺封面等 |
 
@@ -30,26 +30,18 @@
 ```
 ┌─────────────────────────────────────────────┐
 │                    客户端层                   │
-│           微信小程序 (WXML/WXSS/JS)           │
+│      微信小程序 / 管理后台浏览器访问           │
 └─────────────────────┬───────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────┐
-│               网关层 (Nginx)                 │
-│      SSL 终止 / 反向代理 / 静态文件服务       │
+│        单容器应用：Node.js + NestJS :80        │
+│  /          -> 管理后台前端静态文件             │
+│  /api/v1    -> 后端 API                        │
+│  /ws/chat   -> WebSocket 实时通信              │
+│  /uploads   -> 用户上传文件                    │
+│  /static    -> 系统静态资源                    │
 └─────────────────────┬───────────────────────┘
                       │
-        ┌─────────────┴─────────────┐
-        ▼                           ▼
-┌───────────────┐           ┌───────────────┐
-│   API 服务     │           │  WebSocket    │
-│  (NestJS)     │           │   服务        │
-│               │           │               │
-│ • 用户认证    │           │ • 实时消息    │
-│ • 店铺/帖子   │           │ • 在线状态    │
-│ • 文件上传    │           │ • 消息历史    │
-└───────┬───────┘           └───────────────┘
-        │
-        ▼
 ┌─────────────────────────────────────────────┐
 │                  数据层                      │
 │  ┌─────────────────────────────────────┐   │
@@ -66,6 +58,11 @@
 
 ```
 fengxiangbiao/
+├── admin-frontend/             # 管理后台前端
+│   ├── src/                    # 管理后台源码
+│   ├── config/                 # Umi 配置
+│   └── package.json
+│
 ├── backend/                    # 后端服务 (NestJS)
 │   ├── src/
 │   │   ├── common/             # 公共模块 (过滤器、拦截器、守卫)
@@ -80,18 +77,12 @@ fengxiangbiao/
 │   │   ├── app.module.ts       # 根模块
 │   │   └── main.ts             # 应用入口
 │   ├── .env.example            # 环境变量示例
-│   ├── Dockerfile              # Docker 构建文件
-│   ├── docker-compose.yml      # 本地开发环境编排
-│   ├── nginx.conf              # Nginx 配置
 │   ├── package.json
 │   └── tsconfig.json
 │
 ├── docs/                       # 项目文档
 │   ├── architecture-doc.md     # 架构设计文档
-│   ├── deploy-guide.md         # 云端部署指南
-│   ├── dev-steps.md            # 开发步骤指南
-│   ├── mini-program-dev-doc.md # 小程序开发文档
-│   └── mini-program-dev-doc.html
+│   └── mini-program-dev-doc.md # 小程序开发文档
 │
 ├── miniprogram/                # 微信小程序前端
 │   ├── pages/                  # 页面
@@ -124,14 +115,10 @@ fengxiangbiao/
 │       └── index.js
 │
 ├── assets/                     # 静态资源
-│   └── screenshots/            # 产品截图
-│       ├── 风向标主页.jpg
-│       ├── 吃喝玩乐.jpg
-│       ├── 店铺详情页.jpg
-│       ├── 店铺评价详情页.jpg
-│       ├── 添加内容页.jpg
-│       └── 页面跳转逻辑展示.jpg
+│   ├── avatar/                 # 默认头像
+│   └── *.jpg / *.png / *.html  # 产品素材与说明文件
 │
+├── Dockerfile                  # 前后端合并构建镜像
 └── README.md                   # 本文件
 ```
 
@@ -143,8 +130,9 @@ fengxiangbiao/
 
 | 工具 | 版本 | 用途 |
 |------|------|------|
-| Node.js | 18 LTS | 后端运行环境 |
-| Docker | 24.x | 本地数据库 |
+| Node.js | 22 | 本地开发与 Docker 构建环境 |
+| npm / pnpm | npm 用于后端，pnpm 用于管理后台 | 依赖安装与构建 |
+| Docker | 24.x | 构建和运行镜像 |
 | 微信开发者工具 | 最新版 | 小程序开发调试 |
 
 ### 1. 克隆项目
@@ -154,24 +142,19 @@ git clone https://github.com/your-username/fengxiangbiao.git
 cd fengxiangbiao
 ```
 
-### 2. 启动本地数据库
+### 2. 配置后端环境变量
 
 ```bash
 cd backend
-docker-compose up -d postgres
+npm install
+cp .env.example .env
 ```
+
+编辑 `backend/.env`，填入数据库、JWT、微信小程序等配置。
 
 ### 3. 启动后端服务
 
 ```bash
-# 安装依赖
-npm install
-
-# 复制环境变量配置
-cp .env.example .env
-# 编辑 .env 填入你的微信小程序 AppID 和 Secret
-
-# 启动开发服务器
 npm run start:dev
 ```
 
@@ -229,21 +212,32 @@ npm run start:dev
 
 ## 部署指南
 
-项目支持 Docker 一键部署，详见 [docs/deploy-guide.md](docs/deploy-guide.md)。
-
-快速部署命令：
+当前根目录 `Dockerfile` 使用官方 `node:20` 镜像，在镜像内安装后端依赖并构建 NestJS 应用。完整部署流程见 [docs/deploy-guide.md](docs/deploy-guide.md)。
 
 ```bash
-cd backend
+cd admin-frontend
+pnpm install
+pnpm build
 
-# 构建并启动所有服务
-docker-compose up -d
+cd ..
+docker build -t finder:latest .
+docker run --rm -p 80:80 --env-file runtime-config.env finder:latest
+```
 
-# 查看运行状态
-docker-compose ps
+打镜像前需要确认以下目录已存在：
 
-# 查看日志
-docker-compose logs -f
+```text
+admin-frontend/dist
+backend/static
+```
+
+容器默认监听 `80`：
+
+```text
+http://服务器/           管理后台
+http://服务器/api/v1/...  后端 API
+http://服务器/uploads/... 上传文件
+http://服务器/static/...  系统静态资源
 ```
 
 ---
@@ -252,13 +246,12 @@ docker-compose logs -f
 
 | 技术 | 版本 |
 |------|------|
-| Node.js | 18 LTS |
+| Node.js | 22 |
 | NestJS | 10.x |
 | TypeORM | 0.3.x |
 | PostgreSQL | 15 + PostGIS |
 | 微信小程序 | 基础库 2.30+ |
 | Docker | 24.x |
-| Nginx | 1.24 |
 
 ---
 

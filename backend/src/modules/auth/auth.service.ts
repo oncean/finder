@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus, OnModuleInit } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
@@ -7,9 +7,11 @@ import { LoginDto } from './dto/login.dto';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
 import { getRequiredEnv } from '../../config/env';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
-export class AuthService implements OnModuleInit {
+export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private readonly jwtSecret: string;
   private readonly wxAppId: string;
   private readonly wxSecret: string;
@@ -19,42 +21,11 @@ export class AuthService implements OnModuleInit {
     private userRepo: Repository<User>,
     @InjectRepository(Admin)
     private adminRepo: Repository<Admin>,
+    private storageService: StorageService,
   ) {
     this.jwtSecret = getRequiredEnv('JWT_SECRET');
     this.wxAppId = getRequiredEnv('WX_APPID');
     this.wxSecret = getRequiredEnv('WX_SECRET');
-  }
-
-  async onModuleInit() {
-    await this.initDefaultAdmin();
-  }
-
-  private async initDefaultAdmin() {
-    const defaultUsername = process.env.ADMIN_USERNAME;
-    const defaultPassword = process.env.ADMIN_PASSWORD;
-
-    if (!defaultUsername || !defaultPassword) {
-      console.log('未配置默认管理员账号，跳过自动创建');
-      return;
-    }
-    
-    const existingAdmin = await this.adminRepo.findOne({ 
-      where: { username: defaultUsername } 
-    });
-    
-    if (!existingAdmin) {
-      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-      const admin = this.adminRepo.create({
-        username: defaultUsername,
-        password: hashedPassword,
-        nickname: '管理员',
-        permissions: ['all'],
-      });
-      await this.adminRepo.save(admin);
-      console.log(`✅ 默认管理员账户已创建: ${defaultUsername}`);
-    } else {
-      console.log('ℹ️ 管理员账户已存在');
-    }
   }
 
   async wxLogin(dto: LoginDto) {
@@ -96,12 +67,14 @@ export class AuthService implements OnModuleInit {
       { expiresIn: '7d' },
     );
 
+    this.logger.log(`用户登录成功: userId=${user.id}, openid=${openid}`);
+
     return {
       token,
       user: {
         id: user.id,
         nickname: user.nickname,
-        avatar: user.avatar,
+        avatar: await this.storageService.resolveUrl(user.avatar),
         location: user.location,
         openid: user.openid,
         unionid: user.unionid,
@@ -111,14 +84,16 @@ export class AuthService implements OnModuleInit {
 
   async adminLogin(username: string, password: string) {
     const admin = await this.adminRepo.findOne({ where: { username } });
-    
+
     if (!admin) {
+      this.logger.warn(`管理员登录失败: 用户名 ${username} 不存在`);
       throw new HttpException('管理员不存在', HttpStatus.UNAUTHORIZED);
     }
 
     const isPasswordValid = await bcrypt.compare(password, admin.password);
-    
+
     if (!isPasswordValid) {
+      this.logger.warn(`管理员登录失败: 用户名 ${username} 密码错误`);
       throw new HttpException('密码错误', HttpStatus.UNAUTHORIZED);
     }
 
@@ -127,6 +102,8 @@ export class AuthService implements OnModuleInit {
       this.jwtSecret,
       { expiresIn: '24h' },
     );
+
+    this.logger.log(`管理员登录成功: adminId=${admin.id}, username=${username}`);
 
     // 返回符合前端期望的格式
     return {
@@ -138,7 +115,7 @@ export class AuthService implements OnModuleInit {
         id: admin.id,
         username: admin.username,
         nickname: admin.nickname,
-        avatar: admin.avatar,
+        avatar: await this.storageService.resolveUrl(admin.avatar),
         permissions: admin.permissions,
       },
     };
@@ -151,29 +128,32 @@ export class AuthService implements OnModuleInit {
 
     try {
       const decoded = jwt.verify(token, this.jwtSecret) as { userId: string; type: string };
-      
+
       if (decoded.type !== 'user') {
+        this.logger.warn(`Token验证失败: 无效的用户类型, userId=${decoded.userId}`);
         throw new HttpException('无效的用户类型', HttpStatus.UNAUTHORIZED);
       }
-      
+
       const user = await this.userRepo.findOne({
         where: { id: decoded.userId },
       });
 
       if (!user) {
+        this.logger.warn(`Token验证失败: 用户不存在, userId=${decoded.userId}`);
         throw new HttpException('用户不存在', HttpStatus.UNAUTHORIZED);
       }
 
       return {
         id: user.id,
         nickname: user.nickname,
-        avatar: user.avatar,
+        avatar: await this.storageService.resolveUrl(user.avatar),
         phone: user.phone,
         location: user.location,
         openid: user.openid,
         unionid: user.unionid,
       };
     } catch (error) {
+      this.logger.warn(`Token验证失败: ${error.message}`);
       throw new HttpException('token无效或已过期', HttpStatus.UNAUTHORIZED);
     }
   }
@@ -185,16 +165,18 @@ export class AuthService implements OnModuleInit {
 
     try {
       const decoded = jwt.verify(token, this.jwtSecret) as { userId: string; type: string };
-      
+
       if (decoded.type !== 'admin') {
+        this.logger.warn(`Token验证失败: 无效的管理员类型, adminId=${decoded.userId}`);
         throw new HttpException('无效的管理员类型', HttpStatus.UNAUTHORIZED);
       }
-      
+
       const admin = await this.adminRepo.findOne({
         where: { id: decoded.userId },
       });
 
       if (!admin) {
+        this.logger.warn(`Token验证失败: 管理员不存在, adminId=${decoded.userId}`);
         throw new HttpException('管理员不存在', HttpStatus.UNAUTHORIZED);
       }
 
@@ -202,10 +184,11 @@ export class AuthService implements OnModuleInit {
       return {
         userid: admin.id,
         name: admin.nickname || admin.username,
-        avatar: admin.avatar,
+        avatar: await this.storageService.resolveUrl(admin.avatar),
         username: admin.username,
       };
     } catch (error) {
+      this.logger.warn(`Token验证失败: ${error.message}`);
       throw new HttpException('token无效或已过期', HttpStatus.UNAUTHORIZED);
     }
   }
@@ -214,6 +197,7 @@ export class AuthService implements OnModuleInit {
     try {
       return jwt.verify(token, this.jwtSecret) as { userId: string; openid?: string; type: string };
     } catch (error) {
+      this.logger.warn(`Token验证失败: ${error.message}`);
       return null;
     }
   }
@@ -225,16 +209,18 @@ export class AuthService implements OnModuleInit {
 
     try {
       const decoded = jwt.verify(token, this.jwtSecret) as { userId: string; type: string };
-      
+
       if (decoded.type !== 'user') {
+        this.logger.warn(`Token验证失败: 无效的用户类型, userId=${decoded.userId}`);
         throw new HttpException('无效的用户类型', HttpStatus.UNAUTHORIZED);
       }
-      
+
       const user = await this.userRepo.findOne({
         where: { id: decoded.userId },
       });
 
       if (!user) {
+        this.logger.warn(`Token验证失败: 用户不存在, userId=${decoded.userId}`);
         throw new HttpException('用户不存在', HttpStatus.UNAUTHORIZED);
       }
 
@@ -259,13 +245,14 @@ export class AuthService implements OnModuleInit {
       return {
         id: user.id,
         nickname: user.nickname,
-        avatar: user.avatar,
+        avatar: await this.storageService.resolveUrl(user.avatar),
         phone: user.phone,
         location: user.location,
         openid: user.openid,
         unionid: user.unionid,
       };
     } catch (error) {
+      this.logger.warn(`Token验证失败: ${error.message}`);
       throw new HttpException('token无效或已过期', HttpStatus.UNAUTHORIZED);
     }
   }

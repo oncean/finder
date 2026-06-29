@@ -1,20 +1,26 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { BeforeInsert, Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 import { Shop } from './shop.entity';
+import { generateSnowflakeId } from '../common/utils/snowflake.util';
 
 @Entity('comments')
 export class Comment {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'bigint' })
   id: string;
 
-  @Column({ name: 'shop_id' })
+  @BeforeInsert()
+  assignId() {
+    this.id = this.id || generateSnowflakeId();
+  }
+
+  @Column({ type: 'bigint', name: 'shop_id' })
   shopId: string;
 
   @ManyToOne(() => Shop)
   @JoinColumn({ name: 'shop_id' })
   shop: Shop;
 
-  @Column({ name: 'author_id', nullable: true })
+  @Column({ type: 'bigint', name: 'author_id', nullable: true })
   authorId: string;
 
   @ManyToOne(() => User, { nullable: true })
@@ -27,13 +33,13 @@ export class Comment {
   @Column({ type: 'text', nullable: true })
   content: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'json', nullable: true })
   images: string[];
 
   @Column({ type: 'int', nullable: true })
   rating: number;
 
-  @Column({ type: 'jsonb', nullable: true, name: 'consume_record' })
+  @Column({ type: 'json', nullable: true, name: 'consume_record' })
   consumeRecord: {
     amount: number;
     tradeTime: string;

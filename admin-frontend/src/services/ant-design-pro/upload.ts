@@ -1,6 +1,7 @@
 import { request } from '@umijs/max';
 
 export interface UploadResponse {
+  fileId?: string;
   url: string;
   filename: string;
   size: number;
