@@ -17,6 +17,16 @@ import { validateRequiredEnv } from './config/env';
 import { existsSync, mkdirSync } from 'fs';
 import { getSnowflakeWorkerInfo } from './common/utils/snowflake.util';
 
+function logAllEnv(logger: Logger) {
+  logger.log('容器环境变量开始');
+  Object.keys(process.env)
+    .sort()
+    .forEach((key) => {
+      logger.log(`${key}=${process.env[key] ?? ''}`);
+    });
+  logger.log('容器环境变量结束');
+}
+
 async function bootstrap() {
   validateRequiredEnv();
 
@@ -92,6 +102,7 @@ async function bootstrap() {
   logger.log(`运行环境：${process.env.NODE_ENV}`);
   logger.log(`数据库：${process.env.DB_TYPE || 'postgres'}://${process.env.DB_HOST}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME}`);
   logger.log(`Snowflake Worker ID：${snowflakeWorkerInfo.workerId}，来源：${snowflakeWorkerInfo.source}=${snowflakeWorkerInfo.sourceValue}`);
+  logAllEnv(logger);
 }
 
 bootstrap();

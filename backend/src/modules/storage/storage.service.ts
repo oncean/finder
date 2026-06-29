@@ -45,6 +45,48 @@ export class StorageService {
     }
   }
 
+  private isCertificateError(error: unknown) {
+    const err = error as { code?: string; message?: string };
+    const message = (err?.message || '').toLowerCase();
+    return (
+      err?.code === 'SELF_SIGNED_CERT_IN_CHAIN' ||
+      err?.code === 'DEPTH_ZERO_SELF_SIGNED_CERT' ||
+      err?.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' ||
+      message.includes('self-signed certificate') ||
+      message.includes('unable to verify the first certificate')
+    );
+  }
+
+  private getSafeUrl(url: string) {
+    try {
+      const parsedUrl = new URL(url);
+      return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
+    } catch {
+      return url;
+    }
+  }
+
+  private async requestWithStorageLog<T>(
+    action: string,
+    url: string,
+    request: () => Promise<T>,
+  ): Promise<T> {
+    const safeUrl = this.getSafeUrl(url);
+    this.logger.log(`${action}: ${safeUrl}`);
+
+    try {
+      return await request();
+    } catch (error) {
+      const err = error as { code?: string; message?: string };
+      if (this.isCertificateError(error)) {
+        this.logger.error(`${action} 证书校验失败: ${safeUrl}, code=${err?.code || ''}, message=${err?.message || ''}`);
+      } else {
+        this.logger.error(`${action} 请求失败: ${safeUrl}, code=${err?.code || ''}, message=${err?.message || ''}`);
+      }
+      throw error;
+    }
+  }
+
   /**
    * 获取微信 access_token（带缓存）
    */
@@ -60,9 +102,11 @@ export class StorageService {
       throw new Error('WX_APPID 或 WX_SECRET 未配置，无法获取 access_token');
     }
 
-    const { data } = await axios.get(
-      `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appid}&secret=${secret}`,
-      { timeout: 10000 },
+    const tokenUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appid}&secret=${secret}`;
+    const { data } = await this.requestWithStorageLog(
+      '获取微信 access_token',
+      tokenUrl,
+      () => axios.get(tokenUrl, { timeout: 10000 }),
     );
 
     if (data.errcode) {
@@ -108,10 +152,15 @@ export class StorageService {
 
     // 调用 tcb/uploadfile 获取上传凭证
     // https://developers.weixin.qq.com/miniprogram/dev/wxcloudservice/wxcloudrun/src/development/storage/service/upload.html
-    const { data: uploadRes } = await axios.post(
-      `https://api.weixin.qq.com/tcb/uploadfile?access_token=${accessToken}`,
-      { env: this.envId, path: cloudPath },
-      { timeout: 10000 },
+    const uploadFileUrl = `https://api.weixin.qq.com/tcb/uploadfile?access_token=${accessToken}`;
+    const { data: uploadRes } = await this.requestWithStorageLog(
+      '获取云存储上传链接',
+      uploadFileUrl,
+      () => axios.post(
+        uploadFileUrl,
+        { env: this.envId, path: cloudPath },
+        { timeout: 10000 },
+      ),
     );
 
     if (uploadRes.errcode !== 0) {
@@ -119,16 +168,18 @@ export class StorageService {
     }
 
     // 使用凭证直传文件到 COS
-    const form = new FormData();
-    form.append('key', cloudPath);
-    form.append('Signature', uploadRes.authorization);
-    form.append('x-cos-security-token', uploadRes.token);
-    form.append('x-cos-meta-fileid', uploadRes.cos_file_id);
-    form.append('file', fileBuffer, originalName);
+    await this.requestWithStorageLog('上传文件到云存储', uploadRes.url, () => {
+      const form = new FormData();
+      form.append('key', cloudPath);
+      form.append('Signature', uploadRes.authorization);
+      form.append('x-cos-security-token', uploadRes.token);
+      form.append('x-cos-meta-fileid', uploadRes.cos_file_id);
+      form.append('file', fileBuffer, originalName);
 
-    await axios.post(uploadRes.url, form, {
-      headers: form.getHeaders(),
-      timeout: 30000,
+      return axios.post(uploadRes.url, form, {
+        headers: form.getHeaders(),
+        timeout: 30000,
+      });
     });
 
     this.logger.log(`云端文件上传成功: ${cloudPath}`);
@@ -179,10 +230,15 @@ export class StorageService {
     // 云端模式：调用 batchdownloadfile
     // https://developers.weixin.qq.com/miniprogram/dev/wxcloudservice/wxcloudrun/src/development/storage/service/download.html
     const accessToken = await this.getAccessToken();
-    const { data } = await axios.post(
-      `https://api.weixin.qq.com/tcb/batchdownloadfile?access_token=${accessToken}`,
-      { env: this.envId, file_list: [{ fileid: fileId, max_age: 7200 }] },
-      { timeout: 10000 },
+    const downloadUrl = `https://api.weixin.qq.com/tcb/batchdownloadfile?access_token=${accessToken}`;
+    const { data } = await this.requestWithStorageLog(
+      '获取云存储下载链接',
+      downloadUrl,
+      () => axios.post(
+        downloadUrl,
+        { env: this.envId, file_list: [{ fileid: fileId, max_age: 7200 }] },
+        { timeout: 10000 },
+      ),
     );
 
     if (data.errcode !== 0) {
@@ -235,10 +291,15 @@ export class StorageService {
 
     // 批量调用 batchdownloadfile
     const accessToken = await this.getAccessToken();
-    const { data } = await axios.post(
-      `https://api.weixin.qq.com/tcb/batchdownloadfile?access_token=${accessToken}`,
-      { env: this.envId, file_list: cloudIds.map(id => ({ fileid: id, max_age: 7200 })) },
-      { timeout: 10000 },
+    const downloadUrl = `https://api.weixin.qq.com/tcb/batchdownloadfile?access_token=${accessToken}`;
+    const { data } = await this.requestWithStorageLog(
+      '批量获取云存储下载链接',
+      downloadUrl,
+      () => axios.post(
+        downloadUrl,
+        { env: this.envId, file_list: cloudIds.map(id => ({ fileid: id, max_age: 7200 })) },
+        { timeout: 10000 },
+      ),
     );
 
     if (data.errcode !== 0) {
@@ -273,10 +334,14 @@ export class StorageService {
 
     // 云端模式：获取 download_url 后下载
     const downloadUrl = await this.resolveUrl(fileId);
-    const { data } = await axios.get(downloadUrl, {
-      responseType: 'arraybuffer',
-      timeout: 30000,
-    });
+    const { data } = await this.requestWithStorageLog(
+      '下载云存储文件',
+      downloadUrl,
+      () => axios.get(downloadUrl, {
+        responseType: 'arraybuffer',
+        timeout: 30000,
+      }),
+    );
 
     return { buffer: Buffer.from(data) };
   }
