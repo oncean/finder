@@ -1,0 +1,9 @@
+<view class="container">
+  <image class="background-img" src="/static/images/log_background.png" mode="aspectFit" />
+  <view class="logo-section">
+    <image class="logo-img" src="/static/images/YOWEI_LOGO.png" mode="aspectFit" />
+    <text class="slogan">吃喝玩乐　上有味</text>
+  </view>
+
+  <button class="enter-btn" bindtap="onEnter">进入</button>
+</view>
