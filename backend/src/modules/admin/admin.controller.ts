@@ -10,10 +10,9 @@ import { Message } from '../../entities/message.entity';
 import { ChatGroup } from '../../entities/chat-group.entity';
 import { ChatOnlineUser } from '../../entities/chat-online-user.entity';
 import { assertCanDeleteEntity } from '../../common/utils/delete-dependency.util';
-import * as fs from 'fs';
-import * as path from 'path';
 import { ChatRealtimeService } from '../../websocket/chat-realtime.service';
 import { StorageService } from '../storage/storage.service';
+import { DEFAULT_AVATARS } from '../../common/constants/avatar';
 
 @Controller('admin')
 @UseGuards(AuthGuard)
@@ -41,7 +40,6 @@ export class AdminController {
       id: user.id,
       nickname: user.nickname,
       avatar: user.avatar,
-      avatarUrl: await this.storageService.resolveUrl(user.avatar),
       phone: user.phone,
       location: user.location,
       openid: user.openid,
@@ -166,7 +164,7 @@ export class AdminController {
         id: admin.id,
         username: admin.username,
         nickname: admin.nickname,
-        avatar: await this.storageService.resolveUrl(admin.avatar),
+        avatar: admin.avatar,
         phone: admin.phone,
         permissions: admin.permissions,
         createdAt: admin.createdAt,
@@ -188,7 +186,7 @@ export class AdminController {
         id: admin.id,
         username: admin.username,
         nickname: admin.nickname,
-        avatar: await this.storageService.resolveUrl(admin.avatar),
+        avatar: admin.avatar,
         phone: admin.phone,
         permissions: admin.permissions,
         createdAt: admin.createdAt,
@@ -314,8 +312,8 @@ export class AdminController {
         address: shop.address,
         location: shop.location,
         city: shop.city,
-        coverImage: await this.storageService.resolveUrl(shop.coverImage),
-        logo: await this.storageService.resolveUrl(shop.logo),
+        coverImage: shop.coverImage,
+        logo: shop.logo,
         phone: shop.phone,
         businessHours: shop.businessHours,
         rating: shop.rating,
@@ -343,8 +341,8 @@ export class AdminController {
         address: shop.address,
         location: shop.location,
         city: shop.city,
-        coverImage: await this.storageService.resolveUrl(shop.coverImage),
-        logo: await this.storageService.resolveUrl(shop.logo),
+        coverImage: shop.coverImage,
+        logo: shop.logo,
         phone: shop.phone,
         businessHours: shop.businessHours,
         rating: shop.rating,
@@ -466,7 +464,7 @@ export class AdminController {
       list: await Promise.all(messages.map(async msg => ({
         id: msg.id,
         type: msg.type,
-        content: msg.type === 'image' ? await this.storageService.resolveUrl(msg.content) : msg.content,
+        content: msg.content,
         shopId: msg.shopId,
         shopCard: msg.type === 'shop_card' ? this.formatMessageShopCard(msg.shop) : null,
         groupId: msg.groupId,
@@ -475,7 +473,7 @@ export class AdminController {
         sender: msg.sender ? {
           id: msg.sender.id,
           nickname: msg.sender.nickname,
-          avatar: await this.storageService.resolveUrl(msg.sender.avatar),
+          avatar: msg.sender.avatar,
         } : null,
         createdAt: msg.createdAt,
       }))),
@@ -550,13 +548,13 @@ export class AdminController {
         id: message.id,
         groupId: message.groupId,
         type: message.type,
-        content: type === 'image' ? await this.storageService.resolveUrl(message.content) : message.content,
+        content: message.content,
         shopId: message.shopId,
         shopCard: type === 'shop_card' ? this.formatMessageShopCard(shopEntity) : null,
         sender: {
           id: sender.id,
           nickname: sender.nickname,
-          avatar: await this.storageService.resolveUrl(sender.avatar),
+          avatar: sender.avatar,
         },
         createdAt: message.createdAt,
     };
@@ -576,7 +574,7 @@ export class AdminController {
       name: shop.name,
       address: shop.address,
       location: shop.location,
-      coverImage: await this.storageService.resolveUrl(shop.coverImage),
+      coverImage: shop.coverImage,
       distance: 0,
       summaryTags: shop.summaryTags,
       reviewCount: shop.reviewCount,
@@ -678,7 +676,7 @@ export class AdminController {
         user: item.user ? {
           id: item.user.id,
           nickname: item.user.nickname,
-          avatar: await this.storageService.resolveUrl(item.user.avatar),
+          avatar: item.user.avatar,
           phone: item.user.phone,
         } : null,
       }))),
@@ -849,32 +847,7 @@ export class AdminController {
 
   @Get('random-avatar')
   async getRandomAvatar() {
-    const avatarDir = process.env.AVATAR_DIR || path.join(process.cwd(), 'assets', 'avatar');
-    
-    try {
-      const files = fs.readdirSync(avatarDir).filter(f => 
-        /\.(png|jpg|jpeg|gif|webp)$/i.test(f)
-      );
-      
-      if (files.length === 0) {
-        throw new HttpException('头像目录为空', HttpStatus.BAD_REQUEST);
-      }
-      
-      const randomFile = files[Math.floor(Math.random() * files.length)];
-      const filePath = path.join(avatarDir, randomFile);
-      const result = await this.storageService.uploadFile(
-        fs.readFileSync(filePath),
-        `avatar-${Date.now()}-${randomFile}`,
-        'uploads/avatar',
-      );
-      const url = await this.storageService.resolveUrl(result.fileId);
-      
-      return { fileId: result.fileId, url, filename: randomFile };
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException('获取随机头像失败: ' + error.message, HttpStatus.BAD_REQUEST);
-    }
+    const randomAvatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
+    return { fileId: randomAvatar };
   }
 }

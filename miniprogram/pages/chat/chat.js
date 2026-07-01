@@ -1,10 +1,11 @@
 const app = getApp();
 const chatService = require('../../services/chat');
-const ws = require('../../utils/websocket');
 const store = require('../../store/index');
 const { updateMe } = require('../../services/auth');
-const request = require('../../utils/request');
 const { getCurrentLocation } = require('../../utils/location');
+const eventBus = require('../../utils/event-bus');
+
+const POLL_INTERVAL = 3000;
 
 Page({
   data: {
@@ -17,9 +18,10 @@ Page({
     refreshing: false,
     hasMore: true,
     isInitialized: false,
-    showUserInfoModal: false,
-    pendingMessage: null,
-    noGroup: false
+    noGroup: false,
+    onlineCount: 0,
+    lastSeenId: '',
+    scrollIntoView: ''
   },
 
   async onLoad() {
@@ -30,58 +32,34 @@ Page({
     }
     this.data.isInitialized = true;
     
-    await this.checkAndLogin();
-    
     const userInfo = store.get('userInfo');
     console.log('User info:', userInfo);
     this.setData({ userId: userInfo ? userInfo.id : '' });
     
-    if (!this.checkUserInfo()) {
-      console.log('用户未完善信息，弹出获取用户信息弹窗');
-      this.setData({ showUserInfoModal: true });
-    }
-    
     await this.initChat();
   },
 
-  async checkAndLogin() {
-    const token = wx.getStorageSync('token');
-    const userInfo = app.globalData.userInfo || store.get('userInfo');
-    
-    if (!token || !userInfo || !userInfo.id) {
-      console.log('用户未登录，启动静默登录');
-      try {
-        await app.silentLogin();
-        console.log('静默登录成功');
-      } catch (error) {
-        console.error('静默登录失败:', error);
-      }
-    } else {
-      console.log('用户已登录，用户ID:', userInfo.id);
-    }
-  },
-
   onUnload() {
-    this.disconnectWebSocket();
+    this.stopPolling();
     this.data.isInitialized = false;
   },
 
   onHide() {
-    this.disconnectWebSocket();
+    this.stopPolling();
   },
 
   onShow() {
-    if (this.data.isInitialized && this.data.groupId && !ws.isConnected()) {
-      this.connectWebSocket();
+    if (this.data.isInitialized && this.data.groupId) {
+      this.startPolling();
+      this.pollNewMessages();
     }
   },
 
-  disconnectWebSocket() {
-    if (this.unsubscribeMessage) {
-      this.unsubscribeMessage();
-      this.unsubscribeMessage = null;
+  stopPolling() {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
     }
-    ws.close();
   },
 
   async initChat() {
@@ -100,7 +78,11 @@ Page({
         groupId: groupInfo.id,
         groupInfo
       });
-      this.connectWebSocket();
+      app.globalData.groupId = groupInfo.id;
+      store.set('groupId', groupInfo.id);
+      
+      await this.loadInitialMessages();
+      this.startPolling();
     } catch (error) {
       console.error('初始化群聊失败:', error);
       this.setData({ noGroup: true });
@@ -137,19 +119,45 @@ Page({
     }
   },
 
+  async loadInitialMessages() {
+    this.setData({ loading: true });
+    try {
+      const messages = await chatService.getMessages(this.data.groupId, null, 20);
+      const lastSeenId = messages.length > 0 ? messages[messages.length - 1].id : '';
+      this.setData({
+        messages: messages,
+        hasMore: messages.length === 20,
+        loading: false,
+        lastSeenId
+      });
+      this.scrollToBottom();
+    } catch (error) {
+      this.setData({ loading: false });
+      console.error('加载消息失败:', error);
+    }
+  },
+
   async loadMessages() {
     if (this.data.loading || !this.data.hasMore || !this.data.groupId) return;
     
     this.setData({ loading: true });
     try {
       const lastId = this.data.messages.length > 0 ? this.data.messages[0].id : null;
-      const messages = await chatService.getMessages(this.data.groupId, lastId);
+      const newMessages = await chatService.getMessages(this.data.groupId, lastId);
       
       this.setData({
-        messages: [...messages, ...this.data.messages],
-        hasMore: messages.length === 20,
+        messages: [...newMessages, ...this.data.messages],
+        hasMore: newMessages.length === 20,
         loading: false
       });
+      
+      if (newMessages.length >= 3) {
+        const anchorIndex = newMessages.length - 3;
+        const anchorId = newMessages[anchorIndex].id;
+        wx.nextTick(() => {
+          this.setData({ scrollIntoView: 'msg-' + anchorId });
+        });
+      }
     } catch (error) {
       this.setData({ loading: false });
       console.error('加载消息失败:', error);
@@ -166,179 +174,59 @@ Page({
     }
   },
 
-  connectWebSocket() {
-    if (this.unsubscribeMessage) {
-      console.log('取消之前的消息订阅');
-      this.unsubscribeMessage();
-    }
-    
-    ws.connect(this.data.groupId);
-    
-    this.unsubscribeMessage = ws.onMessage((data) => {
-      console.log('chat 页面收到 WebSocket 消息:', data);
-      switch (data.type) {
-        case 'message':
-          console.log('收到新消息:', data.data);
-          this.setData({
-            messages: [...this.data.messages, data.data]
-          });
-          this.scrollToBottom();
-          break;
-        case 'history':
-          console.log('收到历史消息:', data.messages);
-          const historyMessages = data.messages || [];
-          if (this.data.messages.length === 0) {
-            this.setData({
-              messages: historyMessages
-            });
-          } else {
-            const currentIds = new Set(this.data.messages.map(m => m.id));
-            const newMessages = historyMessages.filter(m => !currentIds.has(m.id));
-            if (newMessages.length > 0) {
-              this.setData({
-                messages: [...newMessages, ...this.data.messages]
-              });
-            }
-          }
-          this.scrollToBottom();
-          break;
-      }
-    });
-  },
-
-  checkUserInfo() {
-    const userInfo = app.globalData.userInfo;
-    return !!(userInfo && userInfo.nickname);
-  },
-
-  async onSendMessage(e) {
-    const { content } = e.detail;
-    
-    // 检测用户是否有用户信息
-    if (!this.checkUserInfo()) {
-      console.log('用户未获取用户信息，弹出获取用户信息弹窗');
-      this.setData({ 
-        showUserInfoModal: true,
-        pendingMessage: content
-      });
+  startPolling() {
+    if (this.pollTimer) {
+      console.log('轮询已在运行');
       return;
     }
     
-    // 已有用户信息，直接发送消息
-    this.sendMessage(content);
+    console.log('开始轮询');
+    this.pollTimer = setInterval(() => {
+      this.pollNewMessages();
+    }, POLL_INTERVAL);
   },
 
-  sendMessage(content) {
+  async pollNewMessages() {
+    if (!this.data.groupId) return;
+    
     try {
-      ws.send({
-        type: 'message',
-        content: content
-      });
+      const result = await chatService.poll(this.data.groupId, this.data.lastSeenId);
+      
+      if (result.messages && result.messages.length > 0) {
+        console.log('收到新消息:', result.messages);
+        this.setData({
+          messages: [...this.data.messages, ...result.messages],
+          lastSeenId: result.messages[result.messages.length - 1].id
+        });
+        this.scrollToBottom();
+      }
+      
+      if (result.onlineCount !== undefined) {
+        this.setData({ onlineCount: result.onlineCount });
+      }
+      
+      if (result.onlineUsers) {
+        app.globalData.onlineUsers = result.onlineUsers;
+        app.globalData.onlineCount = result.onlineCount;
+        eventBus.trigger('onlineUsersUpdated');
+      }
+    } catch (error) {
+      console.error('轮询失败:', error);
+    }
+  },
+
+  async sendMessage(content) {
+    try {
+      await chatService.sendMessage(this.data.groupId, 'text', content);
+      await this.pollNewMessages();
     } catch (error) {
       console.error('发送消息失败:', error);
     }
   },
 
-  onCloseUserInfoModal() {
-    this.setData({ 
-      showUserInfoModal: false,
-      pendingMessage: null
-    });
-  },
-
-  stopPropagation() {
-    // 阻止事件冒泡
-  },
-
-  useRandomUser() {
-    const randomNum = Math.random().toString(36).substr(2, 6);
-    const randomNick = '用户' + randomNum;
-
-    // 从后端获取随机头像
-    request.get('/admin/random-avatar').then(async (res) => {
-      const avatarFileId = res.fileId;
-      const avatarUrl = res.url;
-
-      // 更新本地
-      app.globalData.userInfo = {
-        ...app.globalData.userInfo,
-        nickname: randomNick,
-        avatar: avatarFileId
-      };
-      store.set('userInfo', app.globalData.userInfo);
-
-      // 同步到后端
-      try {
-        await updateMe({ nickname: randomNick, avatar: avatarFileId });
-        console.log('匿名用户信息已同步到后端');
-      } catch (error) {
-        console.error('同步用户信息失败:', error);
-      }
-
-      wx.showToast({ title: '已设置', icon: 'success' });
-      this.setData({ showUserInfoModal: false });
-
-      if (this.data.pendingMessage) {
-        this.sendMessage(this.data.pendingMessage);
-        this.setData({ pendingMessage: null });
-      }
-    }).catch((error) => {
-      console.error('获取随机头像失败:', error);
-      wx.showToast({ title: '设置失败', icon: 'none' });
-    });
-  },
-
-  getUserProfile() {
-    wx.getUserProfile({
-      desc: '用于完善会员资料',
-      success: async (res) => {
-        console.log('用户同意授权:', res.userInfo);
-
-        const nickname = res.userInfo.nickName;
-
-        // 从后端获取随机头像
-        try {
-          const avatarRes = await request.get('/admin/random-avatar');
-          const avatarFileId = avatarRes.fileId;
-
-          // 更新本地
-          app.globalData.userInfo = {
-            ...app.globalData.userInfo,
-            nickname,
-            avatar: avatarFileId
-          };
-          store.set('userInfo', app.globalData.userInfo);
-
-          // 同步到后端
-          await updateMe({ nickname, avatar: avatarFileId });
-          console.log('用户信息已同步到后端');
-        } catch (error) {
-          console.error('设置用户信息失败:', error);
-          // 降级：只更新本地
-          app.globalData.userInfo = {
-            ...app.globalData.userInfo,
-            nickname
-          };
-          store.set('userInfo', app.globalData.userInfo);
-        }
-
-        console.log('获取用户信息成功，完整用户数据:', app.globalData.userInfo);
-        wx.showToast({ title: '获取成功', icon: 'success' });
-        this.setData({ showUserInfoModal: false });
-
-        if (this.data.pendingMessage) {
-          this.sendMessage(this.data.pendingMessage);
-          this.setData({ pendingMessage: null });
-        }
-      },
-      fail: (error) => {
-        console.log('用户拒绝授权:', error);
-        wx.showToast({ title: '已取消', icon: 'none' });
-        this.setData({
-          showUserInfoModal: false
-        });
-      }
-    });
+  onSendMessage(e) {
+    const { content } = e.detail;
+    this.sendMessage(content);
   },
 
   onShowAddSheet() {
@@ -371,15 +259,15 @@ Page({
   },
 
   scrollToBottom() {
-    wx.createSelectorQuery()
-      .select('#message-list')
-      .boundingClientRect()
-      .exec((res) => {
-        if (res[0]) {
-          this.setData({
-            scrollTop: res[0].height
-          });
-        }
+    const messages = this.data.messages;
+    if (messages.length === 0) return;
+    
+    const lastMessageId = messages[messages.length - 1].id;
+    
+    wx.nextTick(() => {
+      this.setData({
+        scrollIntoView: 'msg-' + lastMessageId
       });
+    });
   }
 });

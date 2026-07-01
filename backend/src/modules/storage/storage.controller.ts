@@ -108,4 +108,20 @@ export class StorageController {
     res.setHeader('Content-Type', 'application/octet-stream');
     res.send(buffer);
   }
+
+  /**
+   * 通过 fileId 直接返回图片（网页端展示用）
+   * GET /api/v1/storage/image?fileid=...
+   * 添加缓存：Cache-Control: max-age=6900 (1小时55分钟，与云存储缓存一致)
+   */
+  @Get('image')
+  async getImage(
+    @Query('fileid') fileId: string,
+    @Res() res: Response,
+  ) {
+    const { buffer, contentType } = await this.storageService.getImage(fileId);
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=6900');
+    res.send(buffer);
+  }
 }

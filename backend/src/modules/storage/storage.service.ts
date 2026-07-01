@@ -379,4 +379,39 @@ export class StorageService {
     this.logger.log(`[云存储] getFile 云端下载成功: fileId=${fileId}, size=${buffer.length} bytes`);
     return { buffer };
   }
+
+  /**
+   * 通过 fileId 获取图片内容（用于网页端展示）
+   * 返回 buffer 和 contentType
+   */
+  async getImage(fileId: string): Promise<{ buffer: Buffer; contentType: string }> {
+    if (!fileId) {
+      throw new Error('fileId 不能为空');
+    }
+
+    const contentType = this.getContentType(fileId);
+    const { buffer } = await this.getFile(fileId);
+    return { buffer, contentType };
+  }
+
+  /**
+   * 根据文件扩展名获取 Content-Type
+   */
+  private getContentType(fileId: string): string {
+    const ext = extname(fileId).toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp',
+      '.svg': 'image/svg+xml',
+      '.ico': 'image/x-icon',
+      '.bmp': 'image/bmp',
+      '.mp4': 'video/mp4',
+      '.mov': 'video/quicktime',
+      '.pdf': 'application/pdf',
+    };
+    return mimeTypes[ext] || 'application/octet-stream';
+  }
 }

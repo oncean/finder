@@ -6,6 +6,7 @@ import { Admin } from '../../entities/admin.entity';
 import { LoginDto } from './dto/login.dto';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
+import { DEFAULT_AVATARS, DEFAULT_NICKNAMES } from '../../common/constants/avatar';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -64,11 +65,14 @@ export class AuthService implements OnModuleInit {
     let user = await this.userRepo.findOne({ where: { openid } });
 
     if (!user) {
+      const randomNickname = DEFAULT_NICKNAMES[Math.floor(Math.random() * DEFAULT_NICKNAMES.length)];
+      const randomAvatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
+      
       user = this.userRepo.create({
         openid,
         unionid,
-        nickname: dto.userInfo?.nickName || '用户' + Math.random().toString(36).substr(2, 6),
-        avatar: dto.userInfo?.avatarUrl || `${this.staticBaseUrl}/default-avatar.png`,
+        nickname: dto.userInfo?.nickName || randomNickname,
+        avatar: dto.userInfo?.avatarUrl || randomAvatar,
         location: dto.location || {
           lat: 32.0603,
           lng: 118.7969,

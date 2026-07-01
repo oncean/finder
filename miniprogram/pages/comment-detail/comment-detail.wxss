@@ -180,13 +180,14 @@
 }
 
 .row-icon {
-  width: 44rpx;
-  font-size: 28rpx;
+  font-size: 40rpx;
+  margin-right: 15rpx;
+  width: 30rpx;
 }
 .dingwei-pin{
-  width: 20rpx;
+  width: 30rpx;
   margin-right: 15rpx;
-  height: 20rpx;
+  height: 30rpx;
 }
 
 .clock {
@@ -274,6 +275,27 @@
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
+}
+
+.consume-overlay-logo {
+  position: absolute;
+  top: 16rpx;
+  left: 40rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.logo-img {
+  width: 100rpx;
+  height: 60rpx;
+}
+
+.logo-text {
+  color: #fff;
+  font-size: 25rpx;
+  font-weight: 600;
 }
 
 .consume-cert {

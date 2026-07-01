@@ -64,6 +64,8 @@ Page({
         );
       }
 
+      await chatPage.pollNewMessages();
+
       wx.hideLoading();
       wx.navigateBack();
     } catch (error) {

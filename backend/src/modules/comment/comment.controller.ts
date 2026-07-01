@@ -13,8 +13,9 @@ export class CommentController {
     @Query('pageSize') pageSize: string = '10',
     @Query('keyword') keyword?: string,
     @Query('shopId') shopId?: string,
+    @Query('isFengxiangbiao') isFengxiangbiao?: string,
   ) {
-    return this.commentService.findAll(Number(current), Number(pageSize), keyword, shopId);
+    return this.commentService.findAll(Number(current), Number(pageSize), keyword, shopId, undefined, isFengxiangbiao);
   }
 
   @Get(':id')
@@ -26,6 +27,12 @@ export class CommentController {
   @HttpCode(HttpStatus.OK)
   async create(@Body() body: any) {
     return this.commentService.create(body);
+  }
+
+  @Put('batch-rank')
+  @HttpCode(HttpStatus.OK)
+  async batchUpdateRank(@Body() body: { rankings: Array<{ id: string; rank: number }> }) {
+    return this.commentService.batchUpdateFengxiangbiaoRank(body.rankings);
   }
 
   @Put(':id')

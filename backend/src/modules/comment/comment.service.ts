@@ -82,27 +82,18 @@ export class CommentService {
   private async formatComment(comment: Comment) {
     return {
       ...comment,
-      images: Array.isArray(comment.images)
-        ? await this.storageService.resolveUrls(comment.images)
-        : [],
+      images: Array.isArray(comment.images) ? comment.images : [],
       consumeRecord: comment.consumeRecord
         ? {
             ...comment.consumeRecord,
-            image: await this.storageService.resolveUrl(comment.consumeRecord.image),
           }
         : null,
-      shop: comment.shop
-        ? {
-            ...comment.shop,
-            coverImage: await this.storageService.resolveUrl(comment.shop.coverImage),
-          }
-        : null,
-      author: comment.author
-        ? {
-            ...comment.author,
-            avatar: await this.storageService.resolveUrl(comment.author.avatar),
-          }
-        : null,
+      shop: comment.shop ? {
+        ...comment.shop,
+      } : null,
+      author: comment.author ? {
+        ...comment.author,
+      } : null,
     };
   }
 
@@ -144,5 +135,17 @@ export class CommentService {
     await this.commentRepo.remove(comment);
     this.logger.log(`delete: 评价删除成功, commentId=${id}`);
     return { message: '评价删除成功' };
+  }
+
+  async batchUpdateFengxiangbiaoRank(rankings: Array<{ id: string; rank: number }>) {
+    this.logger.log(`batchUpdateFengxiangbiaoRank: ${JSON.stringify(rankings)}`);
+    
+    for (const item of rankings) {
+      await this.commentRepo.update(item.id, {
+        fengxiangbiaoRank: item.rank,
+      });
+    }
+    
+    return { message: '排名更新成功' };
   }
 }

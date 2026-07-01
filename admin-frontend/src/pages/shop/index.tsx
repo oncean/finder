@@ -17,6 +17,7 @@ import {
   type ShopItem,
 } from '@/services/ant-design-pro/shop';
 import { uploadImage } from '@/services/ant-design-pro/upload';
+import { getImageUrl } from '@/utils/format';
 
 const ShopPage: React.FC = () => {
   const actionRef = useRef<ActionType | null>(null);
@@ -177,7 +178,7 @@ const ShopPage: React.FC = () => {
       width: 80,
       render: (logo) =>
         logo ? (
-          <img src={logo} alt="logo" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
+          <img src={getImageUrl(logo)} alt="logo" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
         ) : (
           <div style={{ width: 40, height: 40, background: '#f0f0f0', borderRadius: 4 }} />
         ),
@@ -188,7 +189,7 @@ const ShopPage: React.FC = () => {
       width: 120,
       render: (coverImage) =>
         coverImage ? (
-          <img src={coverImage} alt="封面" style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 4 }} />
+          <img src={getImageUrl(coverImage)} alt="封面" style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 4 }} />
         ) : (
           <div style={{ width: 80, height: 50, background: '#f0f0f0', borderRadius: 4 }} />
         ),

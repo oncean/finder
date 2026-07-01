@@ -30,6 +30,13 @@
   font-size: 28rpx;
 }
 
+.no-more {
+  text-align: center;
+  padding: 20rpx 0;
+  color: #ccc;
+  font-size: 24rpx;
+}
+
 .unsupported {
   text-align: center;
   padding: 180rpx 48rpx;

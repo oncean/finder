@@ -7,23 +7,27 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, Drawer, Form, Input, message, Rate, Select, Avatar, Space, Upload, Switch, InputNumber, DatePicker } from 'antd';
 import { UploadOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
+import { useSearchParams } from '@umijs/max';
 import {
   createComment,
   updateComment,
   deleteComment,
   fetchCommentList,
+  fetchCommentDetail,
   type CommentItem,
 } from '@/services/ant-design-pro/comment';
 import { fetchShopList, type ShopItem } from '@/services/ant-design-pro/shop';
 import { fetchWechatUserList, type WechatUserItem } from '@/services/ant-design-pro/wechat-user';
 import { uploadImage } from '@/services/ant-design-pro/upload';
+import { getImageUrl } from '@/utils/format';
 import dayjs from 'dayjs';
 
 const CommentPage: React.FC = () => {
   const actionRef = useRef<ActionType | null>(null);
   const queryClient = useQueryClient();
   const [messageApi, contextHolder] = message.useMessage();
+  const [searchParams] = useSearchParams();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<CommentItem | null>(null);
@@ -59,6 +63,21 @@ const CommentPage: React.FC = () => {
       setUsers(res.data || []);
     });
   }, []);
+
+  useEffect(() => {
+    const id = searchParams.get('id');
+    if (id) {
+      fetchCommentDetail(id).then((data) => {
+        if (data) {
+          handleOpenDrawer(data);
+        } else {
+          messageApi.warning('评价不存在');
+        }
+      }).catch(() => {
+        messageApi.error('获取评价详情失败');
+      });
+    }
+  }, [searchParams]);
 
   const { mutate: createRun, isPending: creating } = useMutation({
     mutationFn: createComment,
@@ -138,6 +157,8 @@ const CommentPage: React.FC = () => {
         isFengxiangbiao: item.isFengxiangbiao || false,
         fengxiangbiaoRank: item.fengxiangbiaoRank ?? undefined,
       });
+      setPreviewImages((item.images || []).map(img => getImageUrl(img)));
+      setConsumeImagePreview(getImageUrl(item.consumeRecord?.image || ''));
     } else {
       resetForm();
     }
@@ -196,7 +217,7 @@ const CommentPage: React.FC = () => {
       const data = await uploadImage(file);
       if (data.fileId) {
         setFormData((prev) => ({ ...prev, images: [...prev.images, data.fileId] }));
-        setPreviewImages((prev) => [...prev, data.url]);
+        setPreviewImages((prev) => [...prev, getImageUrl(data.fileId)]);
         messageApi.success('图片上传成功');
       } else {
         messageApi.error('上传失败');
@@ -211,7 +232,7 @@ const CommentPage: React.FC = () => {
       const data = await uploadImage(file);
       if (data.fileId) {
         setFormData((prev) => ({ ...prev, consumeImage: data.fileId }));
-        setConsumeImagePreview(data.url);
+        setConsumeImagePreview(getImageUrl(data.fileId));
         messageApi.success('凭证上传成功');
       } else {
         messageApi.error('上传失败');
@@ -260,7 +281,7 @@ const CommentPage: React.FC = () => {
           <Space>
             <Avatar
               size="small"
-              src={record.author.avatar}
+              src={getImageUrl(record.author.avatar)}
               icon={!record.author.avatar ? record.author.nickname?.[0] : undefined}
             />
             <span>{record.author.nickname || '-'}</span>
@@ -411,7 +432,7 @@ const CommentPage: React.FC = () => {
               {users.map((user) => (
                 <Select.Option key={user.id} value={user.id} label={user.nickname}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Avatar size="small" src={user.avatar} icon={!user.avatar ? user.nickname?.[0] : undefined} />
+                    <Avatar size="small" src={getImageUrl(user.avatar)} icon={!user.avatar ? user.nickname?.[0] : undefined} />
                     <span>{user.nickname || '未知用户'}</span>
                   </div>
                 </Select.Option>

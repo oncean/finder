@@ -15,6 +15,10 @@ function getMessages(groupId, lastId, limit = 20) {
   return request.get('/chat/messages', { groupId, lastId, limit });
 }
 
+function poll(groupId, lastSeenId) {
+  return request.get('/chat/poll', { groupId, lastSeenId });
+}
+
 function sendMessage(groupId, type, content, shopCard) {
   const body = { groupId, type, content };
   if (shopCard) {
@@ -27,5 +31,6 @@ module.exports = {
   getGroupInfo,
   getOnlineUsers,
   getMessages,
+  poll,
   sendMessage
 };

@@ -1,6 +1,8 @@
 const shopService = require('../../services/shop');
-const ws = require('../../utils/websocket');
+const chatService = require('../../services/chat');
 const { getCurrentLocation } = require('../../utils/location');
+const app = getApp();
+const store = require('../../store/index');
 
 Page({
   data: {
@@ -70,23 +72,23 @@ Page({
       return;
     }
 
+    const groupId = app.globalData.groupId || store.get('groupId');
+    if (!groupId) {
+      wx.showToast({ title: '聊天室未初始化', icon: 'none' });
+      return;
+    }
+
     try {
       const shop = this.data.selectedShop;
-      ws.send({
-        type: 'message',
-        messageType: 'shop_card',
-        content: shop.id,
+      await chatService.sendMessage(groupId, 'shop_card', shop.id, {
         shopId: shop.id,
-        shopCard: {
-          shopId: shop.id,
-          name: shop.name,
-          address: shop.address,
-          coverImage: shop.coverImage,
-          distance: shop.distance || 0,
-          summaryTags: shop.summaryTags,
-          reviewCount: shop.reviewCount,
-          rating: shop.rating
-        }
+        name: shop.name,
+        address: shop.address,
+        coverImage: shop.coverImage,
+        distance: shop.distance || 0,
+        summaryTags: shop.summaryTags,
+        reviewCount: shop.reviewCount,
+        rating: shop.rating
       });
       wx.navigateBack();
     } catch (error) {

@@ -32,6 +32,14 @@ export class ChatController {
     return this.chatService.getMessages(groupId, lastId, limit || 20);
   }
 
+  @Get('poll')
+  async poll(
+    @Query('groupId') groupId: string,
+    @Query('lastSeenId') lastSeenId?: string,
+  ) {
+    return this.chatService.poll(groupId, lastSeenId || '');
+  }
+
   @Post('message/send')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)

@@ -24,6 +24,7 @@ import {
   type WechatUserItem,
 } from '@/services/ant-design-pro/wechat-user';
 import { uploadImage } from '@/services/ant-design-pro/upload';
+import { getImageUrl } from '@/utils/format';
 
 const WechatUserPage: React.FC = () => {
   const actionRef = useRef<ActionType | null>(null);
@@ -107,7 +108,7 @@ const WechatUserPage: React.FC = () => {
         avatar: item.avatar || '',
         phone: item.phone || '',
       });
-      setAvatarPreview(item.avatarUrl || item.avatar || '');
+      setAvatarPreview(item.avatar || '');
     } else {
       resetForm();
     }
@@ -172,8 +173,8 @@ const WechatUserPage: React.FC = () => {
       search: false,
       render: (_, record) => (
         <Avatar
-          src={record.avatarUrl || record.avatar}
-          icon={!record.avatar && !record.avatarUrl ? '👤' : undefined}
+          src={getImageUrl(record.avatar)}
+          icon={!record.avatar ? '👤' : undefined}
           shape="circle"
           size={40}
         />
@@ -355,7 +356,7 @@ const WechatUserPage: React.FC = () => {
                       const data = await uploadImage(file);
                       if (data.fileId) {
                         setFormData({ ...formData, avatar: data.fileId });
-                        setAvatarPreview(data.url);
+                        setAvatarPreview(data.fileId);
                         messageApi.success('头像上传成功');
                       } else {
                         messageApi.error('上传失败');
@@ -390,7 +391,7 @@ const WechatUserPage: React.FC = () => {
                     const data = await res.json();
                     if (data.fileId) {
                       setFormData({ ...formData, avatar: data.fileId });
-                      setAvatarPreview(data.url);
+                      setAvatarPreview(data.fileId);
                       setAvatarFileList([]);
                       messageApi.success('已随机选择头像');
                     } else {
@@ -419,7 +420,7 @@ const WechatUserPage: React.FC = () => {
             {(avatarPreview || formData.avatar) && (
               <div style={{ marginTop: 12 }}>
                 <Avatar
-                  src={avatarPreview || formData.avatar}
+                  src={getImageUrl(avatarPreview || formData.avatar)}
                   shape="circle"
                   size={64}
                   style={{ border: '1px solid #f0f0f0' }}

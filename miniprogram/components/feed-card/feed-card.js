@@ -40,15 +40,11 @@ Component({
       const amount = post.consumeRecord?.amount;
       const amountText = formatAmount(amount);
 
-      const testerCount = post.shop?.reviewCount || post.reviewCount || 0;
-      const testerCountText = testerCount > 0 ? `${testerCount}+` : '';
-
       this.setData({
         rankText,
         dateText,
         locationText,
         amountText,
-        testerCountText,
       });
     }
   },
@@ -58,7 +54,6 @@ Component({
     dateText: '',
     locationText: '',
     amountText: '0.00',
-    testerCountText: '',
   },
 
   methods: {

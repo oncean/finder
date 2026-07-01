@@ -5,7 +5,7 @@
 
   <block wx:if="{{!loading && (shop.id || reviews.length > 0)}}">
     <!-- 顶部返回栏 -->
-    <view class="top-nav" style="padding-top: calc({{statusBarHeight}}px + 88rpx)">
+    <view class="top-nav" style="padding-top: calc({{statusBarHeight}}px + 44rpx)">
       <view class="back-btn" bindtap="onBack"><image class="back-icon" src="/static/icons/return.svg" mode="aspectFit" /></view>
       <text class="nav-title">店铺详情</text>
       <view class="nav-placeholder"></view>

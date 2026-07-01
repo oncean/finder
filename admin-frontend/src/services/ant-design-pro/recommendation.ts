@@ -115,6 +115,20 @@ export async function deleteRecommendation(
   });
 }
 
+/** 批量更新风向标排名 */
+export async function batchUpdateRanking(
+  rankings: Array<{ id: string; rank: number }>,
+  options?: RequestOptions,
+) {
+  return request<{
+    message?: string;
+  }>('/api/v1/admin/comments/batch-rank', {
+    method: 'PUT',
+    data: { rankings },
+    ...(options || {}),
+  });
+}
+
 function normalizeCommentRecommendation(item: any): RecommendationItem {
   const images = Array.isArray(item.images) ? item.images : [];
   return {

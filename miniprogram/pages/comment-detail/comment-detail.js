@@ -1,7 +1,7 @@
 const shopService = require('../../services/shop');
 const postService = require('../../services/post');
 const { openLocation } = require('../../utils/location');
-
+const RANK_LABELS = ['', '第一', '第二', '第三', '第四', '第五', '第六', '第七', '第八', '第九', '第十'];
 Page({
   data: {
     shop: {},
@@ -32,7 +32,11 @@ Page({
           console.error('加载店铺详情失败:', e);
         }
       }
-
+      const rank = comment.recommendRank
+      const rankText = rank && rank >= 1 && rank <= 10
+        ? `推荐榜${RANK_LABELS[rank]}`
+        : '';
+      comment.rankText = rankText
       this.setData({
         comment,
         shop,

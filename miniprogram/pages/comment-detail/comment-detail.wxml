@@ -20,7 +20,7 @@
     <view class="comment-info-section">
       <view class="comment-header">
         <text class="comment-title text-bold">{{comment.title || shop.name}}</text>
-        <text class="rank-pill" wx:if="{{shop.rankText}}">{{shop.rankText}}</text>
+        <text class="rank-pill" wx:if="{{comment.rankText}}">{{comment.rankText}}</text>
       </view>
       <text class="comment-content" wx:if="{{comment.content}}">{{comment.content}}</text>
       <text class="shop-desc" wx:elif="{{shop.subtitle}}">{{shop.subtitle}}</text>
@@ -48,20 +48,18 @@
         <text class="row-text">{{shop.address}}</text>
       </view>
 
-      <ai-summary summary="{{shop.summaryTags}}" />
+      <ai-summary summary="{{shop.summaryTags}}" wx:if="{{shop.summaryTags}}"/>
     </view>
 
-    <view class="consume-section" wx:if="{{comment.consumeRecord}}">
-      <view class="consume-card" wx:if="{{comment.consumeRecord.image}}" bindtap="onPreviewImage" data-url="{{comment.consumeRecord.image}}" data-images="{{[comment.consumeRecord.image]}}">
+    <view class="consume-section" wx:if="{{comment.consumeRecord && comment.consumeRecord.image}}">
+      <view class="consume-card" bindtap="onPreviewImage" data-url="{{comment.consumeRecord.image}}" data-images="{{[comment.consumeRecord.image]}}">
         <image class="consume-receipt" src="{{comment.consumeRecord.image}}" mode="aspectFill" />
         <view class="consume-overlay">
-          <text class="consume-cert">真实打卡认证</text>
-        </view>
-      </view>
-      <view class="consume-card consume-card--text" wx:elif="{{comment.consumeRecord.amount}}">
-        <view class="consume-overlay">
-          <text class="consume-amount-text">¥{{comment.consumeRecord.amount}}</text>
-          <text class="consume-cert">真实打卡认证</text>
+          <view class="consume-overlay-logo">
+            <image class="logo-img" src="/static/images/YOWEI_LOGO.png" mode="aspectFit" />
+            <text class="logo-text">打卡认证</text>
+          </view>
+          <text class="consume-cert">查看</text>
         </view>
       </view>
     </view>

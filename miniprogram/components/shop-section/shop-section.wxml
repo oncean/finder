@@ -11,7 +11,7 @@
     </view>
   </view>
 
-  <view class="ai-summary-wrap" wx:if="{{showAiSummary && summaryTags}}">
+  <view class="ai-summary-wrap" wx:if="{{showAiSummary && summaryTags }}">
     <ai-summary
       summary="{{summaryTags}}"
       author-avatar="{{commentAvatars[0]}}"
@@ -21,7 +21,7 @@
     />
   </view>
 
-  <view class="shop-footer" wx:if="{{showAiSummary && summaryTags}}">
+  <view class="shop-footer" wx:if="{{showAiSummary && summaryTags && summaryTags.length > 0}}">
     <view class="comment-row">
       <view class="comment-avatars">
         <image

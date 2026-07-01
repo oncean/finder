@@ -1,5 +1,6 @@
 const chatService = require('../../services/chat');
 const app = getApp();
+const eventBus = require('../../utils/event-bus');
 
 Component({
   properties: {
@@ -27,14 +28,14 @@ Component({
     attached() {
       this.setData({ statusBarHeight: app.globalData.statusBarHeight });
       if (this.properties.activeTab === 'chat') {
-        this.loadOnlineUsers();
-        this.startOnlineUsersTimer();
+        this.loadOnlineUsersFromGlobal();
+        this.bindOnlineUsersEvent();
       }
     },
 
     detached() {
-      if (this.onlineUsersTimer) {
-        clearInterval(this.onlineUsersTimer);
+      if (this.onlineUsersEventListener) {
+        eventBus.off('onlineUsersUpdated', this.onlineUsersEventListener);
       }
     }
   },
@@ -48,27 +49,20 @@ Component({
       }
     },
 
-    startOnlineUsersTimer() {
-      if (this.onlineUsersTimer) {
-        clearInterval(this.onlineUsersTimer);
-      }
-      this.onlineUsersTimer = setInterval(() => {
-        this.loadOnlineUsers();
-      }, 5000);
+    loadOnlineUsersFromGlobal() {
+      const onlineUsers = app.globalData.onlineUsers || [];
+      const onlineCount = app.globalData.onlineCount || 0;
+      this.setData({
+        onlineCount,
+        onlineUsers
+      });
     },
 
-    async loadOnlineUsers() {
-      if (!this.properties.groupId) return;
-
-      try {
-        const data = await chatService.getOnlineUsers(this.properties.groupId);
-        this.setData({
-          onlineCount: data.totalCount || 0,
-          onlineUsers: data.list || []
-        });
-      } catch (error) {
-        console.error('加载在线用户失败:', error);
-      }
+    bindOnlineUsersEvent() {
+      this.onlineUsersEventListener = () => {
+        this.loadOnlineUsersFromGlobal();
+      };
+      eventBus.on('onlineUsersUpdated', this.onlineUsersEventListener);
     }
   }
 });

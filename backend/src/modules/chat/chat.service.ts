@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan, IsNull, Not } from 'typeorm';
+import { Repository, LessThan, MoreThan, IsNull, Not } from 'typeorm';
 import { Message } from '../../entities/message.entity';
 import { ChatGroup } from '../../entities/chat-group.entity';
 import { User } from '../../entities/user.entity';
@@ -43,8 +43,13 @@ export class ChatService {
   }
 
   private async findDefaultGroupByLocation(lat?: number, lng?: number) {
+    // 如果没有位置信息，返回第一个群组
     if (lat === undefined || lng === undefined || Number.isNaN(lat) || Number.isNaN(lng)) {
-      return null;
+      const firstGroup = await this.groupRepo.findOne({
+        where: {},
+        order: { createdAt: 'ASC' },
+      });
+      return firstGroup || null;
     }
 
     const groups = await this.groupRepo.find({
@@ -219,6 +224,60 @@ export class ChatService {
       shopCard: msg.type === 'shop_card' ? await this.formatShopCard(shopMap.get(msg.shopId)) : null,
       createdAt: msg.createdAt,
     })));
+  }
+
+  async getMessagesAfter(groupId: string, lastSeenId: string) {
+    const where: any = { groupId };
+
+    if (lastSeenId && lastSeenId !== 'null' && lastSeenId !== null) {
+      const lastMessage = await this.messageRepo.findOne({
+        where: { id: lastSeenId },
+      });
+      if (lastMessage) {
+        where.id = Not(lastSeenId);
+        where.createdAt = MoreThan(lastMessage.createdAt);
+      }
+    }
+
+    const messages = await this.messageRepo.find({
+      where,
+      order: { createdAt: 'ASC' },
+      relations: ['sender'],
+    });
+
+    const shopIds = messages
+      .filter((msg) => msg.type === 'shop_card' && msg.shopId)
+      .map((msg) => msg.shopId);
+    const shops = shopIds.length > 0 ? await this.shopRepo.findByIds(shopIds) : [];
+    const shopMap = new Map(shops.map((shop) => [shop.id, shop]));
+
+    return await Promise.all(messages.map(async (msg) => ({
+      id: msg.id,
+      groupId: msg.groupId,
+      sender: {
+        id: msg.sender.id,
+        nickname: msg.sender.nickname,
+        avatar: msg.sender.avatar,
+      },
+      type: msg.type,
+      content: msg.content,
+      shopId: msg.shopId,
+      shopCard: msg.type === 'shop_card' ? await this.formatShopCard(shopMap.get(msg.shopId)) : null,
+      createdAt: msg.createdAt,
+    })));
+  }
+
+  async poll(groupId: string, lastSeenId: string) {
+    const [newMessages, onlineUsers] = await Promise.all([
+      this.getMessagesAfter(groupId, lastSeenId),
+      this.getOnlineUsersByGroupId(groupId),
+    ]);
+
+    return {
+      messages: newMessages,
+      onlineCount: onlineUsers.totalCount,
+      onlineUsers: onlineUsers.list,
+    };
   }
 
   async sendMessage(dto: SendMessageDto, senderId: string) {

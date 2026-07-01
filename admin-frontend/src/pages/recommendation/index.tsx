@@ -1,6 +1,5 @@
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import {
-  FooterToolbar,
   PageContainer,
   ProTable,
 } from '@ant-design/pro-components';
@@ -10,22 +9,21 @@ import {
   Drawer,
   Form,
   Image,
-  Input,
   InputNumber,
   message,
   Select,
-  Switch,
-  Tag,
 } from 'antd';
 import { useNavigate } from '@umijs/max';
 import React, { useCallback, useRef, useState } from 'react';
 import {
+  batchUpdateRanking,
   deleteRecommendation,
   fetchAllPosts,
   fetchRecommendationList,
   type RecommendationItem,
   updateRecommendation,
 } from '@/services/ant-design-pro/recommendation';
+import { getImageUrl } from '@/utils/format';
 
 const RecommendationPage: React.FC = () => {
   const actionRef = useRef<ActionType | null>(null);
@@ -34,13 +32,7 @@ const RecommendationPage: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedRowsState, setSelectedRows] = useState<RecommendationItem[]>(
-    [],
-  );
-  const [drawerMode, setDrawerMode] = useState<'add' | 'edit'>('edit');
-  const [editingItem, setEditingItem] = useState<RecommendationItem | null>(
-    null,
-  );
+  const [editingItem, setEditingItem] = useState<RecommendationItem | null>(null);
 
   const [allPosts, setAllPosts] = useState<RecommendationItem[]>([]);
   const [selectedPostId, setSelectedPostId] = useState<string>('');
@@ -65,20 +57,32 @@ const RecommendationPage: React.FC = () => {
     },
   });
 
-  const { mutate: delRun, isPending: deleting } = useMutation({
-    mutationFn: deleteRecommendation,
+  const { mutate: batchUpdateRun, isPending: batchUpdating } = useMutation({
+    mutationFn: (rankings: Array<{ id: string; rank: number }>) =>
+      batchUpdateRanking(rankings),
     onSuccess: () => {
-      messageApi.success('删除成功');
+      messageApi.success('排名更新成功');
       actionRef.current?.reload();
       queryClient.invalidateQueries({ queryKey: ['recommendation'] });
     },
     onError: () => {
-      messageApi.error('删除失败，请重试');
+      messageApi.error('排名更新失败，请重试');
+    },
+  });
+
+  const { mutate: delRun, isPending: deleting } = useMutation({
+    mutationFn: deleteRecommendation,
+    onSuccess: () => {
+      messageApi.success('移除成功');
+      actionRef.current?.reload();
+      queryClient.invalidateQueries({ queryKey: ['recommendation'] });
+    },
+    onError: () => {
+      messageApi.error('移除失败，请重试');
     },
   });
 
   const handleOpenAddDrawer = async () => {
-    setDrawerMode('add');
     setEditingItem(null);
     setSelectedPostId('');
     setFormRank(1);
@@ -89,14 +93,6 @@ const RecommendationPage: React.FC = () => {
     } catch {
       setAllPosts([]);
     }
-    setDrawerOpen(true);
-  };
-
-  const handleOpenEditDrawer = (item: RecommendationItem) => {
-    setDrawerMode('edit');
-    setEditingItem(item);
-    setSelectedPostId(item.id);
-    setFormRank(item.recommendRank || 0);
     setDrawerOpen(true);
   };
 
@@ -115,18 +111,13 @@ const RecommendationPage: React.FC = () => {
     });
   };
 
-  const handleToggleRecommend = (
-    item: RecommendationItem,
-    checked: boolean,
-  ) => {
-    updateRun({
-      id: item.id,
-      data: {
-        isRecommended: checked,
-        recommendRank: checked ? item.recommendRank || 0 : undefined,
-      },
-    });
-  };
+  const handleRankChange = useCallback(
+    (id: string, newRank: number, oldRank: number) => {
+      if (newRank === oldRank) return;
+      batchUpdateRun([{ id, rank: newRank }]);
+    },
+    [batchUpdateRun],
+  );
 
   const handleDelete = useCallback(
     async (item: RecommendationItem) => {
@@ -135,18 +126,33 @@ const RecommendationPage: React.FC = () => {
     [delRun],
   );
 
-  const handleBatchDelete = useCallback(async () => {
-    if (selectedRowsState.length === 0) {
-      messageApi.warning('请选择要删除的项');
-      return;
-    }
-    for (const item of selectedRowsState) {
-      await delRun(item.id);
-    }
-    setSelectedRows([]);
-  }, [selectedRowsState, delRun, messageApi]);
-
   const columns: ProColumns<RecommendationItem>[] = [
+    {
+      title: '排名',
+      dataIndex: 'recommendRank',
+      width: 80,
+      search: false,
+      render: (dom, record) => (
+        <InputNumber
+          size="small"
+          min={1}
+          defaultValue={record.recommendRank}
+          style={{ width: 60 }}
+          onBlur={(e) => {
+            const newRank = parseInt(e.target.value, 10);
+            if (!isNaN(newRank) && newRank !== record.recommendRank) {
+              handleRankChange(record.id, newRank, record.recommendRank || 0);
+            }
+          }}
+          onPressEnter={(e) => {
+            const newRank = parseInt((e.target as HTMLInputElement).value, 10);
+            if (!isNaN(newRank) && newRank !== record.recommendRank) {
+              handleRankChange(record.id, newRank, record.recommendRank || 0);
+            }
+          }}
+        />
+      ),
+    },
     {
       title: '封面',
       dataIndex: 'coverImage',
@@ -155,7 +161,7 @@ const RecommendationPage: React.FC = () => {
       render: (_, record) =>
         record.coverImage ? (
           <Image
-            src={record.coverImage}
+            src={getImageUrl(record.coverImage)}
             width={60}
             height={60}
             style={{ objectFit: 'cover', borderRadius: 4 }}
@@ -191,32 +197,6 @@ const RecommendationPage: React.FC = () => {
       render: (_, record) => record.shop?.name || '-',
     },
     {
-      title: '风向标排名',
-      dataIndex: 'recommendRank',
-      width: 100,
-      search: false,
-      sorter: (a, b) => (a.recommendRank || 0) - (b.recommendRank || 0),
-      render: (_, record) => (
-        <Tag color={record.recommendRank <= 3 ? 'green' : 'default'}>
-          #{record.recommendRank || '-'}
-        </Tag>
-      ),
-    },
-    {
-      title: '风向标状态',
-      dataIndex: 'isRecommended',
-      width: 100,
-      search: false,
-      render: (_, record) => (
-        <Switch
-          checked={record.isRecommended}
-          onChange={(checked) => handleToggleRecommend(record, checked)}
-          checkedChildren="风向标"
-          unCheckedChildren="取消"
-        />
-      ),
-    },
-    {
       title: '位置',
       dataIndex: 'location',
       width: 150,
@@ -234,24 +214,15 @@ const RecommendationPage: React.FC = () => {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
-      width: 260,
+      width: 120,
       fixed: 'right',
       render: (_, record) => [
         <Button
           type="link"
-          onClick={() => handleOpenEditDrawer(record)}
-          key="edit"
+          onClick={() => navigate(`/comment?id=${record.id}`)}
+          key="view"
         >
-          编辑
-        </Button>,
-        <Button
-          type="link"
-          onClick={() =>
-            navigate(`/comment?id=${record.id}`)
-          }
-          key="view-comment"
-        >
-          查看评论
+          查看
         </Button>,
         <Button
           type="link"
@@ -259,7 +230,7 @@ const RecommendationPage: React.FC = () => {
           onClick={() => handleDelete(record)}
           key="delete"
         >
-          取消风向标
+          移除
         </Button>,
       ],
     },
@@ -291,70 +262,39 @@ const RecommendationPage: React.FC = () => {
           }))
         }
         columns={columns}
-        rowSelection={{
-          onChange: (_, selectedRows) => {
-            setSelectedRows(selectedRows);
-          },
-        }}
         pagination={{
           defaultPageSize: 20,
         }}
       />
 
-      {selectedRowsState.length > 0 && (
-        <FooterToolbar
-          extra={
-            <div>
-              已选择{' '}
-              <span style={{ fontWeight: 600 }}>
-                {selectedRowsState.length}
-              </span>{' '}
-              项
-            </div>
-          }
-        >
-          <Button loading={deleting} onClick={handleBatchDelete} danger>
-            批量删除
-          </Button>
-        </FooterToolbar>
-      )}
-
       <Drawer
-        title={drawerMode === 'add' ? '添加风向标' : '编辑风向标'}
+        title="添加风向标"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={600}
       >
         <div style={{ padding: '20px' }}>
-          {drawerMode === 'add' && (
-            <Form.Item label="选择评价" required style={{ marginBottom: 24 }}>
-              <Select
-                showSearch
-                style={{ width: '100%' }}
-                placeholder="搜索并选择评价"
-                value={selectedPostId || undefined}
-                onChange={setSelectedPostId}
-                filterOption={(input, option) =>
-                  (option?.label as string)
-                    ?.toLowerCase()
-                    .includes(input.toLowerCase())
-                }
-                options={allPosts
-                  .filter((p) => !p.isRecommended)
-                  .map((p) => ({
-                    label: `${p.title}${p.shop ? ` - ${p.shop.name}` : ''}${p.author ? ` (${p.author.nickname})` : ''}`,
-                    value: p.id,
-                  }))}
-                notFoundContent="暂无可设置风向标的评价"
-              />
-            </Form.Item>
-          )}
-
-          {drawerMode === 'edit' && editingItem && (
-            <Form.Item label="评价标题" style={{ marginBottom: 24 }}>
-              <Input value={editingItem.title} disabled />
-            </Form.Item>
-          )}
+          <Form.Item label="选择评价" required style={{ marginBottom: 24 }}>
+            <Select
+              showSearch
+              style={{ width: '100%' }}
+              placeholder="搜索并选择评价"
+              value={selectedPostId || undefined}
+              onChange={setSelectedPostId}
+              filterOption={(input, option) =>
+                (option?.label as string)
+                  ?.toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+              options={allPosts
+                .filter((p) => !p.isRecommended)
+                .map((p) => ({
+                  label: `${p.title}${p.shop ? ` - ${p.shop.name}` : ''}${p.author ? ` (${p.author.nickname})` : ''}`,
+                  value: p.id,
+                }))}
+              notFoundContent="暂无可设置风向标的评价"
+            />
+          </Form.Item>
 
           <Form.Item label="风向标排名" required style={{ marginBottom: 24 }}>
             <InputNumber
@@ -370,7 +310,7 @@ const RecommendationPage: React.FC = () => {
           <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
             <Button onClick={() => setDrawerOpen(false)}>取消</Button>
             <Button type="primary" loading={updating} onClick={handleSubmit}>
-              {drawerMode === 'add' ? '设为推荐' : '保存修改'}
+              设为推荐
             </Button>
           </div>
         </div>
