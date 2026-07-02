@@ -30,7 +30,7 @@
   <!-- 底部发送栏 -->
   <view class="bottom-bar safe-area-bottom">
     <text class="selected-count">已选择 {{photos.length}} 张</text>
-    <button class="send-btn btn-primary" bindtap="onSendPhotos">
+    <button class="send-btn" bindtap="onSendPhotos">
       发送
     </button>
   </view>

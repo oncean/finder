@@ -29,11 +29,6 @@ Component({
     'post': function (post) {
       if (!post || !post.id) return;
 
-      const rank = post.recommendRank;
-      const rankText = rank && rank >= 1 && rank <= 10
-        ? `推荐榜${RANK_LABELS[rank]}`
-        : '';
-
       const dateText = formatDate(post.eventTime);
       const locationText = post.city || '';
 
@@ -41,7 +36,6 @@ Component({
       const amountText = formatAmount(amount);
 
       this.setData({
-        rankText,
         dateText,
         locationText,
         amountText,
@@ -50,7 +44,6 @@ Component({
   },
 
   data: {
-    rankText: '',
     dateText: '',
     locationText: '',
     amountText: '0.00',

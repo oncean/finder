@@ -1,0 +1,52 @@
+.feed-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+}
+
+.feed-list {
+  flex: 1;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.feed-container {
+  padding: 0 28rpx 28rpx;
+}
+
+.loading {
+  text-align: center;
+  padding: 20rpx;
+  color: #999;
+  font-size: 24rpx;
+}
+
+.no-more {
+  text-align: center;
+  padding: 40rpx;
+  color: #999;
+  font-size: 24rpx;
+}
+
+.empty {
+  text-align: center;
+  padding: 100rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.latest-float {
+  position: fixed;
+  top: 190rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99;
+  padding: 14rpx 32rpx;
+  border-radius: 999rpx;
+  background: #65a30d;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 600;
+  box-shadow: 0 8rpx 24rpx rgba(101, 163, 13, 0.28);
+}

@@ -52,8 +52,8 @@
   
   <!-- 底部发送按钮 -->
   <view class="bottom-bar safe-area-bottom">
-    <button class="send-btn btn-primary" bindtap="onSendShop">
-      发送店铺卡片
+    <button class="send-btn" bindtap="onSendShop">
+      发送
     </button>
   </view>
 </view>

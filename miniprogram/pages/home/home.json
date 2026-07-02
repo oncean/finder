@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "吃喝玩乐",
+  "usingComponents": {
+    "tab-header": "../../components/tab-header/tab-header",
+    "chat-panel": "../../components/chat-panel/chat-panel",
+    "feed-panel": "../../components/feed-panel/feed-panel"
+  }
+}

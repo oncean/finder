@@ -3,6 +3,7 @@
   "usingComponents": {
     "consume-record": "../consume-record/consume-record",
     "ai-summary": "../ai-summary/ai-summary",
-    "shop-section": "../shop-section/shop-section"
+    "shop-section": "../shop-section/shop-section",
+    "rank-pill": "../rank-pill/rank-pill"
   }
 }

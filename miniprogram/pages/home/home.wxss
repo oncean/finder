@@ -1,0 +1,30 @@
+.home-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #fff;
+}
+
+/* Swiper 内容区域 */
+.content-swiper {
+  flex: 1;
+  position: relative;
+}
+
+.swiper-item {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.unsupported {
+  text-align: center;
+  padding: 180rpx 48rpx;
+  color: #8c8c8c;
+  font-size: 30rpx;
+  line-height: 1.5;
+}
+
+.swiper-item-page{
+  height: 100%;
+}

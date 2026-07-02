@@ -1,0 +1,38 @@
+<view class="feed-panel">
+  <scroll-view 
+    class="feed-list" 
+    scroll-y
+    scroll-top="{{scrollTop}}"
+    refresher-enabled
+    refresher-triggered="{{refreshing}}"
+    bindrefresherrefresh="onPullDownRefresh"
+    bindscrolltolower="onReachBottom"
+  >
+    <view class="feed-container">
+      <block wx:for="{{recommendations}}" wx:key="id">
+        <feed-card 
+          post="{{item}}"
+          bindtap="onTapPost"
+          bindtapReview="onTapReview"
+          bindtapShop="onTapShop"
+        />
+      </block>
+      
+      <view class="loading" wx:if="{{loading}}">
+        <text>加载中...</text>
+      </view>
+      
+      <view class="no-more" wx:if="{{!hasMore && recommendations.length > 0}}">
+        <text>已经到底了</text>
+      </view>
+      
+      <view class="empty" wx:if="{{recommendations.length === 0 && !loading}}">
+        <text>暂无推荐内容</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="latest-float" wx:if="{{showLatestFloat}}" bindtap="onViewLatest">
+    <text>查看最新</text>
+  </view>
+</view>

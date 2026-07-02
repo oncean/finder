@@ -25,6 +25,7 @@ function silentLogin() {
           const data = result.data || result.result || result;
           wx.setStorageSync('token', data.token);
           if (data.user) {
+            wx.setStorageSync('userInfo', data.user);
             store.set('userInfo', data.user);
           }
           resolve(data.token);

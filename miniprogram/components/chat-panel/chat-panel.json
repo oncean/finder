@@ -1,0 +1,8 @@
+{
+  "component": true,
+  "usingComponents": {
+    "message-item": "../message-item/message-item",
+    "chat-input": "../chat-input/chat-input",
+    "add-sheet": "../add-sheet/add-sheet"
+  }
+}

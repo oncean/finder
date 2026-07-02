@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "吃喝玩乐",
-  "usingComponents": {
-    "message-item": "../../components/message-item/message-item",
-    "chat-input": "../../components/chat-input/chat-input",
-    "add-sheet": "../../components/add-sheet/add-sheet"
-  }
-}

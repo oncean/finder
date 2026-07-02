@@ -13,6 +13,7 @@ App({
   onLaunch() {
     console.log('App onLaunch');
     this.initCloud();
+    this.checkLogin();
   },
 
   initCloud() {
@@ -24,5 +25,13 @@ App({
       env: CLOUD_ENV_ID
     });
     console.log('微信云托管环境已初始化:', CLOUD_ENV_ID);
+  },
+
+  checkLogin() {
+    const token = wx.getStorageSync('token');
+    const userInfo = wx.getStorageSync('userInfo');
+    if (!token || !userInfo) {
+      wx.redirectTo({ url: '/pages/index/index' });
+    }
   }
 });

@@ -1,6 +1,6 @@
 <view class="chat-input-bar safe-area-bottom">
   <view class="add-btn" bindtap="onShowAddSheet">
-      <image class="send-icon" src="/static/icons/add.svg" mode="aspectFit" />
+      <image class="send-icon" src="/static/icons/add.png" mode="aspectFit" />
   </view>
   
   <view class="input-wrap">

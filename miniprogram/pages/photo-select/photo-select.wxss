@@ -111,6 +111,13 @@
 }
 
 .send-btn {
-  padding: 16rpx 48rpx;
+  padding: 0 60rpx;
   margin: 0;
+  background: #222222;
+  border-radius: 49rpx 49rpx 49rpx 49rpx;
+  border: 2rpx solid #D2FEA4;
+  font-weight: 900;
+  font-size: 40rpx;
+  color: #B1EC1A;
+  font-style: italic;
 }

@@ -1,15 +1,14 @@
 .chat-input-bar {
   display: flex;
   align-items: center;
-  padding: 30rpx 20rpx;
-  background: #fff;
-  border-top: 1rpx solid #eee;
-  padding-bottom: 50rpx;
+  width: 90%;
+  margin: auto ;
+  padding: 28rpx 0;
 }
 
 .add-btn {
-  width: 50rpx;
-  height: 50rpx;
+  width: 53rpx;
+  height: 53rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,9 +28,9 @@
 
 .input-wrap {
   flex: 1;
-  height: 72rpx;
+  height: 86rpx;
   background: #f5f5f5;
-  border-radius: 36rpx;
+  border-radius: 43rpx;
   display: flex;
   align-items: center;
   padding: 0 24rpx 0 24rpx;
@@ -58,7 +57,7 @@
   border-radius: 50%;
   flex-shrink: 0;
   margin-left: 16rpx;
-  margin-right: -24rpx;
+  margin-right: -15rpx;
 }
 
 .send-icon {

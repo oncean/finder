@@ -5,5 +5,5 @@
     <text class="slogan">吃喝玩乐　上有味</text>
   </view>
 
-  <button class="enter-btn" bindtap="onEnter">进入</button>
+  <button class="enter-btn" wx:if="{{loggedIn}}" bindtap="onEnter">进入</button>
 </view>

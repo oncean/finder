@@ -1,7 +1,7 @@
 .shop-section {
   padding: 22rpx 24rpx 24rpx;
-  border: 2rpx solid #d8f99b;
-  border-radius: 24rpx;
+  border-radius: 28rpx 28rpx 28rpx 28rpx;
+  border: 1rpx solid #B1EC1A;
   background: linear-gradient(180deg, #fff 0%, #fbfff6 100%);
 }
 

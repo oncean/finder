@@ -5,14 +5,14 @@
 
   <block wx:if="{{!loading && (shop.id || reviews.length > 0)}}">
     <!-- 顶部返回栏 -->
-    <view class="top-nav" style="padding-top: calc({{statusBarHeight}}px + 44rpx)">
+    <view class="top-nav" style="padding-top: calc({{statusBarHeight}}px)">
       <view class="back-btn" bindtap="onBack"><image class="back-icon" src="/static/icons/return.svg" mode="aspectFit" /></view>
       <text class="nav-title">店铺详情</text>
       <view class="nav-placeholder"></view>
     </view>
 
     <!-- 店铺信息卡 -->
-    <view style="padding: 10rpx 20rpx;">
+    <view style="padding: 24rpx 46rpx;">
       <shop-section
       shop="{{shop}}"
       shop-name="{{shop.name}}"
@@ -23,7 +23,6 @@
       show-ai-summary="{{true}}"
       shop-id="{{shop.id}}"
       show-share="{{true}}"
-      bind:tapShop="onTapShop"
     />
     </view>
 
@@ -36,9 +35,9 @@
             <view class="title-row">
               <image class="author-avatar" src="{{item.author.avatar}}" mode="aspectFill" wx:if="{{item.author.avatar}}" />
               <text class="feed-title text-bold text-ellipsis">{{item.title}}</text>
-              <text class="rank-pill" wx:if="{{item.rankText}}">{{item.rankText}}</text>
+              <rank-pill rank="{{item.recommendRank}}" />
             </view>
-            <view class="title-row">
+            <view class="title-row title-row-desc">
               <text class="feed-desc text-ellipsis" wx:if="{{item.content}}">{{item.content}}</text>
               <text class="date-text" wx:if="{{item.dateText || item.locationText}}">{{item.dateText}}  {{item.locationText}}</text>
             </view>

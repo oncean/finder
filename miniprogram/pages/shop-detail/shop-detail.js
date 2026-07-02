@@ -2,8 +2,6 @@ const shopService = require('../../services/shop');
 const { openLocation } = require('../../utils/location');
 const app = getApp();
 
-const RANK_LABELS = ['', '第一', '第二', '第三', '第四', '第五', '第六', '第七', '第八', '第九', '第十'];
-
 function formatDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -21,10 +19,6 @@ function formatAmount(amount) {
 }
 
 function formatReviewItem(item) {
-  const rank = item.recommendRank;
-  const rankText = rank && rank >= 1 && rank <= 10
-    ? `推荐榜${RANK_LABELS[rank]}`
-    : '';
   const dateText = formatDate(item.eventTime || item.createdAt);
   const locationText = item.city || '';
   const amount = item.consumeRecord?.amount;
@@ -32,7 +26,6 @@ function formatReviewItem(item) {
 
   return {
     ...item,
-    rankText,
     dateText,
     locationText,
     amountText,
@@ -118,7 +111,7 @@ Page({
     if (getCurrentPages().length > 1) {
       wx.navigateBack();
     } else {
-      wx.switchTab({ url: '/pages/feed/feed' });
+      wx.redirectTo({ url: '/pages/home/home' });
     }
   },
 

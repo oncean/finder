@@ -67,7 +67,6 @@
 
 .shop-list {
   flex: 1;
-  padding: 20rpx;
 }
 
 .shop-item {
@@ -76,8 +75,8 @@
   background: #fff;
   border-radius: 16rpx;
   padding: 20rpx;
-  margin-bottom: 16rpx;
-  border: 2rpx solid transparent;
+  margin: 16rpx 58rpx 0 58rpx;
+  border: 1rpx solid #B1EC1A;
 }
 
 .shop-item.selected {
@@ -138,11 +137,22 @@
 }
 
 .bottom-bar {
-  padding: 20rpx;
+  padding: 50rpx;
   background: #fff;
   border-top: 1rpx solid #eee;
+  padding-top: 40rpx;
+  padding-bottom: 55rpx;
 }
 
 .send-btn {
-  width: 100%;
+  height: 90rpx;
+  line-height: 90rpx;
+  color: #B1EC1A;
+  font-weight: 900;
+  font-size: 40rpx;
+  font-style: italic;
+  border: none;
+  background: #222222;
+  border-radius: 49rpx 49rpx 49rpx 49rpx;
+  border: 2rpx solid #D2FEA4;
 }

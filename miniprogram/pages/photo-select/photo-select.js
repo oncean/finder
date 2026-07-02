@@ -46,25 +46,26 @@ Page({
 
     try {
       const pages = getCurrentPages();
-      const chatPage = pages.find(p => p.route === 'pages/chat/chat');
+      const homePage = pages.find(p => p.route === 'pages/home/home');
       
-      if (!chatPage) {
+      if (!homePage) {
         wx.hideLoading();
         wx.showToast({ title: '发送失败', icon: 'none' });
         return;
       }
 
+      const chatPanel = homePage.selectComponent('#chatPanel');
+      const groupId = homePage.data.groupId;
+
       // 上传所有照片
       for (const photo of this.data.photos) {
         const result = await uploadService.uploadImage(photo);
-        await chatService.sendMessage(
-          chatPage.data.groupId,
-          'image',
-          result.fileId
-        );
+        await chatService.sendMessage(groupId, 'image', result.fileId);
       }
 
-      await chatPage.pollNewMessages();
+      if (chatPanel && typeof chatPanel.pollNewMessages === 'function') {
+        await chatPanel.pollNewMessages();
+      }
 
       wx.hideLoading();
       wx.navigateBack();

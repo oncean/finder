@@ -1,0 +1,83 @@
+<view class="chat-panel">
+  <!-- header-info: 定位 + 在线人数 -->
+  <view class="header-info-container">
+    <view class="header-info">
+    <view class="location-info">
+      <image class="location-icon" src="/static/icons/dingwei.svg" mode="aspectFit" />
+      <text class="location-text">{{location || '定位中...'}}</text>
+    </view>
+    <view class="online-info">
+      <view class="online-count-wrap">
+        <text class="online-count">{{onlineCount}}人</text>
+      </view>
+      <view class="online-avatars" wx:if="{{onlineUsers.length > 0}}">
+        <block wx:for="{{onlineUsers}}" wx:key="id">
+          <image
+            wx:if="{{item.avatar}}"
+            class="avatar-preview"
+            src="{{item.avatar}}"
+            mode="aspectFill"
+          />
+        </block>
+      </view>
+    </view>
+  </view>
+  </view>
+
+
+
+  <view class="header-info-line"></view>
+  <!-- 消息列表 -->
+  <scroll-view
+    class="message-list"
+    scroll-y
+    scroll-into-view="{{scrollIntoView}}"
+    id="message-list"
+    refresher-enabled
+    refresher-triggered="{{refreshing}}"
+    bindrefresherrefresh="onPullDownRefresh"
+  >
+    <view class="no-more" wx:if="{{!hasMore && messages.length > 0 && !loading}}">
+      <text>已经到顶了</text>
+    </view>
+
+    <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+    <block wx:for="{{messages}}" wx:key="id">
+      <view id="msg-{{item.id}}">
+        <message-item
+          message="{{item}}"
+          isSelf="{{item.sender && item.sender.id === userId}}"
+          loading="{{item.loading || false}}"
+          failed="{{item.failed || false}}"
+          bindtapShop="onTapShopCard"
+        />
+      </view>
+    </block>
+
+    <view class="empty" wx:if="{{messages.length === 0 && !loading}}">
+      <text>暂无消息，来说点什么吧~</text>
+    </view>
+  </scroll-view>
+
+  <!-- 新消息浮窗提示 -->
+  <view class="new-msg-tip" wx:if="{{showNewMsgTip}}" bindtap="onTapNewMsgTip">
+    <text>{{newMsgCount}}条新消息</text>
+    <text class="tip-arrow">↓</text>
+  </view>
+
+  <!-- 聊天输入框 -->
+  <chat-input
+    class="chat-input"
+    bindsend="onSendMessage"
+    bindshowAddSheet="onShowAddSheet"
+  />
+
+  <!-- 添加内容弹窗 -->
+  <add-sheet
+    visible="{{showAddSheet}}"
+    bindclose="onCloseAddSheet"
+    bindselectShop="onSelectShop"
+    bindselectPhoto="onSelectPhoto"
+  />
+</view>

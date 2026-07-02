@@ -18,34 +18,6 @@
       <text class="tab-text" wx:else>风向标</text>
       <view class="tab-indicator" wx:if="{{activeTab === 'feed'}}"></view>
     </view>
-  </view>
-  
-  <view class="header-info" wx:if="{{activeTab === 'chat'}}">
-    <view class="location-info">
-      <image class="location-icon" src="/static/icons/dingwei.svg" mode="aspectFit" />
-      <text class="location-text">{{location || '定位中...'}}</text>
-    </view>
-    <view class="online-info">
-      <view class="online-count-wrap">
-        <text class="online-count">{{onlineCount}}人</text>
-      </view>
-      <view class="online-avatars" wx:if="{{onlineUsers.length > 0}}">
-        <block wx:for="{{onlineUsers}}" wx:key="id">
-          <image
-            wx:if="{{item.avatar}}"
-            class="avatar-preview"
-            src="{{item.avatar}}"
-            mode="aspectFill"
-          />
-        </block>
-      </view>
-    </view>
-  </view>
-  
-  <view class="header-info feed-info" wx:if="{{false && activeTab === 'feed'}}">
-    <view class="location-tag">
-      <image class="location-icon" src="/static/icons/dingwei.svg" mode="aspectFit" />
-      <text>附近推荐</text>
-    </view>
+    <image class="home-top-back" src="/static/images/home-top-back.png" mode="aspectFit" bindtap="onBack" />
   </view>
 </view>

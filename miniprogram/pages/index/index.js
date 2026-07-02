@@ -5,7 +5,8 @@ const { silentLogin } = require('../../services/auth');
 
 Page({
   data: {
-    loading: false
+    loading: false,
+    loggedIn: false
   },
 
   onLoad() {
@@ -41,19 +42,22 @@ Page({
 
   async doLogin() {
     this.setData({ loading: true });
-    
+
     try {
       await silentLogin();
-      this.setData({ loading: false });
+      this.setData({ loading: false, loggedIn: true });
     } catch (error) {
       console.error('登录失败:', error);
-      this.setData({ loading: false });
+      this.setData({ loading: false, loggedIn: false });
     }
   },
 
   onEnter() {
+    if (!this.data.loggedIn) {
+      return;
+    }
     wx.redirectTo({
-      url: '/pages/chat/chat'
+      url: '/pages/home/home'
     });
   }
 });

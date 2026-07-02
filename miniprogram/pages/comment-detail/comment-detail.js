@@ -32,11 +32,6 @@ Page({
           console.error('加载店铺详情失败:', e);
         }
       }
-      const rank = comment.recommendRank
-      const rankText = rank && rank >= 1 && rank <= 10
-        ? `推荐榜${RANK_LABELS[rank]}`
-        : '';
-      comment.rankText = rankText
       this.setData({
         comment,
         shop,
@@ -54,7 +49,7 @@ Page({
     if (getCurrentPages().length > 1) {
       wx.navigateBack();
     } else {
-      wx.switchTab({ url: '/pages/feed/feed' });
+      wx.redirectTo({ url: '/pages/home/home' });
     }
   },
 

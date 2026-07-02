@@ -5,7 +5,7 @@
       
         <image class="author-avatar" src="{{post.author.avatar}}" mode="aspectFill" wx:if="{{post.author.avatar}}" />
         <text class="feed-title text-bold text-ellipsis">{{post.title}}</text>
-        <text class="rank-pill" wx:if="{{rankText}}">{{rankText}}</text>
+        <rank-pill rank="{{post.recommendRank}}" />
       </view>
       <view class="title-row">
         <text class="feed-desc text-ellipsis" wx:if="{{post.content}}">{{post.content}}</text>
@@ -23,7 +23,7 @@
     </view>
   </view>
 
-  <view style="padding: 15rpx;">
+  <view style="padding: 15rpx 20rpx;">
   
     <shop-section
     wx:if="{{post.shopName}}"

@@ -1,5 +1,6 @@
 <view class="ai-summary">
-  <view class="summary-title" wx:if="{{showTitle}}">{{title}}</view>
+
+  <image style="width: 150rpx; height: 44rpx;" src="/static/images/ai-summary.png" mode="aspectFit"/>
 
   <view class="summary-tags">
     <view class="summary-tag positive" wx:for="{{summary.positive}}" wx:key="index">

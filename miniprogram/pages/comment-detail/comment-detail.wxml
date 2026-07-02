@@ -20,7 +20,7 @@
     <view class="comment-info-section">
       <view class="comment-header">
         <text class="comment-title text-bold">{{comment.title || shop.name}}</text>
-        <text class="rank-pill" wx:if="{{comment.rankText}}">{{comment.rankText}}</text>
+        <rank-pill rank="{{comment.recommendRank}}" />
       </view>
       <text class="comment-content" wx:if="{{comment.content}}">{{comment.content}}</text>
       <text class="shop-desc" wx:elif="{{shop.subtitle}}">{{shop.subtitle}}</text>
@@ -35,7 +35,7 @@
           <text class="count-num">{{shop.testerCount || shop.reviewCount}}</text>
           <text class="count-label"> 测评过</text>
         </view>
-        <text class="row-arrow">›</text>
+        <!-- <text class="row-arrow">›</text> -->
       </view>
 
       <view class="info-row" wx:if="{{shop.businessHours}}">

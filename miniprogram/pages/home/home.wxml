@@ -1,0 +1,40 @@
+<view class="home-page">
+  <tab-header 
+    active-tab="{{activeTab}}"
+    bindtabchange="onTabChange"
+  />
+  
+  <view class="unsupported" wx:if="{{noGroup}}">
+    <text>暂未开通该区域</text>
+  </view>
+
+  <block wx:if="{{!noGroup}}">
+    <swiper 
+      class="content-swiper"
+      current="{{swiperIndex}}"
+      bindchange="onSwiperChange"
+      duration="300"
+    >
+      <!-- 聊天页 -->
+      <swiper-item class="swiper-item">
+        <chat-panel
+          id="chatPanel"
+          class="swiper-item-page"
+          group-id="{{groupId}}"
+          group-info="{{groupInfo}}"
+          user-id="{{userId}}"
+          active="{{activeTab === 'chat'}}"
+        />
+      </swiper-item>
+
+      <!-- 风向标页 -->
+      <swiper-item class="swiper-item">
+        <feed-panel
+          id="feedPanel"
+          class="swiper-item-page"
+          active="{{activeTab === 'feed'}}"
+        />
+      </swiper-item>
+    </swiper>
+  </block>
+</view>

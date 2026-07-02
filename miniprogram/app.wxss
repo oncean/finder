@@ -107,20 +107,6 @@ page {
   border-radius: 50%;
 }
 
-/* 按钮样式 */
-.btn-primary {
-  background: #b2ea1c;
-  color: #1a1a2e;
-  border-radius: 40rpx;
-  padding: 16rpx 40rpx;
-  font-size: 28rpx;
-  font-weight: bold;
-  border: none;
-}
-
-.btn-primary::after {
-  border: none;
-}
 
 /* 标签样式 */
 .tag {

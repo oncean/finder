@@ -2,6 +2,7 @@
   "navigationBarTitleText": "评价详情",
   "usingComponents": {
     "ai-summary": "../../components/ai-summary/ai-summary",
-    "shop-section": "../../components/shop-section/shop-section"
+    "shop-section": "../../components/shop-section/shop-section",
+    "rank-pill": "../../components/rank-pill/rank-pill"
   }
 }

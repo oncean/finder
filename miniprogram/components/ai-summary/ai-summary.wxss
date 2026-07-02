@@ -1,7 +1,7 @@
 .ai-summary {
   padding: 24rpx 22rpx 20rpx;
-  border-radius: 18rpx;
-  background: linear-gradient(90deg, rgba(235, 255, 213, 0.92), rgba(255, 255, 255, 0.96));
+  border-radius: 22rpx;
+  background: linear-gradient( 90deg, #F2FFF0 0%, #FFFFFF 100%);
 }
 
 .summary-title {
@@ -35,9 +35,9 @@
 .summary-tag {
   display: flex;
   align-items: center;
-  font-size: 18rpx;
-  color: #374151;
-  line-height: 1.2;
+  font-weight: 500;
+  font-size: 24rpx;
+  color: #222222;
   white-space: nowrap;
 }
 
@@ -55,8 +55,8 @@
 }
 
 .back-icon{
-  height: 20rpx;
-  width: 20rpx;
+  height: 30rpx;
+  width: 30rpx;
   margin-right: 10rpx;
 }
 

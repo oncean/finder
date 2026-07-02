@@ -55,6 +55,10 @@
   border: none;
 }
 
+.enter-btn.disabled {
+  opacity: 0.5;
+}
+
 /* 登录弹窗 */
 .login-modal {
   position: fixed;

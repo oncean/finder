@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "店铺详情",
   "usingComponents": {
-    "ai-summary": "../../components/ai-summary/ai-summary"
+    "ai-summary": "../../components/ai-summary/ai-summary",
+    "rank-pill": "../../components/rank-pill/rank-pill"
   }
 }

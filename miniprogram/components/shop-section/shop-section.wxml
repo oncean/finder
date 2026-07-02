@@ -21,7 +21,7 @@
     />
   </view>
 
-  <view class="shop-footer" wx:if="{{showAiSummary && summaryTags && summaryTags.length > 0}}">
+  <view class="shop-footer" wx:if="{{showAiSummary && summaryTags}}">
     <view class="comment-row">
       <view class="comment-avatars">
         <image
@@ -35,6 +35,6 @@
       <text class="comment-text" wx:if="{{commentCount > 0}}">{{commentCount}}+ 真实测评过</text>
     </view>
     <button wx:if="{{showShare}}" class="view-btn share-btn" open-type="share" catchtap="onShareTap">分享</button>
-    <view wx:else class="view-btn" catchtap="onTapShop">查看</view>
+    <view  wx:if="{{!showShare}}" class="view-btn" catchtap="onTapShop">查看</view>
   </view>
 </view>
