@@ -2,6 +2,15 @@
   <image wx:if="{{!isSelf && message.sender.avatar}}" class="avatar avatar-small" src="{{message.sender.avatar}}" mode="aspectFill" />
   
   <view class="message-content {{message.type === 'image' ? 'image-message' : ''}}">
+    <text class="message-time" wx:if="{{message.type !== 'shop_card' && !message.loading && isSelf}}">{{displayTime}}</text>
+    
+    <view wx:if="{{isSelf && message.loading}}" class="msg-status">
+      <view class="loading-spinner"></view>
+    </view>
+    
+    <view wx:if="{{isSelf && message.failed}}" class="msg-status">
+      <text class="failed-icon">!</text>
+    </view>
     
     <!-- 文字消息 -->
     <view class="bubble text-bubble" wx:if="{{message.type === 'text'}}">
@@ -27,7 +36,6 @@
         bindtapShop="onTapShopCard"
       />
     </view>
-    
-    <text class="message-time" wx:if="{{message.type !== 'shop_card'}}">{{displayTime}}</text>
+    <text class="message-time" wx:if="{{!isSelf&&message.type !== 'shop_card' && !message.loading}}">{{displayTime}}</text>
   </view>
 </view>

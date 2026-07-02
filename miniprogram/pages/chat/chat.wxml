@@ -30,6 +30,8 @@
           <message-item
             message="{{item}}"
             isSelf="{{item.sender.id === userId}}"
+            loading="{{item.loading || false}}"
+            failed="{{item.failed || false}}"
             bindtapShop="onTapShopCard"
           />
         </view>
@@ -39,6 +41,12 @@
         <text>暂无消息，来说点什么吧~</text>
       </view>
     </scroll-view>
+
+    <!-- 新消息浮窗提示 -->
+    <view class="new-msg-tip" wx:if="{{showNewMsgTip}}" bindtap="onTapNewMsgTip">
+      <text>{{newMsgCount}}条新消息</text>
+      <text class="tip-arrow">↓</text>
+    </view>
 
     <chat-input
       bindsend="onSendMessage"

@@ -1,7 +1,7 @@
 const app = getApp();
 const { getCurrentLocation } = require('../../utils/location');
 const store = require('../../store/index');
-const { login } = require('../../services/auth');
+const { silentLogin } = require('../../services/auth');
 
 Page({
   data: {
@@ -43,46 +43,12 @@ Page({
     this.setData({ loading: true });
     
     try {
-      const code = await this.getWxCode();
-      if (!code) {
-        throw new Error('登录失败');
-      }
-
-      let loginData = { code };
-
-      const location = app.globalData.location;
-      if (location) {
-        loginData.location = location;
-      }
-
-      console.log('调用后端登录接口, 参数:', loginData);
-      const result = await login(loginData);
-      console.log('后端登录成功, 返回结果:', result);
-
-      wx.setStorageSync('token', result.token);
-      app.globalData.userInfo = result.user;
-      store.set('userInfo', result.user);
-      
+      await silentLogin();
       this.setData({ loading: false });
     } catch (error) {
       console.error('登录失败:', error);
       this.setData({ loading: false });
     }
-  },
-
-  getWxCode() {
-    return new Promise((resolve, reject) => {
-      wx.login({
-        success: (res) => {
-          console.log('wx.login 成功, code:', res.code);
-          resolve(res.code);
-        },
-        fail: (error) => {
-          console.error('wx.login 调用失败:', error);
-          reject(error);
-        }
-      });
-    });
   },
 
   onEnter() {

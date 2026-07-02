@@ -7,6 +7,14 @@ Component({
     isSelf: {
       type: Boolean,
       value: false
+    },
+    loading: {
+      type: Boolean,
+      value: false
+    },
+    failed: {
+      type: Boolean,
+      value: false
     }
   },
 

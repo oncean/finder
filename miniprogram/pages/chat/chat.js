@@ -6,6 +6,7 @@ const { getCurrentLocation } = require('../../utils/location');
 const eventBus = require('../../utils/event-bus');
 
 const POLL_INTERVAL = 3000;
+let _tempMsgId = 0;
 
 Page({
   data: {
@@ -21,7 +22,9 @@ Page({
     noGroup: false,
     onlineCount: 0,
     lastSeenId: '',
-    scrollIntoView: ''
+    scrollIntoView: '',
+    showNewMsgTip: false,
+    newMsgCount: 0
   },
 
   async onLoad() {
@@ -109,7 +112,7 @@ Page({
       app.globalData.location = location;
       store.set('location', location);
       
-      const userInfo = app.globalData.userInfo;
+      const userInfo = store.get('userInfo');
       if (userInfo && location) {
         console.log('上传位置到服务器:', location);
         await updateMe({ location });
@@ -122,14 +125,15 @@ Page({
   async loadInitialMessages() {
     this.setData({ loading: true });
     try {
-      const messages = await chatService.getMessages(this.data.groupId, null, 20);
+      const messages = await chatService.getMessages(this.data.groupId, null, 100);
       const lastSeenId = messages.length > 0 ? messages[messages.length - 1].id : '';
       this.setData({
         messages: messages,
-        hasMore: messages.length === 20,
+        hasMore: messages.length === 100,
         loading: false,
         lastSeenId
       });
+      console.log('[scroll] loadInitialMessages: 加载初始消息后调用scrollToBottom');
       this.scrollToBottom();
     } catch (error) {
       this.setData({ loading: false });
@@ -147,13 +151,14 @@ Page({
       
       this.setData({
         messages: [...newMessages, ...this.data.messages],
-        hasMore: newMessages.length === 20,
+        hasMore: newMessages.length === 100,
         loading: false
       });
       
       if (newMessages.length >= 3) {
         const anchorIndex = newMessages.length - 3;
         const anchorId = newMessages[anchorIndex].id;
+        console.log('[scroll] loadMessages: 滚动到锚点消息:', anchorId);
         wx.nextTick(() => {
           this.setData({ scrollIntoView: 'msg-' + anchorId });
         });
@@ -187,18 +192,41 @@ Page({
   },
 
   async pollNewMessages() {
-    if (!this.data.groupId) return;
+    if (!this.data.groupId || this._polling) return;
+    this._polling = true;
     
     try {
       const result = await chatService.poll(this.data.groupId, this.data.lastSeenId);
       
       if (result.messages && result.messages.length > 0) {
         console.log('收到新消息:', result.messages);
-        this.setData({
-          messages: [...this.data.messages, ...result.messages],
-          lastSeenId: result.messages[result.messages.length - 1].id
-        });
-        this.scrollToBottom();
+        
+        const currentMessages = this.data.messages;
+        // 收集已存在的消息 id（包含临时消息和服务器消息）
+        const existingIds = new Set(currentMessages.map(m => m.id));
+        
+        // 去重：只追加不存在的新消息
+        const uniqueNewMessages = result.messages.filter(m => !existingIds.has(m.id));
+        
+        if (uniqueNewMessages.length > 0) {
+          // 追加新消息（已去重，只追加不存在的消息）
+          const updatedMessages = [...currentMessages, ...uniqueNewMessages];
+          
+          // 检查是否有其他人的消息
+          const otherMessages = uniqueNewMessages.filter(m => !m.sender || m.sender.id !== this.data.userId);
+          
+          this.setData({
+            messages: updatedMessages,
+            lastSeenId: result.messages[result.messages.length - 1].id
+          });
+          
+          if (otherMessages.length > 0) {
+            this.setData({
+              showNewMsgTip: true,
+              newMsgCount: this.data.newMsgCount + otherMessages.length
+            });
+          }
+        }
       }
       
       if (result.onlineCount !== undefined) {
@@ -212,15 +240,75 @@ Page({
       }
     } catch (error) {
       console.error('轮询失败:', error);
+    } finally {
+      this._polling = false;
     }
   },
 
   async sendMessage(content) {
+    if (this._sending) return;
+    this._sending = true;
+    
     try {
-      await chatService.sendMessage(this.data.groupId, 'text', content);
-      await this.pollNewMessages();
+      // 发送消息时清除浮窗提示
+      this.setData({ showNewMsgTip: false, newMsgCount: 0 });
+      
+      // 生成唯一标识，用于后续轮询替换
+      const tempId = 'temp-' + (++_tempMsgId);
+      
+      // 直接追加临时消息到列表
+      const userInfo = store.get('userInfo');
+      const tempMsg = {
+        id: tempId,
+        _tempId: tempId,
+        _temp: true,
+        groupId: this.data.groupId,
+        sender: {
+          id: this.data.userId,
+          nickname: userInfo ? userInfo.nickname : '',
+          avatar: userInfo ? userInfo.avatar : ''
+        },
+        type: 'text',
+        content: content,
+        loading: true,
+        createdAt: new Date().toISOString()
+      };
+      
+      this.setData({
+        messages: [...this.data.messages, tempMsg]
+      });
+      console.log('[scroll] sendMessage: 添加临时消息后调用scrollToBottom');
+      this.scrollToBottom();
+      
+      // 发送消息到服务端
+      const serverMsg = await chatService.sendMessage(this.data.groupId, 'text', content);
+      
+      // 发送成功，用服务端返回的消息替换临时消息
+      const messages = this.data.messages;
+      const tempIdx = messages.findIndex(m => m._temp && m._tempId === tempId);
+      if (tempIdx !== -1) {
+        this.setData({
+          messages: messages.map((m, i) => 
+            i === tempIdx ? { ...serverMsg, _temp: false, loading: false } : m
+          )
+        });
+      }
     } catch (error) {
       console.error('发送消息失败:', error);
+      // 发送失败，标记临时消息为失败状态
+      const messages = this.data.messages;
+      const failedIdx = messages.findIndex(
+        m => m._temp && m._tempId === tempId
+      );
+      if (failedIdx !== -1) {
+        this.setData({
+          messages: messages.map((m, i) => 
+            i === failedIdx ? { ...m, loading: false, failed: true } : m
+          )
+        });
+      }
+    } finally {
+      this._sending = false;
     }
   },
 
@@ -260,14 +348,35 @@ Page({
 
   scrollToBottom() {
     const messages = this.data.messages;
-    if (messages.length === 0) return;
+    console.log('[scroll] scrollToBottom called, messages.length:', messages.length);
+    
+    if (messages.length === 0) {
+      console.log('[scroll] scrollToBottom: 无消息，跳过');
+      return;
+    }
     
     const lastMessageId = messages[messages.length - 1].id;
+    const messageContent = messages[messages.length -1].content;
+    
+    if (!lastMessageId) {
+      console.log('[scroll] scrollToBottom: lastMessageId为空，跳过');
+      return;
+    }
     
     wx.nextTick(() => {
+      console.log('[scroll] scrollToBottom: 设置scrollIntoView: msg-' + lastMessageId + "messageContent: "+ messageContent);
       this.setData({
         scrollIntoView: 'msg-' + lastMessageId
       });
     });
+  },
+
+  onTapNewMsgTip() {
+    this.setData({
+      showNewMsgTip: false,
+      newMsgCount: 0
+    });
+    console.log('[scroll] onTapNewMsgTip: 点击新消息提示后调用scrollToBottom');
+    this.scrollToBottom();
   }
 });
